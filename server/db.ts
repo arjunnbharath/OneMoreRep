@@ -3,17 +3,32 @@ import 'dotenv/config'
 
 const { Pool } = pg
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is not set in environment variables')
+let poolInstance: pg.Pool | null = null
+let dbReady = false
+
+function getPool(): pg.Pool {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL is not set')
+  }
+
+  if (!poolInstance) {
+    poolInstance = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    })
+  }
+
+  return poolInstance
 }
 
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-})
+export const pool = {
+  query: (...args: Parameters<pg.Pool['query']>) => getPool().query(...args),
+}
 
-export async function initDb() {
-  await pool.query(`
+export async function ensureDb() {
+  if (dbReady) return
+
+  await getPool().query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
@@ -22,4 +37,9 @@ export async function initDb() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `)
+  dbReady = true
+}
+
+export async function initDb() {
+  await ensureDb()
 }
