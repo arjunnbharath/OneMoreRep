@@ -1,4 +1,9 @@
 import 'dotenv/config'
-import { initDb } from '../lib/db.js'
+import { createRequire } from 'node:module'
 
-export { initDb }
+const require = createRequire(import.meta.url)
+const { ensureDb } = require('../lib/db.cjs')
+
+export async function initDb() {
+  await ensureDb()
+}

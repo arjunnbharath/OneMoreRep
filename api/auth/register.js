@@ -1,19 +1,14 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { AuthError, registerUser } from '../../lib/auth'
+const { AuthError, registerUser } = require('../../lib/auth.cjs')
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-    const { name, email, password } = (body ?? {}) as {
-      name?: string
-      email?: string
-      password?: string
-    }
-    const data = await registerUser(name ?? '', email ?? '', password ?? '')
+    const { name, email, password } = body || {}
+    const data = await registerUser(name || '', email || '', password || '')
     return res.status(201).json(data)
   } catch (err) {
     if (err instanceof AuthError) {
