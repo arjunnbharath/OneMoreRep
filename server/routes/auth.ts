@@ -1,8 +1,5 @@
 import { Router } from 'express'
-import { createRequire } from 'node:module'
-
-const require = createRequire(import.meta.url)
-const { AuthError, getUserFromToken, loginUser, registerUser } = require('../../lib/auth.cjs')
+import { AuthError, getUserFromToken, loginUser, registerUser } from './auth-bridge.js'
 
 const router = Router()
 

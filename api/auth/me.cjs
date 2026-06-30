@@ -1,4 +1,4 @@
-const { AuthError, getUserFromToken } = require('../../lib/auth.cjs')
+const { AuthError, getUserFromToken } = require('../lib/auth.cjs')
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {

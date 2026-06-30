@@ -1,4 +1,4 @@
-const { ensureDb } = require('../../lib/db.cjs')
+const { ensureDb } = require('./lib/db.cjs')
 
 module.exports = async function handler(_req, res) {
   try {
