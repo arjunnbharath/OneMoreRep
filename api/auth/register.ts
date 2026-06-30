@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { AuthError, registerUser } from '../server/auth-service.js'
+import { AuthError, registerUser } from '../../server/auth-service'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

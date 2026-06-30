@@ -1,34 +1,35 @@
-import pg from 'pg'
-import 'dotenv/config'
+import { neon } from '@neondatabase/serverless'
 
-const { Pool } = pg
-
-let poolInstance: pg.Pool | null = null
+let sql: ReturnType<typeof neon> | null = null
 let dbReady = false
 
-function getPool(): pg.Pool {
-  if (!process.env.DATABASE_URL) {
+function getSql() {
+  const url = process.env.DATABASE_URL
+  if (!url) {
     throw new Error('DATABASE_URL is not set')
   }
 
-  if (!poolInstance) {
-    poolInstance = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-    })
+  if (!sql) {
+    sql = neon(url)
   }
 
-  return poolInstance
+  return sql
 }
 
 export const pool = {
-  query: (...args: Parameters<pg.Pool['query']>) => getPool().query(...args),
+  async query<T = Record<string, unknown>>(
+    text: string,
+    params: unknown[] = [],
+  ): Promise<{ rows: T[] }> {
+    const rows = await getSql().query(text, params)
+    return { rows: (Array.isArray(rows) ? rows : [rows]) as T[] }
+  },
 }
 
 export async function ensureDb() {
   if (dbReady) return
 
-  await getPool().query(`
+  await getSql().query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
