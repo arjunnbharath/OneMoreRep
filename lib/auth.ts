@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { ensureDb, pool } from './db.js'
+import { ensureDb, pool } from './db'
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret'
 
@@ -42,15 +42,13 @@ export async function registerUser(
   }
 
   const passwordHash = await bcrypt.hash(password, 10)
-  const result = await pool.query(
+  const result = await pool.query<AuthUser & { created_at: string }>(
     'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, created_at',
     [name.trim(), normalizedEmail, passwordHash],
   )
 
   const user = result.rows[0]
-  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
-    expiresIn: '7d',
-  })
+  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
 
   return {
     token,
@@ -69,7 +67,7 @@ export async function loginUser(
   }
 
   const normalizedEmail = email.trim().toLowerCase()
-  const result = await pool.query(
+  const result = await pool.query<AuthUser & { password_hash: string }>(
     'SELECT id, name, email, password_hash FROM users WHERE email = $1',
     [normalizedEmail],
   )
@@ -85,9 +83,7 @@ export async function loginUser(
     throw new AuthError('Invalid email or password', 401)
   }
 
-  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
-    expiresIn: '7d',
-  })
+  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
 
   return {
     token,
@@ -99,7 +95,7 @@ export async function getUserFromToken(token: string): Promise<AuthUser> {
   await ensureDb()
 
   const payload = jwt.verify(token, JWT_SECRET) as { userId: number }
-  const result = await pool.query(
+  const result = await pool.query<AuthUser>(
     'SELECT id, name, email, created_at FROM users WHERE id = $1',
     [payload.userId],
   )

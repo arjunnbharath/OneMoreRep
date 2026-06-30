@@ -1,9 +1,21 @@
-import { Router } from 'express'
-import { AuthError, getUserFromToken, loginUser, registerUser } from '../lib/auth.js'
+import express from 'express'
+import { AuthError, getUserFromToken, loginUser, registerUser } from '../lib/auth'
+import { ensureDb } from '../lib/db'
 
-const router = Router()
+const app = express()
+app.use(express.json())
 
-router.post('/register', async (req, res) => {
+app.get('/health', async (_req, res) => {
+  try {
+    await ensureDb()
+    res.json({ ok: true, database: 'connected' })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Database check failed'
+    res.status(500).json({ ok: false, error: message })
+  }
+})
+
+app.post('/auth/register', async (req, res) => {
   try {
     const { name, email, password } = req.body as {
       name?: string
@@ -18,11 +30,12 @@ router.post('/register', async (req, res) => {
       return
     }
     console.error('Register error:', err)
-    res.status(500).json({ error: 'Failed to create account' })
+    const message = err instanceof Error ? err.message : 'Failed to create account'
+    res.status(500).json({ error: message })
   }
 })
 
-router.post('/login', async (req, res) => {
+app.post('/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body as { email?: string; password?: string }
     const data = await loginUser(email ?? '', password ?? '')
@@ -33,11 +46,12 @@ router.post('/login', async (req, res) => {
       return
     }
     console.error('Login error:', err)
-    res.status(500).json({ error: 'Failed to log in' })
+    const message = err instanceof Error ? err.message : 'Failed to log in'
+    res.status(500).json({ error: message })
   }
 })
 
-router.get('/me', async (req, res) => {
+app.get('/auth/me', async (req, res) => {
   try {
     const authHeader = req.headers.authorization
     if (!authHeader?.startsWith('Bearer ')) {
@@ -57,4 +71,4 @@ router.get('/me', async (req, res) => {
   }
 })
 
-export default router
+export default app
