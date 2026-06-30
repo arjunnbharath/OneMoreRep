@@ -2,10 +2,12 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Calendar, Search } from 'lucide-react'
 import WorkoutCard from '../components/WorkoutCard'
+import { useAuth } from '../context/AuthContext'
 import { categories, workouts, type MuscleGroup } from '../data/mockData'
 
 export default function Home() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [activeMuscle, setActiveMuscle] = useState<MuscleGroup>('chest')
   const [showAll, setShowAll] = useState(false)
 
@@ -26,7 +28,9 @@ export default function Home() {
       <header className="flex items-center justify-between">
         <div>
           <p className="text-sm text-neutral-500">Hello,</p>
-          <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">Shahinur</h1>
+          <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
+            {user?.name?.split(' ')[0] ?? 'Athlete'}
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           <button

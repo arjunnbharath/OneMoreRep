@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import Button from '../components/Button'
 import Input from '../components/Input'
+import { useAuth } from '../context/AuthContext'
 import { heroImage } from '../data/mockData'
 
 function GoogleIcon() {
@@ -39,11 +40,26 @@ function AppleIcon() {
 
 export default function Login() {
   const navigate = useNavigate()
+  const { login } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    navigate('/home')
+    setError('')
+    setLoading(true)
+
+    try {
+      await login(email, password)
+      navigate('/home')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -67,6 +83,12 @@ export default function Login() {
           <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Welcome back!</h1>
           <p className="mt-2 text-neutral-500">Sign in to continue your fitness journey.</p>
 
+          {error && (
+            <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <Input
               label="Email"
@@ -74,6 +96,8 @@ export default function Login() {
               placeholder="you@example.com"
               autoComplete="email"
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               icon={<Mail size={18} />}
             />
             <div>
@@ -83,6 +107,8 @@ export default function Login() {
                 placeholder="Enter your password"
                 autoComplete="current-password"
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 icon={<Lock size={18} />}
               />
               <button
@@ -101,8 +127,8 @@ export default function Login() {
               </button>
             </div>
 
-            <Button type="submit" fullWidth className="mt-2 py-4 text-base">
-              Login
+            <Button type="submit" fullWidth className="mt-2 py-4 text-base" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
 
@@ -131,9 +157,9 @@ export default function Login() {
 
           <p className="mt-8 text-center text-sm text-neutral-500">
             Don&apos;t have an account?{' '}
-            <button type="button" className="font-semibold text-black hover:underline">
+            <Link to="/signup" className="font-semibold text-black hover:underline">
               Sign up
-            </button>
+            </Link>
           </p>
 
           <p className="mt-4 text-center">
