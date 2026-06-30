@@ -19,28 +19,7 @@ This starts the frontend at [http://localhost:5173](http://localhost:5173) and t
 
 - **Sign up** at `/signup` — creates a user in Neon PostgreSQL
 - **Login** at `/login` — returns a JWT stored in localStorage
-- **Google / Apple** — social sign-in on login and signup pages
 - Protected routes (`/home`, `/tracker`, etc.) require login
-
-### Google Sign-In setup
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
-2. Create an **OAuth 2.0 Client ID** (Web application)
-3. Add **Authorized JavaScript origins**:
-   - `http://localhost:5173`
-   - `https://your-app.vercel.app`
-4. Add to `.env` and Vercel:
-   - `GOOGLE_CLIENT_ID`
-   - `VITE_GOOGLE_CLIENT_ID` (same value)
-
-### Apple Sign-In setup
-
-1. Go to [Apple Developer](https://developer.apple.com/account/resources/identifiers/list/serviceId)
-2. Create a **Services ID** and enable Sign in with Apple
-3. Add your domain and return URL (`https://your-app.vercel.app`)
-4. Add to `.env` and Vercel:
-   - `APPLE_CLIENT_ID` (Services ID, e.g. `com.yourapp.web`)
-   - `VITE_APPLE_CLIENT_ID` (same value)
 
 ## Pages
 
@@ -59,9 +38,6 @@ This starts the frontend at [http://localhost:5173](http://localhost:5173) and t
 |----------|--------|-------------|
 | `/api/auth/register` | POST | `{ name, email, password }` |
 | `/api/auth/login` | POST | `{ email, password }` |
-| `/api/auth/google` | POST | `{ credential }` — Google ID token |
-| `/api/auth/apple` | POST | `{ idToken, user? }` — Apple identity token |
-| `/api/auth/config` | GET | Public OAuth client IDs |
 | `/api/auth/me` | GET | Bearer token — current user |
 
 ## Responsive layout

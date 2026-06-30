@@ -62,11 +62,6 @@ async function loginUser(email, password) {
   }
 
   const user = result.rows[0]
-
-  if (!user.password_hash) {
-    throw new AuthError('This account uses Google or Apple sign-in', 401)
-  }
-
   const valid = await bcrypt.compare(password, user.password_hash)
 
   if (!valid) {

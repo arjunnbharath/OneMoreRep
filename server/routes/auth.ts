@@ -1,51 +1,7 @@
 import { Router } from 'express'
-import {
-  AuthError,
-  getUserFromToken,
-  loginUser,
-  loginWithApple,
-  loginWithGoogle,
-  registerUser,
-} from './auth-bridge.js'
+import { AuthError, getUserFromToken, loginUser, registerUser } from './auth-bridge.js'
 
 const router = Router()
-
-router.get('/config', (_req, res) => {
-  res.json({
-    googleClientId: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '',
-    appleClientId: process.env.APPLE_CLIENT_ID || process.env.VITE_APPLE_CLIENT_ID || '',
-  })
-})
-
-router.post('/google', async (req, res) => {
-  try {
-    const { credential } = req.body
-    const data = await loginWithGoogle(credential)
-    res.json(data)
-  } catch (err) {
-    if (err instanceof AuthError) {
-      res.status(err.status).json({ error: err.message })
-      return
-    }
-    console.error('Google auth error:', err)
-    res.status(500).json({ error: 'Google sign-in failed' })
-  }
-})
-
-router.post('/apple', async (req, res) => {
-  try {
-    const { idToken, user } = req.body
-    const data = await loginWithApple(idToken, user)
-    res.json(data)
-  } catch (err) {
-    if (err instanceof AuthError) {
-      res.status(err.status).json({ error: err.message })
-      return
-    }
-    console.error('Apple auth error:', err)
-    res.status(500).json({ error: 'Apple sign-in failed' })
-  }
-})
 
 router.post('/register', async (req, res) => {
   try {

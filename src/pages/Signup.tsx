@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
 import Button from '../components/Button'
 import Input from '../components/Input'
-import SocialLogin from '../components/SocialLogin'
 import { useAuth } from '../context/AuthContext'
 import { heroImage } from '../data/mockData'
 
@@ -107,14 +106,6 @@ export default function Signup() {
               {loading ? 'Creating account...' : 'Sign up'}
             </Button>
           </form>
-
-          <div className="my-8 flex items-center gap-4">
-            <div className="h-px flex-1 bg-neutral-200" />
-            <span className="text-xs font-medium text-neutral-400">or continue with</span>
-            <div className="h-px flex-1 bg-neutral-200" />
-          </div>
-
-          <SocialLogin onError={setError} />
 
           <p className="mt-8 text-center text-sm text-neutral-500">
             Already have an account?{' '}

@@ -34,28 +34,10 @@ async function ensureDb() {
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       email VARCHAR(255) UNIQUE NOT NULL,
-      password_hash VARCHAR(255),
-      auth_provider VARCHAR(20) NOT NULL DEFAULT 'local',
-      oauth_sub VARCHAR(255),
+      password_hash VARCHAR(255) NOT NULL,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `)
-
-  await getSql().query(`
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider VARCHAR(20) NOT NULL DEFAULT 'local'
-  `)
-  await getSql().query(`
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_sub VARCHAR(255)
-  `)
-  await getSql().query(`
-    ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL
-  `)
-  await getSql().query(`
-    CREATE UNIQUE INDEX IF NOT EXISTS users_oauth_provider_sub_idx
-    ON users (auth_provider, oauth_sub)
-    WHERE oauth_sub IS NOT NULL
-  `)
-
   dbReady = true
 }
 

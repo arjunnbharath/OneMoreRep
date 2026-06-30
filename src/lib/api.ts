@@ -9,11 +9,6 @@ export interface AuthResponse {
   user: User
 }
 
-export interface OAuthConfig {
-  googleClientId: string
-  appleClientId: string
-}
-
 async function parseError(res: Response): Promise<string> {
   const text = await res.text()
 
@@ -53,10 +48,6 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
-export async function getOAuthConfig(): Promise<OAuthConfig> {
-  return request<OAuthConfig>('/api/auth/config')
-}
-
 export async function login(email: string, password: string): Promise<AuthResponse> {
   return request<AuthResponse>('/api/auth/login', {
     method: 'POST',
@@ -74,25 +65,6 @@ export async function register(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, password }),
-  })
-}
-
-export async function loginWithGoogle(credential: string): Promise<AuthResponse> {
-  return request<AuthResponse>('/api/auth/google', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ credential }),
-  })
-}
-
-export async function loginWithApple(
-  idToken: string,
-  user?: { name?: { firstName?: string; lastName?: string } },
-): Promise<AuthResponse> {
-  return request<AuthResponse>('/api/auth/apple', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ idToken, user }),
   })
 }
 
