@@ -7,7 +7,14 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { getMe, login as apiLogin, register as apiRegister, type User } from '../lib/api'
+import {
+  getMe,
+  login as apiLogin,
+  loginWithApple as apiLoginWithApple,
+  loginWithGoogle as apiLoginWithGoogle,
+  register as apiRegister,
+  type User,
+} from '../lib/api'
 
 const TOKEN_KEY = 'onemorerep-token'
 const USER_KEY = 'onemorerep-user'
@@ -18,6 +25,11 @@ interface AuthContextValue {
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (name: string, email: string, password: string) => Promise<void>
+  loginWithGoogle: (credential: string) => Promise<void>
+  loginWithApple: (
+    idToken: string,
+    user?: { name?: { firstName?: string; lastName?: string } },
+  ) => Promise<void>
   logout: () => void
 }
 
@@ -76,9 +88,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist],
   )
 
+  const loginWithGoogle = useCallback(
+    async (credential: string) => {
+      const data = await apiLoginWithGoogle(credential)
+      persist(data.token, data.user)
+    },
+    [persist],
+  )
+
+  const loginWithApple = useCallback(
+    async (
+      idToken: string,
+      appleUser?: { name?: { firstName?: string; lastName?: string } },
+    ) => {
+      const data = await apiLoginWithApple(idToken, appleUser)
+      persist(data.token, data.user)
+    },
+    [persist],
+  )
+
   const value = useMemo(
-    () => ({ user, token, isLoading, login, register, logout }),
-    [user, token, isLoading, login, register, logout],
+    () => ({
+      user,
+      token,
+      isLoading,
+      login,
+      register,
+      loginWithGoogle,
+      loginWithApple,
+      logout,
+    }),
+    [user, token, isLoading, login, register, loginWithGoogle, loginWithApple, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

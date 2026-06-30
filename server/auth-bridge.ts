@@ -2,8 +2,11 @@ import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
 const auth = require('../api/lib/auth.js')
+const oauth = require('../api/lib/oauth.js')
 
 export const AuthError = auth.AuthError
 export const registerUser = auth.registerUser
 export const loginUser = auth.loginUser
 export const getUserFromToken = auth.getUserFromToken
+export const loginWithGoogle = oauth.loginWithGoogle
+export const loginWithApple = oauth.loginWithApple
