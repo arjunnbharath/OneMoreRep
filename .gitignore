@@ -12,9 +12,7 @@ dist
 dist-ssr
 *.local
 /data/
-.venv-data/public/videos/workouts/*.mp4
-public/videos/workouts/*.mov
-public/videos/workouts/*.webm
+.venv-data/
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
