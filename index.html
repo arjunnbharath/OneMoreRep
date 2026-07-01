@@ -11,8 +11,16 @@
       rel="stylesheet"
     />
     <title>OneMoreRep</title>
+    <script>
+      (function () {
+        var t = localStorage.getItem('onemorerep-theme');
+        if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
-  <body>
+  <body class="bg-white text-black dark:bg-neutral-950 dark:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

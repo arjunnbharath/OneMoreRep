@@ -11,7 +11,10 @@ export default function Input({ label, icon, className = '', id, ...props }: Inp
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={inputId} className="mb-2 block text-sm font-medium text-neutral-700">
+        <label
+          htmlFor={inputId}
+          className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+        >
           {label}
         </label>
       )}
@@ -24,7 +27,7 @@ export default function Input({ label, icon, className = '', id, ...props }: Inp
         <input
           id={inputId}
           className={[
-            'w-full rounded-2xl border border-transparent bg-surface px-4 py-3.5 text-sm text-black outline-none transition focus:border-neutral-300 focus:bg-white',
+            'w-full rounded-2xl border border-transparent bg-surface px-4 py-3.5 text-sm text-black outline-none transition focus:border-neutral-300 focus:bg-white dark:text-white dark:focus:border-neutral-600 dark:focus:bg-neutral-800',
             icon ? 'pl-11' : '',
             className,
           ]

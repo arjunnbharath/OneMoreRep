@@ -75,7 +75,7 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="flex min-h-dvh flex-col justify-center px-6 py-10 sm:px-10 lg:px-16">
+      <div className="flex min-h-dvh flex-col justify-center bg-white px-6 py-10 dark:bg-neutral-950 sm:px-10 lg:px-16">
         <div className="mx-auto w-full max-w-md">
           <p className="text-sm font-semibold uppercase tracking-wider text-neutral-400">
             OneMoreRep
@@ -84,7 +84,7 @@ export default function Login() {
           <p className="mt-2 text-neutral-500">Sign in to continue your fitness journey.</p>
 
           {error && (
-            <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+            <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">
               {error}
             </div>
           )}
@@ -114,7 +114,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="mt-2 flex items-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-black"
+                className="mt-2 flex items-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-black dark:hover:text-white"
               >
                 {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                 {showPassword ? 'Hide password' : 'Show password'}
@@ -122,7 +122,7 @@ export default function Login() {
             </div>
 
             <div className="flex items-center justify-end">
-              <button type="button" className="text-sm font-medium text-neutral-600 hover:text-black">
+              <button type="button" className="text-sm font-medium text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white">
                 Forgot password?
               </button>
             </div>
@@ -133,22 +133,22 @@ export default function Login() {
           </form>
 
           <div className="my-8 flex items-center gap-4">
-            <div className="h-px flex-1 bg-neutral-200" />
+            <div className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
             <span className="text-xs font-medium text-neutral-400">or continue with</span>
-            <div className="h-px flex-1 bg-neutral-200" />
+            <div className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
           </div>
 
           <div className="flex gap-4">
             <button
               type="button"
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white py-3.5 text-sm font-semibold transition hover:bg-neutral-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white py-3.5 text-sm font-semibold transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
             >
               <GoogleIcon />
               Google
             </button>
             <button
               type="button"
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white py-3.5 text-sm font-semibold transition hover:bg-neutral-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white py-3.5 text-sm font-semibold transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
             >
               <AppleIcon />
               Apple
@@ -157,7 +157,7 @@ export default function Login() {
 
           <p className="mt-8 text-center text-sm text-neutral-500">
             Don&apos;t have an account?{' '}
-            <Link to="/signup" className="font-semibold text-black hover:underline">
+            <Link to="/signup" className="font-semibold text-black hover:underline dark:text-white">
               Sign up
             </Link>
           </p>

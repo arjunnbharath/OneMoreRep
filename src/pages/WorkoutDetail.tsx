@@ -47,7 +47,7 @@ export default function WorkoutDetail() {
             <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">{workout.title}</h1>
             <div className="mt-2 flex items-center gap-4 text-sm text-neutral-500">
               <span className="flex items-center gap-1">
-                <Star size={16} className="fill-black text-black" />
+                <Star size={16} className="fill-black text-black dark:fill-white dark:text-white" />
                 {workout.rating}
               </span>
               <span>{workout.duration}</span>
@@ -60,8 +60,8 @@ export default function WorkoutDetail() {
             className={[
               'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition',
               isFavorite
-                ? 'border-black bg-black text-white'
-                : 'border-neutral-200 bg-white text-black hover:bg-neutral-50',
+                ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black'
+                : 'border-neutral-200 bg-white text-black hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800',
             ].join(' ')}
           >
             <Heart size={20} className={isFavorite ? 'fill-current' : ''} />
@@ -75,8 +75,8 @@ export default function WorkoutDetail() {
             className={[
               'rounded-full px-5 py-2.5 text-sm font-semibold transition',
               activeTab === 'videos'
-                ? 'bg-black text-white'
-                : 'bg-surface text-neutral-600 hover:bg-neutral-200',
+                ? 'bg-black text-white dark:bg-white dark:text-black'
+                : 'bg-surface text-neutral-600 hover:bg-neutral-200 dark:hover:bg-neutral-800',
             ].join(' ')}
           >
             Videos ({workout.exercises.length})
@@ -87,8 +87,8 @@ export default function WorkoutDetail() {
             className={[
               'rounded-full px-5 py-2.5 text-sm font-semibold transition',
               activeTab === 'review'
-                ? 'bg-black text-white'
-                : 'bg-surface text-neutral-600 hover:bg-neutral-200',
+                ? 'bg-black text-white dark:bg-white dark:text-black'
+                : 'bg-surface text-neutral-600 hover:bg-neutral-200 dark:hover:bg-neutral-800',
             ].join(' ')}
           >
             Review
@@ -100,9 +100,9 @@ export default function WorkoutDetail() {
             {workout.exercises.map((exercise) => (
               <li
                 key={exercise.name}
-                className="flex items-center gap-4 rounded-2xl bg-surface p-4 transition hover:bg-neutral-200/60"
+                className="flex items-center gap-4 rounded-2xl bg-surface p-4 transition hover:bg-neutral-200/60 dark:hover:bg-neutral-800"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white dark:bg-neutral-800">
                   <CirclePlay size={20} />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -112,7 +112,7 @@ export default function WorkoutDetail() {
                 <div
                   className={[
                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-                    exercise.completed ? 'bg-black text-white' : 'bg-white text-neutral-300',
+                    exercise.completed ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white text-neutral-300 dark:bg-neutral-800 dark:text-neutral-600',
                   ].join(' ')}
                 >
                   <Check size={16} />
@@ -122,7 +122,7 @@ export default function WorkoutDetail() {
           </ul>
         ) : (
           <div className="mt-6 rounded-2xl bg-surface p-6 text-center text-neutral-500">
-            <p className="font-medium text-black">No reviews yet</p>
+            <p className="font-medium text-black dark:text-white">No reviews yet</p>
             <p className="mt-1 text-sm">Be the first to share your experience.</p>
           </div>
         )}

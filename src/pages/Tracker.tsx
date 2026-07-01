@@ -69,7 +69,7 @@ export default function Tracker() {
           onClick={() => setShowHistory((v) => !v)}
           className={[
             'shrink-0 rounded-2xl px-4 py-2.5 text-sm font-semibold transition',
-            showHistory ? 'bg-black text-white' : 'bg-surface text-black hover:bg-neutral-200',
+            showHistory ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-surface text-black hover:bg-neutral-200 dark:text-white dark:hover:bg-neutral-800',
           ].join(' ')}
         >
           {showHistory ? 'Active' : 'History'}
@@ -82,7 +82,7 @@ export default function Tracker() {
           {sessions.length === 0 ? (
             <div className="rounded-2xl bg-surface px-6 py-10 text-center text-neutral-500">
               <Dumbbell className="mx-auto mb-3 text-neutral-400" size={32} />
-              <p className="font-medium text-black">No workouts logged yet</p>
+              <p className="font-medium text-black dark:text-white">No workouts logged yet</p>
               <p className="mt-1 text-sm">Finish a session to see it here.</p>
             </div>
           ) : (
@@ -149,7 +149,7 @@ export default function Tracker() {
                   type="text"
                   value={activeSession.name}
                   onChange={(e) => updateSessionName(e.target.value)}
-                  className="min-w-0 flex-1 bg-transparent text-lg font-bold outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-lg font-bold text-black outline-none dark:text-white"
                   placeholder="Workout name"
                 />
                 <div className="flex gap-4 text-sm text-neutral-500">
@@ -159,7 +159,7 @@ export default function Tracker() {
                 </div>
               </div>
 
-              <form onSubmit={handleAddExercise} className="mt-6 rounded-2xl border border-neutral-100 p-5">
+              <form onSubmit={handleAddExercise} className="mt-6 rounded-2xl border border-neutral-100 p-5 dark:border-neutral-800">
                 <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-neutral-500">
                   Add Exercise
                 </h2>
@@ -232,7 +232,7 @@ export default function Tracker() {
                           {exercise.sets.map((set, index) => (
                             <li
                               key={set.id}
-                              className="flex items-center gap-2 rounded-xl bg-white p-2"
+                              className="flex items-center gap-2 rounded-xl bg-white p-2 dark:bg-neutral-800"
                             >
                               <span className="w-12 shrink-0 text-xs font-semibold text-neutral-400">
                                 Set {index + 1}
@@ -249,7 +249,7 @@ export default function Tracker() {
                                     set.weight,
                                   )
                                 }
-                                className="w-16 rounded-lg bg-surface px-2 py-1.5 text-center text-sm font-medium outline-none focus:ring-1 focus:ring-neutral-300"
+                                className="w-16 rounded-lg bg-surface px-2 py-1.5 text-center text-sm font-medium outline-none focus:ring-1 focus:ring-neutral-300 dark:text-white dark:focus:ring-neutral-600"
                                 aria-label={`Set ${index + 1} reps`}
                               />
                               <span className="text-xs text-neutral-400">reps</span>
@@ -267,7 +267,7 @@ export default function Tracker() {
                                     e.target.value ? parseFloat(e.target.value) : undefined,
                                   )
                                 }
-                                className="w-16 rounded-lg bg-surface px-2 py-1.5 text-center text-sm outline-none focus:ring-1 focus:ring-neutral-300"
+                                className="w-16 rounded-lg bg-surface px-2 py-1.5 text-center text-sm outline-none focus:ring-1 focus:ring-neutral-300 dark:text-white dark:focus:ring-neutral-600"
                                 aria-label={`Set ${index + 1} weight`}
                               />
                               <span className="text-xs text-neutral-400">kg</span>

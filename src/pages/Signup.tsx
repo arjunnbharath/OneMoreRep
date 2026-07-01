@@ -45,7 +45,7 @@ export default function Signup() {
         </div>
       </div>
 
-      <div className="flex min-h-dvh flex-col justify-center px-6 py-10 sm:px-10 lg:px-16">
+      <div className="flex min-h-dvh flex-col justify-center bg-white px-6 py-10 dark:bg-neutral-950 sm:px-10 lg:px-16">
         <div className="mx-auto w-full max-w-md">
           <p className="text-sm font-semibold uppercase tracking-wider text-neutral-400">
             OneMoreRep
@@ -54,7 +54,7 @@ export default function Signup() {
           <p className="mt-2 text-neutral-500">Sign up to get started.</p>
 
           {error && (
-            <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+            <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">
               {error}
             </div>
           )}
@@ -95,7 +95,7 @@ export default function Signup() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="mt-2 flex items-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-black"
+                className="mt-2 flex items-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-black dark:hover:text-white"
               >
                 {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                 {showPassword ? 'Hide password' : 'Show password'}
@@ -109,7 +109,7 @@ export default function Signup() {
 
           <p className="mt-8 text-center text-sm text-neutral-500">
             Already have an account?{' '}
-            <Link to="/login" className="font-semibold text-black hover:underline">
+            <Link to="/login" className="font-semibold text-black hover:underline dark:text-white">
               Log in
             </Link>
           </p>

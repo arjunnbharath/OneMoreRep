@@ -13,8 +13,8 @@ export default function AppLayout() {
   const isWorkoutDetail = location.pathname.startsWith('/workout/')
 
   return (
-    <div className="min-h-dvh bg-white lg:flex">
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-neutral-100 lg:px-6 lg:py-8">
+    <div className="min-h-dvh bg-white dark:bg-neutral-950 lg:flex">
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-neutral-100 lg:px-6 lg:py-8 dark:lg:border-neutral-800">
         <div className="mb-10">
           <span className="text-xl font-bold tracking-tight">OneMoreRep</span>
         </div>
@@ -27,8 +27,8 @@ export default function AppLayout() {
                 [
                   'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors',
                   isActive || (isWorkoutDetail && to === '/tracker')
-                    ? 'bg-black text-white'
-                    : 'text-neutral-600 hover:bg-neutral-100',
+                    ? 'bg-black text-white dark:bg-white dark:text-black'
+                    : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800',
                 ].join(' ')
               }
             >
@@ -44,7 +44,7 @@ export default function AppLayout() {
           <Outlet />
         </main>
 
-        <nav className="fixed bottom-4 left-1/2 z-50 w-[calc(100%-3rem)] max-w-xs -translate-x-1/2 rounded-2xl bg-black px-4 py-2 shadow-lg lg:hidden">
+        <nav className="fixed bottom-4 left-1/2 z-50 w-[calc(100%-3rem)] max-w-xs -translate-x-1/2 rounded-2xl bg-black px-4 py-2 shadow-lg lg:hidden dark:bg-neutral-900 dark:ring-1 dark:ring-neutral-800">
           <ul className="flex items-center justify-between">
             {navItems.map(({ to, icon: Icon, label }) => (
               <li key={to}>
@@ -55,7 +55,7 @@ export default function AppLayout() {
                     [
                       'flex h-8 w-8 items-center justify-center rounded-lg transition-colors',
                       isActive || (isWorkoutDetail && to === '/tracker')
-                        ? 'bg-white text-black'
+                        ? 'bg-white text-black dark:bg-neutral-100'
                         : 'text-white/70 hover:text-white',
                     ].join(' ')
                   }
