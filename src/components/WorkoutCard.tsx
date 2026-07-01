@@ -2,15 +2,16 @@ import { BarChart2, Bookmark, Clock, Flame } from 'lucide-react'
 import type { Difficulty, IntensityLevel } from '../data/mockData'
 
 const difficultyStyles: Record<Difficulty, string> = {
-  Beginner: 'text-emerald-400',
-  Intermediate: 'text-orange-400',
-  Advanced: 'text-red-400',
+  Beginner: 'text-white/90',
+  Intermediate: 'text-white',
+  Advanced: 'text-white font-extrabold',
 }
 
 interface WorkoutCardProps {
   id: string
   title: string
   image: string
+  video?: string
   duration: string
   calories: number
   intensity: IntensityLevel
@@ -23,6 +24,7 @@ interface WorkoutCardProps {
 export default function WorkoutCard({
   title,
   image,
+  video,
   duration,
   calories,
   intensity,
@@ -44,18 +46,31 @@ export default function WorkoutCard({
           onClick?.()
         }
       }}
-      className="group relative aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-2xl text-left"
+      className="group relative aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-2xl text-left ring-1 ring-border transition hover:ring-foreground/30"
     >
-      <img
-        src={image}
-        alt={title}
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
+      {video ? (
+        <video
+          src={video}
+          poster={image}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      ) : (
+        <img
+          src={image}
+          alt={title}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/20" />
 
       <span
         className={[
-          'absolute left-3 top-3 rounded-lg bg-black/50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide backdrop-blur-sm',
+          'absolute left-3 top-3 rounded-lg bg-black/60 px-2 py-1 text-[10px] font-bold uppercase tracking-wide backdrop-blur-sm',
           difficultyStyles[difficulty],
         ].join(' ')}
       >
@@ -69,7 +84,7 @@ export default function WorkoutCard({
           onBookmarkToggle?.()
         }}
         aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark workout'}
-        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70"
+        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg bg-black/60 text-white backdrop-blur-sm transition hover:bg-black/80"
       >
         <Bookmark size={14} className={bookmarked ? 'fill-white' : ''} />
       </button>
@@ -82,7 +97,7 @@ export default function WorkoutCard({
             {duration}
           </span>
           <span className="flex items-center gap-1">
-            <Flame size={11} className="text-orange-400" />
+            <Flame size={11} />
             {calories}
           </span>
           <span className="flex items-center gap-1">

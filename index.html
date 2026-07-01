@@ -14,13 +14,13 @@
     <script>
       (function () {
         var t = localStorage.getItem('onemorerep-theme');
-        if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
-        }
+        var dark =
+          t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', dark);
       })();
     </script>
   </head>
-  <body class="bg-white text-black dark:bg-neutral-950 dark:text-white">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

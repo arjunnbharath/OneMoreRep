@@ -11,11 +11,19 @@ class AuthError extends Error {
   }
 }
 
-async function registerUser(name, email, password) {
+async function registerUser(name, email, password, avatar) {
   await ensureDb()
 
   if (!name?.trim() || !email?.trim() || !password) {
     throw new AuthError('Name, email, and password are required', 400)
+  }
+
+  if (!avatar || typeof avatar !== 'string' || !avatar.startsWith('data:image/')) {
+    throw new AuthError('A profile selfie is required', 400)
+  }
+
+  if (avatar.length > 500000) {
+    throw new AuthError('Selfie image is too large', 400)
   }
 
   if (password.length < 6) {
@@ -31,8 +39,8 @@ async function registerUser(name, email, password) {
 
   const passwordHash = await bcrypt.hash(password, 10)
   const result = await query(
-    'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, created_at',
-    [name.trim(), normalizedEmail, passwordHash],
+    'INSERT INTO users (name, email, password_hash, avatar_url) VALUES ($1, $2, $3, $4) RETURNING id, name, email, avatar_url, created_at',
+    [name.trim(), normalizedEmail, passwordHash, avatar],
   )
 
   const user = result.rows[0]
@@ -40,7 +48,12 @@ async function registerUser(name, email, password) {
 
   return {
     token,
-    user: { id: user.id, name: user.name, email: user.email },
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatar_url ?? null,
+    },
   }
 }
 
@@ -53,7 +66,7 @@ async function loginUser(email, password) {
 
   const normalizedEmail = email.trim().toLowerCase()
   const result = await query(
-    'SELECT id, name, email, password_hash FROM users WHERE email = $1',
+    'SELECT id, name, email, password_hash, avatar_url FROM users WHERE email = $1',
     [normalizedEmail],
   )
 
@@ -72,7 +85,12 @@ async function loginUser(email, password) {
 
   return {
     token,
-    user: { id: user.id, name: user.name, email: user.email },
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatar_url ?? null,
+    },
   }
 }
 
@@ -80,7 +98,7 @@ async function getUserFromToken(token) {
   await ensureDb()
 
   const payload = jwt.verify(token, JWT_SECRET)
-  const result = await query('SELECT id, name, email, created_at FROM users WHERE id = $1', [
+  const result = await query('SELECT id, name, email, avatar_url, created_at FROM users WHERE id = $1', [
     payload.userId,
   ])
 
@@ -89,7 +107,12 @@ async function getUserFromToken(token) {
   }
 
   const user = result.rows[0]
-  return { id: user.id, name: user.name, email: user.email }
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatarUrl: user.avatar_url ?? null,
+  }
 }
 
 async function deleteUser(token) {

@@ -60,8 +60,12 @@ async function ensureDb() {
       name VARCHAR(255) NOT NULL,
       email VARCHAR(255) UNIQUE NOT NULL,
       password_hash VARCHAR(255) NOT NULL,
+      avatar_url TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
+  `)
+  await getSql().query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT
   `)
   dbReady = true
 }

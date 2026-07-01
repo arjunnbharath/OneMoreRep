@@ -5,8 +5,8 @@ const router = Router()
 
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body
-    const data = await registerUser(name ?? '', email ?? '', password ?? '')
+    const { name, email, password, avatar } = req.body
+    const data = await registerUser(name ?? '', email ?? '', password ?? '', avatar)
     res.status(201).json(data)
   } catch (err) {
     if (err instanceof AuthError) {

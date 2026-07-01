@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { Dumbbell } from 'lucide-react'
 import Button from '../components/Button'
 import { heroImage } from '../data/mockData'
 
@@ -6,32 +7,39 @@ export default function Splash() {
   const navigate = useNavigate()
 
   return (
-    <div className="relative min-h-dvh">
-      <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30" />
+    <div className="relative min-h-dvh bg-background">
+      <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-50 dark:opacity-60" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40 dark:from-black dark:via-black/70 dark:to-black/40" />
 
-      <div className="relative flex min-h-dvh flex-col justify-end px-6 pb-10 pt-16 sm:px-10 lg:px-16">
-        <div className="mx-auto w-full max-w-lg lg:max-w-2xl lg:text-center">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-white/60">
-            OneMoreRep
-          </p>
-          <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
-            Workout for health
-          </h1>
-          <p className="mt-4 text-base text-white/80 sm:text-lg lg:mx-auto lg:max-w-xl">
-            Thousands of fitness classes, gyms, and wellness, all in one app.
-          </p>
+      <div className="relative flex min-h-dvh flex-col px-6 pb-12 pt-14 text-foreground sm:px-10">
+        <div className="flex items-center gap-2">
+          <Dumbbell size={24} className="text-foreground" />
+          <span className="text-sm font-bold tracking-[0.2em]">ONEMOREREP</span>
         </div>
 
-        <div className="mx-auto mt-10 w-full max-w-lg">
-          <Button
-            variant="secondary"
-            fullWidth
-            className="py-4 text-base font-bold"
-            onClick={() => navigate('/login')}
-          >
-            Get Started
-          </Button>
+        <div className="mt-auto">
+          <p className="text-sm font-medium text-muted">Train smarter. Lift harder.</p>
+          <h1 className="mt-3 text-4xl font-bold leading-[1.1] sm:text-5xl lg:text-6xl">
+            One more rep.<br />
+            Every day.
+          </h1>
+          <p className="mt-4 max-w-md text-base text-muted sm:text-lg">
+            Track workouts, watch exercise demos, and build unstoppable momentum.
+          </p>
+
+          <div className="mt-10 space-y-3">
+            <Button fullWidth className="py-4 text-base" onClick={() => navigate('/signup')}>
+              Get Started
+            </Button>
+            <Button
+              variant="outline"
+              fullWidth
+              className="py-4 text-base"
+              onClick={() => navigate('/login')}
+            >
+              I already have an account
+            </Button>
+          </div>
         </div>
       </div>
     </div>

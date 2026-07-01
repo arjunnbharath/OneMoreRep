@@ -1,0 +1,183 @@
+{
+  "source": "hasyimabdillah/workoutfitness-video",
+  "sourceUrl": "https://www.kaggle.com/datasets/hasyimabdillah/workoutfitness-video",
+  "categoryCount": 22,
+  "categories": [
+    {
+      "id": "barbell-biceps-curl",
+      "folderName": "barbell biceps curl",
+      "label": "Barbell Biceps Curl",
+      "videoPath": "/videos/workouts/barbell-biceps-curl.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "bench-press",
+      "folderName": "bench press",
+      "label": "Bench Press",
+      "videoPath": "/videos/workouts/bench-press.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "chest-fly-machine",
+      "folderName": "chest fly machine",
+      "label": "Chest Fly Machine",
+      "videoPath": "/videos/workouts/chest-fly-machine.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "deadlift",
+      "folderName": "deadlift",
+      "label": "Deadlift",
+      "videoPath": "/videos/workouts/deadlift.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "decline-bench-press",
+      "folderName": "decline bench press",
+      "label": "Decline Bench Press",
+      "videoPath": "/videos/workouts/decline-bench-press.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "hammer-curl",
+      "folderName": "hammer curl",
+      "label": "Hammer Curl",
+      "videoPath": "/videos/workouts/hammer-curl.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "hip-thrust",
+      "folderName": "hip thrust",
+      "label": "Hip Thrust",
+      "videoPath": "/videos/workouts/hip-thrust.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "incline-bench-press",
+      "folderName": "incline bench press",
+      "label": "Incline Bench Press",
+      "videoPath": "/videos/workouts/incline-bench-press.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "lat-pulldown",
+      "folderName": "lat pulldown",
+      "label": "Lat Pulldown",
+      "videoPath": "/videos/workouts/lat-pulldown.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "lateral-raise",
+      "folderName": "lateral raise",
+      "label": "Lateral Raise",
+      "videoPath": "/videos/workouts/lateral-raise.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "leg-extension",
+      "folderName": "leg extension",
+      "label": "Leg Extension",
+      "videoPath": "/videos/workouts/leg-extension.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "leg-raises",
+      "folderName": "leg raises",
+      "label": "Leg Raises",
+      "videoPath": "/videos/workouts/leg-raises.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "plank",
+      "folderName": "plank",
+      "label": "Plank",
+      "videoPath": "/videos/workouts/plank.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "pull-up",
+      "folderName": "pull Up",
+      "label": "Pull Up",
+      "videoPath": "/videos/workouts/pull-up.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "push-up",
+      "folderName": "push-up",
+      "label": "Push-Up",
+      "videoPath": "/videos/workouts/push-up.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "romanian-deadlift",
+      "folderName": "romanian deadlift",
+      "label": "Romanian Deadlift",
+      "videoPath": "/videos/workouts/romanian-deadlift.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "russian-twist",
+      "folderName": "russian twist",
+      "label": "Russian Twist",
+      "videoPath": "/videos/workouts/russian-twist.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "shoulder-press",
+      "folderName": "shoulder press",
+      "label": "Shoulder Press",
+      "videoPath": "/videos/workouts/shoulder-press.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "squat",
+      "folderName": "squat",
+      "label": "Squat",
+      "videoPath": "/videos/workouts/squat.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "t-bar-row",
+      "folderName": "t bar row",
+      "label": "T Bar Row",
+      "videoPath": "/videos/workouts/t-bar-row.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "tricep-dips",
+      "folderName": "tricep dips",
+      "label": "Tricep Dips",
+      "videoPath": "/videos/workouts/tricep-dips.mp4",
+      "available": true,
+      "source": "kaggle"
+    },
+    {
+      "id": "tricep-pushdown",
+      "folderName": "tricep Pushdown",
+      "label": "Tricep Pushdown",
+      "videoPath": "/videos/workouts/tricep-pushdown.mp4",
+      "available": true,
+      "source": "kaggle"
+    }
+  ]
+}

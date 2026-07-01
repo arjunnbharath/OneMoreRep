@@ -2,6 +2,7 @@ export interface User {
   id: number
   name: string
   email: string
+  avatarUrl?: string | null
 }
 
 export interface AuthResponse {
@@ -70,11 +71,12 @@ export async function register(
   name: string,
   email: string,
   password: string,
+  avatar: string,
 ): Promise<AuthResponse> {
   return request<AuthResponse>('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ name, email, password, avatar }),
   })
 }
 

@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
+import { Dumbbell, Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
 import Button from '../components/Button'
 import Input from '../components/Input'
+import SelfieCapture from '../components/SelfieCapture'
 import { useAuth } from '../context/AuthContext'
 import { heroImage } from '../data/mockData'
 
@@ -13,6 +14,7 @@ export default function Signup() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [avatar, setAvatar] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,10 +22,16 @@ export default function Signup() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
+
+    if (!avatar) {
+      setError('Please add a profile selfie to continue')
+      return
+    }
+
     setLoading(true)
 
     try {
-      await register(name, email, password)
+      await register(name, email, password, avatar)
       navigate('/home')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed')
@@ -33,33 +41,44 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-2">
+    <div className="min-h-dvh bg-background text-foreground lg:grid lg:grid-cols-2">
       <div className="relative hidden lg:block">
-        <img src={heroImage} alt="" className="h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-black/50" />
+        <img src={heroImage} alt="" className="h-full w-full object-cover opacity-70" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
         <div className="absolute bottom-16 left-12 right-12 text-white">
-          <h2 className="text-4xl font-bold leading-tight">Start your journey</h2>
-          <p className="mt-3 max-w-md text-lg text-white/80">
+          <div className="flex items-center gap-2">
+            <Dumbbell size={22} />
+            <span className="text-sm font-bold tracking-widest">ONEMOREREP</span>
+          </div>
+          <h2 className="mt-6 text-4xl font-bold leading-tight">
+            Start your<br />
+            transformation.
+          </h2>
+          <p className="mt-4 max-w-md text-lg text-white/70">
             Create an account and track every rep, set, and workout.
           </p>
         </div>
       </div>
 
-      <div className="flex min-h-dvh flex-col justify-center bg-white px-6 py-10 dark:bg-neutral-950 sm:px-10 lg:px-16">
+      <div className="flex min-h-dvh flex-col justify-center px-6 py-10 sm:px-10 lg:px-16">
         <div className="mx-auto w-full max-w-md">
-          <p className="text-sm font-semibold uppercase tracking-wider text-neutral-400">
-            OneMoreRep
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Create account</h1>
-          <p className="mt-2 text-neutral-500">Sign up to get started.</p>
+          <div className="mb-8 flex items-center gap-2 lg:hidden">
+            <Dumbbell size={20} />
+            <span className="text-sm font-bold tracking-widest">ONEMOREREP</span>
+          </div>
+
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Create account</h1>
+          <p className="mt-2 text-muted">Join thousands crushing their goals.</p>
 
           {error && (
-            <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">
+            <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-200 dark:bg-red-950/50 dark:text-red-400 dark:ring-red-900/50">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            <SelfieCapture value={avatar} onChange={setAvatar} />
+
             <Input
               label="Name"
               type="text"
@@ -95,7 +114,7 @@ export default function Signup() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="mt-2 flex items-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-black dark:hover:text-white"
+                className="mt-2 flex items-center gap-1.5 text-xs font-medium text-muted hover:text-foreground"
               >
                 {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                 {showPassword ? 'Hide password' : 'Show password'}
@@ -103,19 +122,19 @@ export default function Signup() {
             </div>
 
             <Button type="submit" fullWidth className="mt-2 py-4 text-base" disabled={loading}>
-              {loading ? 'Creating account...' : 'Sign up'}
+              {loading ? 'Creating account...' : 'Create account'}
             </Button>
           </form>
 
-          <p className="mt-8 text-center text-sm text-neutral-500">
+          <p className="mt-8 text-center text-sm text-muted">
             Already have an account?{' '}
-            <Link to="/login" className="font-semibold text-black hover:underline dark:text-white">
-              Log in
+            <Link to="/login" className="font-semibold text-foreground underline-offset-2 hover:underline">
+              Sign in
             </Link>
           </p>
 
           <p className="mt-4 text-center">
-            <Link to="/" className="text-sm text-neutral-400 hover:text-neutral-600">
+            <Link to="/" className="text-sm text-muted hover:text-foreground">
               ← Back to welcome
             </Link>
           </p>
