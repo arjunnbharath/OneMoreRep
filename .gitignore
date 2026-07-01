@@ -11,9 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
-data/
-.venv-data/
-public/videos/workouts/*.mp4
+/data/
+.venv-data/public/videos/workouts/*.mp4
 public/videos/workouts/*.mov
 public/videos/workouts/*.webm
 # Editor directories and files
