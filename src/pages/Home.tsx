@@ -1,24 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Bell, Search } from 'lucide-react'
+import { ChevronRight, Search, Sparkles, Star } from 'lucide-react'
 import WorkoutCard from '../components/WorkoutCard'
 import { useAuth } from '../context/AuthContext'
-import { categories, workouts, type MuscleGroup } from '../data/mockData'
-
-function getGreeting() {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'Good morning'
-  if (hour < 17) return 'Good afternoon'
-  return 'Good evening'
-}
-
-function getTodayLabel() {
-  return new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-  })
-}
+import { categories, heroImage, workouts, type MuscleGroup } from '../data/mockData'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -33,116 +18,88 @@ export default function Home() {
     return byMuscle.filter((w) => w.title.toLowerCase().includes(q))
   }, [activeMuscle, search])
 
-  const featured = useMemo(
-    () => [...workouts].sort((a, b) => b.rating - a.rating)[0],
+  const trending = useMemo(
+    () => [...workouts].sort((a, b) => b.rating - a.rating).slice(0, 5),
     [],
   )
 
   const activeLabel = categories.find((c) => c.id === activeMuscle)?.label ?? 'Workout'
   const firstName = user?.name?.split(' ')[0] ?? 'Athlete'
-  const initial = firstName.charAt(0).toUpperCase()
 
   return (
-    <div className="min-h-full bg-neutral-50 dark:bg-neutral-950">
-      <header className="border-b border-neutral-200/80 bg-white px-5 pb-6 pt-8 dark:border-neutral-800 dark:bg-neutral-950 lg:px-10 lg:pt-10">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">
-              OneMoreRep
-            </p>
-            <p className="mt-3 text-sm text-neutral-500">{getTodayLabel()}</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight text-neutral-900 dark:text-white lg:text-3xl">
-              {getGreeting()}, {firstName}
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
-            >
-              <Bell size={18} />
-            </button>
+    <div className="min-h-full bg-white dark:bg-neutral-950">
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <img
+          src={heroImage}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black" />
+
+        <div className="relative px-5 pb-10 pt-8 lg:px-10 lg:pt-10">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold tracking-widest text-white/80">ONEMOREREP</span>
             <button
               type="button"
               onClick={() => navigate('/profile')}
-              aria-label="Profile"
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-sm font-bold text-white dark:bg-white dark:text-neutral-900"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-black"
             >
-              {initial}
+              {firstName.charAt(0).toUpperCase()}
             </button>
           </div>
-        </div>
 
-        <div className="mt-6 flex items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
-          <Search size={18} className="shrink-0 text-neutral-400" />
-          <input
-            type="search"
-            placeholder="Search programs and workouts"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-transparent text-sm text-neutral-900 outline-none placeholder:text-neutral-400 dark:text-white"
-          />
-        </div>
-      </header>
+          <div className="mt-10">
+            <p className="text-white/70">Hello, {firstName} 👋</p>
+            <h1 className="mt-1 max-w-xs text-3xl font-bold leading-tight text-white lg:text-4xl">
+              Let&apos;s crush your workout
+            </h1>
+          </div>
 
-      <div className="mx-auto max-w-6xl px-5 py-8 lg:px-10">
-        {featured && (
-          <section className="mb-10">
-            <div className="mb-4 flex items-end justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-                  Featured
-                </p>
-                <h2 className="mt-1 text-lg font-bold text-neutral-900 dark:text-white">
-                  Top rated program
-                </h2>
-              </div>
-            </div>
-            <WorkoutCard
-              variant="featured"
-              title={featured.title}
-              stat={featured.stat}
-              rating={featured.rating}
-              duration={featured.duration}
-              muscle={categories.find((c) => c.id === featured.muscle)?.label}
-              image={featured.image}
-              onClick={() => navigate(`/workout/${featured.id}`)}
+          <div className="mt-8 flex items-center gap-3 rounded-2xl bg-white/95 px-4 py-3.5 shadow-xl backdrop-blur dark:bg-neutral-900/95">
+            <Search size={20} className="shrink-0 text-neutral-400" />
+            <input
+              type="search"
+              placeholder="Search workouts..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-transparent text-sm text-black outline-none placeholder:text-neutral-400 dark:text-white"
             />
-          </section>
-        )}
+          </div>
+        </div>
+      </section>
 
-        <section className="mb-10">
-          <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-            Categories
-          </p>
-          <h2 className="mt-1 text-lg font-bold text-neutral-900 dark:text-white">
-            Train by muscle group
-          </h2>
-          <div className="scrollbar-hide mt-4 -mx-5 flex gap-2 overflow-x-auto px-5 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
+      <div className="mx-auto max-w-6xl space-y-8 px-5 py-8 lg:px-10">
+        {/* Muscle filter */}
+        <section>
+          <h2 className="text-lg font-bold dark:text-white">Target muscle</h2>
+          <div className="scrollbar-hide -mx-5 mt-4 flex gap-4 overflow-x-auto px-5 lg:mx-0 lg:px-0">
             {categories.map((cat) => {
               const isActive = activeMuscle === cat.id
-              const count = workouts.filter((w) => w.muscle === cat.id).length
               return (
                 <button
                   key={cat.id}
                   type="button"
                   onClick={() => setActiveMuscle(cat.id)}
-                  className={[
-                    'flex shrink-0 flex-col items-start rounded-xl border px-4 py-3 text-left transition',
-                    isActive
-                      ? 'border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900'
-                      : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:border-neutral-700',
-                  ].join(' ')}
+                  className="flex shrink-0 flex-col items-center gap-2"
                 >
-                  <span className="text-sm font-semibold">{cat.label}</span>
-                  <span
+                  <div
                     className={[
-                      'mt-0.5 text-xs',
-                      isActive ? 'text-white/70 dark:text-neutral-500' : 'text-neutral-400',
+                      'flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl text-2xl transition-all duration-200',
+                      isActive
+                        ? 'scale-105 bg-black text-white shadow-lg dark:bg-white dark:text-black'
+                        : 'bg-neutral-100 text-black dark:bg-neutral-800 dark:text-white',
                     ].join(' ')}
                   >
-                    {count} programs
+                    {cat.icon}
+                  </div>
+                  <span
+                    className={[
+                      'text-xs font-semibold',
+                      isActive ? 'text-black dark:text-white' : 'text-neutral-400',
+                    ].join(' ')}
+                  >
+                    {cat.label}
                   </span>
                 </button>
               )
@@ -150,64 +107,83 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Trending scroll */}
         <section>
-          <div className="mb-4 flex items-end justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-                Programs
-              </p>
-              <h2 className="mt-1 text-lg font-bold text-neutral-900 dark:text-white">
-                {activeLabel}
-              </h2>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles size={18} className="text-amber-500" />
+              <h2 className="text-lg font-bold dark:text-white">Trending</h2>
             </div>
-            <span className="text-sm text-neutral-500">
-              {filteredWorkouts.length} available
+          </div>
+          <div className="scrollbar-hide -mx-5 mt-4 flex gap-4 overflow-x-auto px-5 lg:mx-0 lg:px-0">
+            {trending.map((workout) => (
+              <button
+                key={workout.id}
+                type="button"
+                onClick={() => navigate(`/workout/${workout.id}`)}
+                className="relative h-44 w-36 shrink-0 overflow-hidden rounded-2xl"
+              >
+                <img src={workout.image} alt="" className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                <div className="absolute bottom-3 left-3 right-3">
+                  <p className="truncate text-sm font-bold text-white">{workout.title}</p>
+                  <p className="mt-0.5 flex items-center gap-1 text-xs text-white/70">
+                    <Star size={11} className="fill-white text-white" />
+                    {workout.rating}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Workout grid */}
+        <section>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold dark:text-white">{activeLabel} workouts</h2>
+            <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+              {filteredWorkouts.length} plans
             </span>
           </div>
 
           {filteredWorkouts.length > 0 ? (
-            <div className="space-y-3">
+            <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-3">
               {filteredWorkouts.map((workout) => (
                 <WorkoutCard
                   key={workout.id}
-                  variant="compact"
                   title={workout.title}
                   stat={workout.stat}
                   rating={workout.rating}
                   duration={workout.duration}
-                  muscle={activeLabel}
                   image={workout.image}
                   onClick={() => navigate(`/workout/${workout.id}`)}
                 />
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-neutral-200 bg-white px-6 py-12 text-center dark:border-neutral-800 dark:bg-neutral-900">
-              <p className="font-medium text-neutral-900 dark:text-white">No programs found</p>
-              <p className="mt-1 text-sm text-neutral-500">
-                Try another muscle group or adjust your search.
-              </p>
+            <div className="mt-4 rounded-3xl bg-neutral-100 px-6 py-14 text-center dark:bg-neutral-900">
+              <p className="text-4xl">🏋️</p>
+              <p className="mt-3 font-semibold dark:text-white">No workouts found</p>
+              <p className="mt-1 text-sm text-neutral-500">Try another muscle or search term</p>
             </div>
           )}
         </section>
 
+        {/* Tracker CTA */}
         <button
           type="button"
           onClick={() => navigate('/tracker')}
-          className="mt-10 flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-5 py-5 text-left transition hover:border-neutral-300 hover:shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700"
+          className="flex w-full items-center justify-between rounded-3xl bg-black px-6 py-5 text-left text-white transition hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200"
         >
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-              Workout log
+            <p className="font-bold">Start tracking</p>
+            <p className="mt-0.5 text-sm text-white/60 dark:text-neutral-500">
+              Log sets, reps & weight
             </p>
-            <p className="mt-1 font-semibold text-neutral-900 dark:text-white">
-              Track today&apos;s session
-            </p>
-            <p className="mt-0.5 text-sm text-neutral-500">Record sets, reps, and weight</p>
           </div>
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900">
-            <ArrowRight size={18} />
-          </span>
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-black dark:bg-black dark:text-white">
+            <ChevronRight size={22} />
+          </div>
         </button>
       </div>
     </div>
