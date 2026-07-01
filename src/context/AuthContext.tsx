@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { getMe, login as apiLogin, register as apiRegister, type User } from '../lib/api'
+import { deleteAccount as apiDeleteAccount, getMe, login as apiLogin, register as apiRegister, type User } from '../lib/api'
 
 const TOKEN_KEY = 'onemorerep-token'
 const USER_KEY = 'onemorerep-user'
@@ -19,6 +19,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>
   register: (name: string, email: string, password: string) => Promise<void>
   logout: () => void
+  deleteAccount: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -76,9 +77,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist],
   )
 
+  const deleteAccount = useCallback(async () => {
+    if (!token) throw new Error('Not authenticated')
+    await apiDeleteAccount(token)
+    logout()
+  }, [token, logout])
+
   const value = useMemo(
-    () => ({ user, token, isLoading, login, register, logout }),
-    [user, token, isLoading, login, register, logout],
+    () => ({ user, token, isLoading, login, register, logout, deleteAccount }),
+    [user, token, isLoading, login, register, logout, deleteAccount],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

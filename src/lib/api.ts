@@ -24,7 +24,17 @@ async function parseError(res: Response): Promise<string> {
   }
 
   if (res.status >= 500) {
-    return text || 'Server error. Check DATABASE_URL is set in your environment.'
+    if (text.includes('FUNCTION_INVOCATION_FAILED')) {
+      return 'Server crashed on Vercel. Check function logs and that DATABASE_URL is set, then redeploy.'
+    }
+    try {
+      const data = JSON.parse(text) as { error?: string; message?: string }
+      if (data.error) return data.error
+      if (data.message) return data.message
+    } catch {
+      // not JSON
+    }
+    return text.slice(0, 200) || 'Server error. Check DATABASE_URL is set in your environment.'
   }
 
   return text || `Request failed (${res.status})`
@@ -70,6 +80,13 @@ export async function register(
 
 export async function getMe(token: string): Promise<{ user: User }> {
   return request<{ user: User }>('/api/auth/me', {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function deleteAccount(token: string): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>('/api/auth/delete', {
+    method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   })
 }

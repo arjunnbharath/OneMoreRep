@@ -7,3 +7,4 @@ export const AuthError = auth.AuthError
 export const registerUser = auth.registerUser
 export const loginUser = auth.loginUser
 export const getUserFromToken = auth.getUserFromToken
+export const deleteUser = auth.deleteUser

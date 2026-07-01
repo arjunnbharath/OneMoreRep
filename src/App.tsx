@@ -5,6 +5,7 @@ import Splash from './pages/Splash'
 import Home from './pages/Home'
 import WorkoutDetail from './pages/WorkoutDetail'
 import Tracker from './pages/Tracker'
+import Profile from './pages/Profile'
 import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/workout/:id" element={<WorkoutDetail />} />
           <Route path="/tracker" element={<Tracker />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

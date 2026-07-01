@@ -1,12 +1,37 @@
+const path = require('path')
+const fs = require('fs')
 const { neon } = require('@neondatabase/serverless')
 
 let sql = null
 let dbReady = false
 
+function loadEnvFile() {
+  const hasUrl =
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL
+
+  if (hasUrl) return
+
+  const envPath = path.resolve(process.cwd(), '.env')
+  if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath })
+  }
+}
+
 function getDatabaseUrl() {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL
+  loadEnvFile()
+
+  const url =
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL_NON_POOLING
+
   if (!url) {
-    throw new Error('DATABASE_URL is not set')
+    throw new Error(
+      'DATABASE_URL is not set. Add it to your .env file locally, or to Vercel → Settings → Environment Variables, then redeploy.',
+    )
   }
 
   const parsed = new URL(url)

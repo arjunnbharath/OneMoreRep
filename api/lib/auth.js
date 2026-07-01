@@ -92,4 +92,17 @@ async function getUserFromToken(token) {
   return { id: user.id, name: user.name, email: user.email }
 }
 
-module.exports = { AuthError, registerUser, loginUser, getUserFromToken }
+async function deleteUser(token) {
+  await ensureDb()
+
+  const payload = jwt.verify(token, JWT_SECRET)
+  const result = await query('DELETE FROM users WHERE id = $1 RETURNING id', [payload.userId])
+
+  if (result.rows.length === 0) {
+    throw new AuthError('User not found', 404)
+  }
+
+  return { success: true }
+}
+
+module.exports = { AuthError, registerUser, loginUser, getUserFromToken, deleteUser }
