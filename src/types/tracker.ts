@@ -2,6 +2,7 @@ export interface WorkoutSet {
   id: string
   reps: number
   weight?: number
+  completed?: boolean
 }
 
 export interface TrackedExercise {
@@ -14,5 +15,7 @@ export interface WorkoutSession {
   id: string
   name: string
   date: string
+  startedAt?: string
+  note?: string
   exercises: TrackedExercise[]
 }

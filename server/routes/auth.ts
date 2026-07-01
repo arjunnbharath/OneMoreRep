@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { AuthError, deleteUser, getUserFromToken, loginUser, registerUser } from './auth-bridge.js'
+import { AuthError, deleteUser, getUserFromToken, loginUser, registerUser } from '../auth-bridge.js'
 
 const router = Router()
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { TrackedExercise, WorkoutSession, WorkoutSet } from '../types/tracker'
 
 const STORAGE_KEY = 'onemorerep-tracker'
+const ACTIVE_KEY = 'onemorerep-active-session'
 
 function loadSessions(): WorkoutSession[] {
   try {
@@ -12,8 +13,22 @@ function loadSessions(): WorkoutSession[] {
   }
 }
 
+function loadActiveSession(): WorkoutSession | null {
+  try {
+    const raw = sessionStorage.getItem(ACTIVE_KEY)
+    return raw ? (JSON.parse(raw) as WorkoutSession) : null
+  } catch {
+    return null
+  }
+}
+
 function saveSessions(sessions: WorkoutSession[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions))
+}
+
+function saveActiveSession(session: WorkoutSession | null) {
+  if (session) sessionStorage.setItem(ACTIVE_KEY, JSON.stringify(session))
+  else sessionStorage.removeItem(ACTIVE_KEY)
 }
 
 function createId() {
@@ -22,17 +37,23 @@ function createId() {
 
 export function useWorkoutTracker() {
   const [sessions, setSessions] = useState<WorkoutSession[]>(loadSessions)
-  const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null)
+  const [activeSession, setActiveSession] = useState<WorkoutSession | null>(loadActiveSession)
 
   useEffect(() => {
     saveSessions(sessions)
   }, [sessions])
 
-  function startSession(name = 'Today\'s Workout') {
+  useEffect(() => {
+    saveActiveSession(activeSession)
+  }, [activeSession])
+
+  function startSession(name = "Today's Workout") {
     const session: WorkoutSession = {
       id: createId(),
       name,
       date: new Date().toISOString(),
+      startedAt: new Date().toISOString(),
+      note: '',
       exercises: [],
     }
     setActiveSession(session)
@@ -44,6 +65,7 @@ export function useWorkoutTracker() {
       id: createId(),
       reps,
       weight: weight || undefined,
+      completed: false,
     }))
 
     const exercise: TrackedExercise = {
@@ -54,10 +76,12 @@ export function useWorkoutTracker() {
 
     setActiveSession((prev) => {
       if (!prev) {
-        const session = {
+        const session: WorkoutSession = {
           id: createId(),
-          name: 'Today\'s Workout',
+          name: "Today's Workout",
           date: new Date().toISOString(),
+          startedAt: new Date().toISOString(),
+          note: '',
           exercises: [exercise],
         }
         return session
@@ -83,7 +107,10 @@ export function useWorkoutTracker() {
           ex.id === exerciseId
             ? {
                 ...ex,
-                sets: [...ex.sets, { id: createId(), reps, weight: weight || undefined }],
+                sets: [
+                  ...ex.sets,
+                  { id: createId(), reps, weight: weight || undefined, completed: false },
+                ],
               }
             : ex,
         ),
@@ -102,6 +129,25 @@ export function useWorkoutTracker() {
                 ...ex,
                 sets: ex.sets.map((s) =>
                   s.id === setId ? { ...s, reps, weight: weight || undefined } : s,
+                ),
+              }
+            : ex,
+        ),
+      }
+    })
+  }
+
+  function toggleSetComplete(exerciseId: string, setId: string) {
+    setActiveSession((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        exercises: prev.exercises.map((ex) =>
+          ex.id === exerciseId
+            ? {
+                ...ex,
+                sets: ex.sets.map((s) =>
+                  s.id === setId ? { ...s, completed: !s.completed } : s,
                 ),
               }
             : ex,
@@ -140,6 +186,10 @@ export function useWorkoutTracker() {
     setActiveSession((prev) => (prev ? { ...prev, name } : prev))
   }
 
+  function updateSessionNote(note: string) {
+    setActiveSession((prev) => (prev ? { ...prev, note } : prev))
+  }
+
   return {
     sessions,
     activeSession,
@@ -148,10 +198,12 @@ export function useWorkoutTracker() {
     removeExercise,
     addSetToExercise,
     updateSet,
+    toggleSetComplete,
     removeSet,
     finishSession,
     deleteSession,
     updateSessionName,
+    updateSessionNote,
     setActiveSession,
   }
 }

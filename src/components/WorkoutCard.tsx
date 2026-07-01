@@ -1,54 +1,96 @@
-import { Play, Star } from 'lucide-react'
+import { BarChart2, Bookmark, Clock, Flame } from 'lucide-react'
+import type { Difficulty, IntensityLevel } from '../data/mockData'
+
+const difficultyStyles: Record<Difficulty, string> = {
+  Beginner: 'text-emerald-400',
+  Intermediate: 'text-orange-400',
+  Advanced: 'text-red-400',
+}
 
 interface WorkoutCardProps {
+  id: string
   title: string
-  stat: string
-  rating: number
   image: string
-  duration?: string
+  duration: string
+  calories: number
+  intensity: IntensityLevel
+  difficulty: Difficulty
+  bookmarked?: boolean
+  onBookmarkToggle?: () => void
   onClick?: () => void
 }
 
 export default function WorkoutCard({
   title,
-  stat,
-  rating,
   image,
   duration,
+  calories,
+  intensity,
+  difficulty,
+  bookmarked = false,
+  onBookmarkToggle,
   onClick,
 }: WorkoutCardProps) {
+  const intensityLabel = intensity === 'Medium' ? 'Med' : intensity
+
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="group relative aspect-[4/5] w-full overflow-hidden rounded-3xl text-left shadow-sm transition hover:shadow-lg active:scale-[0.98]"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick?.()
+        }
+      }}
+      className="group relative aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-2xl text-left"
     >
       <img
         src={image}
         alt={title}
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
 
-      <div className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md transition group-hover:bg-white group-hover:text-black">
-        <Play size={16} className="ml-0.5" fill="currentColor" />
-      </div>
+      <span
+        className={[
+          'absolute left-3 top-3 rounded-lg bg-black/50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide backdrop-blur-sm',
+          difficultyStyles[difficulty],
+        ].join(' ')}
+      >
+        {difficulty}
+      </span>
 
-      <div className="absolute bottom-0 left-0 right-0 p-5">
-        <div className="mb-2 flex items-center gap-2">
-          <span className="flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-            <Star size={11} className="fill-white" />
-            {rating}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          onBookmarkToggle?.()
+        }}
+        aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark workout'}
+        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70"
+      >
+        <Bookmark size={14} className={bookmarked ? 'fill-white' : ''} />
+      </button>
+
+      <div className="absolute bottom-0 left-0 right-0 p-3">
+        <h3 className="text-sm font-bold leading-tight text-white">{title}</h3>
+        <div className="mt-2 flex items-center gap-3 text-[10px] text-white/75">
+          <span className="flex items-center gap-1">
+            <Clock size={11} />
+            {duration}
           </span>
-          {duration && (
-            <span className="rounded-full bg-white/20 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
-              {duration}
-            </span>
-          )}
+          <span className="flex items-center gap-1">
+            <Flame size={11} className="text-orange-400" />
+            {calories}
+          </span>
+          <span className="flex items-center gap-1">
+            <BarChart2 size={11} />
+            {intensityLabel}
+          </span>
         </div>
-        <h3 className="text-lg font-bold leading-tight text-white">{title}</h3>
-        <p className="mt-1 text-sm text-white/70">{stat}</p>
       </div>
-    </button>
+    </div>
   )
 }

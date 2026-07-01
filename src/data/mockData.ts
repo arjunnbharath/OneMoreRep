@@ -6,6 +6,35 @@ export type MuscleGroup =
   | 'legs'
   | 'core'
   | 'glutes'
+  | 'cardio'
+
+export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced'
+export type IntensityLevel = 'Low' | 'Medium' | 'High'
+
+export type Workout = {
+  id: string
+  title: string
+  shortTitle?: string
+  muscle: MuscleGroup
+  stat: string
+  rating: number
+  duration: string
+  image: string
+  difficulty: Difficulty
+  calories: number
+  intensity: IntensityLevel
+  exercises: { name: string; duration: string; completed: boolean }[]
+}
+
+export const homeFilters: { id: MuscleGroup | 'all'; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'chest', label: 'Chest' },
+  { id: 'back', label: 'Back' },
+  { id: 'legs', label: 'Legs' },
+  { id: 'arms', label: 'Arms' },
+  { id: 'core', label: 'Core' },
+  { id: 'cardio', label: 'Cardio' },
+]
 
 export const categories: { id: MuscleGroup; label: string; icon: string }[] = [
   { id: 'chest', label: 'Chest', icon: '💪' },
@@ -17,14 +46,14 @@ export const categories: { id: MuscleGroup; label: string; icon: string }[] = [
   { id: 'glutes', label: 'Glutes', icon: '🍑' },
 ]
 
-export const workouts = [
+const rawWorkouts: Omit<Workout, 'difficulty' | 'calories' | 'intensity' | 'shortTitle'>[] = [
   {
     id: 'chest-press-power',
     title: 'Chest Press Power',
     muscle: 'chest' as MuscleGroup,
     stat: '6 exercises',
     rating: 4.7,
-    duration: '45 min',
+    duration: '40 min',
     image:
       'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80',
     exercises: [
@@ -161,7 +190,7 @@ export const workouts = [
     muscle: 'legs' as MuscleGroup,
     stat: '7 exercises',
     rating: 4.8,
-    duration: '55 min',
+    duration: '50 min',
     image:
       'https://images.unsplash.com/photo-1434682881348-1deda2a010f5?w=800&q=80',
     exercises: [
@@ -247,7 +276,62 @@ export const workouts = [
       { name: 'Step Ups', duration: '8 min', completed: false },
     ],
   },
+  {
+    id: 'hiit-cardio',
+    title: 'HIIT Cardio Blast',
+    muscle: 'cardio' as MuscleGroup,
+    stat: '6 rounds',
+    rating: 4.6,
+    duration: '20 min',
+    image:
+      'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80',
+    exercises: [
+      { name: 'Jump Rope', duration: '4 min', completed: false },
+      { name: 'Burpees', duration: '4 min', completed: false },
+      { name: 'Mountain Climbers', duration: '4 min', completed: false },
+      { name: 'High Knees', duration: '4 min', completed: false },
+    ],
+  },
 ]
+
+const workoutMeta: Record<
+  string,
+  Pick<Workout, 'shortTitle' | 'difficulty' | 'calories' | 'intensity'>
+> = {
+  'chest-press-power': { shortTitle: 'Chest Power', difficulty: 'Intermediate', calories: 320, intensity: 'High' },
+  'upper-chest-burn': { shortTitle: 'Upper Chest', difficulty: 'Intermediate', calories: 280, intensity: 'Medium' },
+  'chest-pump': { shortTitle: 'Chest Pump', difficulty: 'Beginner', calories: 240, intensity: 'Medium' },
+  'back-strength': { shortTitle: 'Back Builder', difficulty: 'Intermediate', calories: 360, intensity: 'High' },
+  'lat-builder': { shortTitle: 'Lat Builder', difficulty: 'Intermediate', calories: 300, intensity: 'High' },
+  'shoulder-press-focus': { shortTitle: 'Shoulder Press', difficulty: 'Intermediate', calories: 260, intensity: 'Medium' },
+  'deltoid-destroyer': { shortTitle: 'Deltoid Destroy', difficulty: 'Advanced', calories: 340, intensity: 'High' },
+  'arm-blaster': { shortTitle: 'Arm Blast', difficulty: 'Beginner', calories: 210, intensity: 'Medium' },
+  'bicep-tricep-split': { shortTitle: 'Arm Split', difficulty: 'Beginner', calories: 200, intensity: 'Low' },
+  'leg-day-crusher': { shortTitle: 'Leg Day', difficulty: 'Advanced', calories: 410, intensity: 'High' },
+  'quad-focus': { shortTitle: 'Quad Focus', difficulty: 'Intermediate', calories: 350, intensity: 'High' },
+  'core-strength': { shortTitle: 'Core Shred', difficulty: 'Beginner', calories: 180, intensity: 'Medium' },
+  'ab-shred': { shortTitle: 'Ab Shred', difficulty: 'Beginner', calories: 160, intensity: 'Low' },
+  'glute-builder': { shortTitle: 'Glute Builder', difficulty: 'Intermediate', calories: 290, intensity: 'High' },
+  'glute-burn': { shortTitle: 'Glute Burn', difficulty: 'Intermediate', calories: 270, intensity: 'Medium' },
+  'hiit-cardio': { shortTitle: 'HIIT Cardio', difficulty: 'Intermediate', calories: 280, intensity: 'High' },
+}
+
+type RawWorkout = Omit<Workout, 'difficulty' | 'calories' | 'intensity' | 'shortTitle'>
+
+function enrichWorkout(workout: RawWorkout): Workout {
+  const meta = workoutMeta[workout.id] ?? {
+    shortTitle: workout.title,
+    difficulty: 'Intermediate' as Difficulty,
+    calories: 250,
+    intensity: 'Medium' as IntensityLevel,
+  }
+  return { ...workout, ...meta }
+}
+
+export const workouts: Workout[] = rawWorkouts.map(enrichWorkout)
 
 export const heroImage =
   'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80'
+
+export const motivationImage =
+  'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80'
