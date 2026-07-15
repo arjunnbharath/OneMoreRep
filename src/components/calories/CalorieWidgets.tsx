@@ -1,10 +1,146 @@
 import type { DailyMacroTotals, UserNutritionProfile } from '../../types/nutrition'
 
 const MACRO_COLORS = {
-  protein: 'bg-red-500',
-  carbs: 'bg-amber-500',
-  fat: 'bg-sky-500',
+  protein: {
+    bar: 'bg-red-500',
+    track: 'bg-red-500/15',
+    dot: 'bg-red-500',
+  },
+  carbs: {
+    bar: 'bg-amber-500',
+    track: 'bg-amber-500/15',
+    dot: 'bg-amber-500',
+  },
+  fat: {
+    bar: 'bg-sky-500',
+    track: 'bg-sky-500/15',
+    dot: 'bg-sky-500',
+  },
 } as const
+
+interface MacroColumnProps {
+  label: string
+  current: number
+  target: number
+  color: keyof typeof MACRO_COLORS
+}
+
+function MacroColumn({ label, current, target, color }: MacroColumnProps) {
+  const eaten = Math.round(current)
+  const goal = Math.round(target)
+  const pct = goal > 0 ? Math.min(100, (current / goal) * 100) : 0
+  const over = current > target
+  const palette = MACRO_COLORS[color]
+
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5">
+        <span className={`h-2 w-2 shrink-0 rounded-full ${palette.dot}`} />
+        <span className="truncate text-[11px] font-medium text-muted">{label}</span>
+      </div>
+      <p className="mt-2 text-xl font-semibold tabular-nums leading-none">
+        {eaten}
+        <span className="ml-0.5 text-sm font-normal text-muted">g</span>
+      </p>
+      <div className={`mt-2.5 h-1.5 overflow-hidden rounded-full ${palette.track}`}>
+        <div
+          className={[
+            'h-full rounded-full transition-all duration-500',
+            over ? 'bg-amber-500' : palette.bar,
+          ].join(' ')}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="mt-1.5 text-[10px] tabular-nums text-muted">of {goal}g</p>
+    </div>
+  )
+}
+
+interface DailyCalorieSummaryProps {
+  consumed: number
+  target: number
+  protein: number
+  proteinTarget: number
+  carbs: number
+  carbsTarget: number
+  fat: number
+  fatTarget: number
+}
+
+export function DailyCalorieSummary({
+  consumed,
+  target,
+  protein,
+  proteinTarget,
+  carbs,
+  carbsTarget,
+  fat,
+  fatTarget,
+}: DailyCalorieSummaryProps) {
+  const eaten = Math.round(consumed)
+  const goal = Math.round(target)
+  const over = eaten > goal
+  const remaining = Math.max(0, goal - eaten)
+  const pct = goal > 0 ? Math.min(100, (eaten / goal) * 100) : 0
+
+  return (
+    <div className="rounded-3xl bg-surface p-5 ring-1 ring-border lg:p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+            {over ? 'Over budget' : 'Remaining'}
+          </p>
+          <p
+            className={[
+              'mt-1 text-4xl font-bold tabular-nums tracking-tight sm:text-[2.75rem]',
+              over ? 'text-amber-600 dark:text-amber-400' : '',
+            ].join(' ')}
+          >
+            {over ? eaten - goal : remaining}
+          </p>
+          <p className="mt-0.5 text-sm text-muted">kcal</p>
+        </div>
+
+        <div className="shrink-0 rounded-2xl bg-surface-elevated px-4 py-3 text-right ring-1 ring-border">
+          <p className="text-2xl font-semibold tabular-nums leading-none">{eaten}</p>
+          <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-muted">
+            Eaten
+          </p>
+          <div className="my-2 h-px bg-border" />
+          <p className="text-sm font-semibold tabular-nums leading-none">{goal}</p>
+          <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-muted">
+            Goal
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <div className="flex items-center justify-between text-xs text-muted">
+          <span>{eaten} kcal eaten</span>
+          <span>{goal} kcal goal</span>
+        </div>
+        <div className="mt-2 h-3 overflow-hidden rounded-full bg-surface-elevated">
+          <div
+            className={[
+              'h-full rounded-full transition-all duration-700',
+              over ? 'bg-amber-500' : 'bg-foreground',
+            ].join(' ')}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <p className="mt-2 text-center text-[11px] tabular-nums text-muted">
+          {Math.round(pct)}% of daily goal
+        </p>
+      </div>
+
+      <div className="mt-6 grid grid-cols-3 gap-4 border-t border-border pt-5">
+        <MacroColumn label="Protein" current={protein} target={proteinTarget} color="protein" />
+        <MacroColumn label="Carbs" current={carbs} target={carbsTarget} color="carbs" />
+        <MacroColumn label="Fat" current={fat} target={fatTarget} color="fat" />
+      </div>
+    </div>
+  )
+}
 
 interface MacroBarProps {
   label: string
@@ -38,7 +174,7 @@ export function MacroBar({
         <div
           className={[
             'h-full rounded-full transition-all duration-500',
-            over ? 'bg-amber-500' : MACRO_COLORS[color],
+            over ? 'bg-amber-500' : MACRO_COLORS[color].bar,
           ].join(' ')}
           style={{ width: `${pct}%` }}
         />

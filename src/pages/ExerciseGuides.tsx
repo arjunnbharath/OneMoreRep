@@ -98,7 +98,7 @@ export default function ExerciseGuides() {
         </div>
       </section>
 
-      <section className="mt-8 px-5 pb-8 lg:px-10">
+      <section className="mt-8 px-5 pb-4 lg:px-10 lg:pb-8">
         <p className="mb-4 text-sm text-muted">{filtered.length} exercises</p>
         <ul className="space-y-2">
           {filtered.map((exercise) => {

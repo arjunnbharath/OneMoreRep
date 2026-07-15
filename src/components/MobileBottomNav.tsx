@@ -25,11 +25,11 @@ export default function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur-md lg:hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="fixed inset-x-0 bottom-0 z-50 overflow-hidden rounded-t-3xl bg-surface/90 shadow-[var(--shadow-nav)] backdrop-blur-xl lg:hidden dark:bg-surface/75"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       aria-label="Main navigation"
     >
-      <div className="mx-auto grid h-16 max-w-lg grid-cols-4">
+      <div className="mx-auto grid h-14 max-w-lg grid-cols-4">
         {navItems.map(({ to, icon: Icon, label, exact }) => {
           const active = isActive(pathname, to, exact)
           return (
@@ -38,19 +38,19 @@ export default function MobileBottomNav() {
               to={to}
               aria-label={label}
               aria-current={active ? 'page' : undefined}
-              className="relative flex flex-col items-center justify-center gap-1 px-1"
+              className="relative flex flex-col items-center justify-center gap-0.5 px-1"
             >
               {active && (
-                <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-foreground" />
+                <span className="absolute inset-x-3 top-1/2 h-10 -translate-y-1/2 rounded-xl bg-surface-elevated ring-1 ring-border dark:bg-surface-elevated dark:ring-white/8" />
               )}
               <Icon
-                size={20}
+                size={18}
                 strokeWidth={active ? 2.25 : 1.75}
-                className={active ? 'text-foreground' : 'text-muted'}
+                className={['relative z-10', active ? 'text-foreground' : 'text-muted'].join(' ')}
               />
               <span
                 className={[
-                  'text-[10px] leading-none',
+                  'relative z-10 text-[10px] leading-none',
                   active ? 'font-semibold text-foreground' : 'font-medium text-muted',
                 ].join(' ')}
               >

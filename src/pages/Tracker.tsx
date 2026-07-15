@@ -5,14 +5,12 @@ import {
   ArrowLeft,
   BarChart3,
   Calendar,
-  Check,
   Clock,
   Copy,
   Dumbbell,
   Flame,
   History,
   Plus,
-  Search,
   Star,
   Timer,
   Trash2,
@@ -23,10 +21,21 @@ import {
 import Button from '../components/Button'
 import WorkoutCalendar from '../components/WorkoutCalendar'
 import ExerciseHistoryChart from '../components/tracker/ExerciseHistoryChart'
-import { exerciseGuides } from '../data/exerciseGuides'
+import AddExerciseForm from '../components/tracker/AddExerciseForm'
+import ExerciseSetTable from '../components/tracker/ExerciseSetTable'
+import NextMuscleReady from '../components/tracker/NextMuscleReady'
+import WeeklyPlanPanel from '../components/tracker/WeeklyPlanPanel'
+import { exerciseGuides, type ExerciseGroup } from '../data/exerciseGuides'
 import { heroImage } from '../data/mockData'
-import { findVideoForExercise } from '../data/workoutVideos'
+import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
+import {
+  exercisesForMuscle,
+  getTodayWeekday,
+  groupLabel,
+  muscleQueueForDay,
+  WEEKDAY_LABELS,
+} from '../lib/workoutPlan'
 import {
   detectSessionPRs,
   findLastExerciseLog,
@@ -37,8 +46,9 @@ import {
   sessionVolume,
 } from '../lib/workoutProgress'
 import type { TrackedExercise, WorkoutSession } from '../types/tracker'
+import type { Weekday } from '../types/workoutPlan'
 
-type View = 'workout' | 'history' | 'progress'
+type View = 'workout' | 'plan' | 'history' | 'progress'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -73,10 +83,6 @@ function getSessionStats(session: WorkoutSession, live = false) {
   return { progress, volume, elapsed, calories, completedSets: completedSets.length, totalSets }
 }
 
-function isExerciseComplete(exercise: TrackedExercise) {
-  return exercise.sets.length > 0 && exercise.sets.every((s) => s.completed)
-}
-
 function toDateKey(iso: string) {
   const d = new Date(iso)
   const y = d.getFullYear()
@@ -85,18 +91,24 @@ function toDateKey(iso: string) {
   return `${y}-${m}-${day}`
 }
 
+type DayWorkoutFlow = {
+  day: Weekday
+  queue: ExerciseGroup[]
+  remaining: ExerciseGroup[]
+}
+
 export default function Tracker() {
   const navigate = useNavigate()
   const {
     sessions,
     activeSession,
     startSession,
+    startSessionWithExercises,
     addExercise,
     removeExercise,
     addSetToExercise,
     updateSet,
     toggleSetComplete,
-    toggleSetWarmup,
     removeSet,
     finishSession,
     duplicateSession,
@@ -106,7 +118,21 @@ export default function Tracker() {
     setActiveSession,
   } = useWorkoutTracker()
 
+  const {
+    plan,
+    addMuscleToDay,
+    removeMuscleFromDay,
+    addExercise: addPlanExercise,
+    removeExercise: removePlanExercise,
+  } = useWorkoutPlan()
+
   const [view, setView] = useState<View>('workout')
+  const [dayWorkoutFlow, setDayWorkoutFlow] = useState<DayWorkoutFlow | null>(null)
+  const [readyForNextMuscle, setReadyForNextMuscle] = useState<{
+    day: Weekday
+    muscle: ExerciseGroup
+    lastSession: WorkoutSession
+  } | null>(null)
   const [tick, setTick] = useState(0)
   const [showAddForm, setShowAddForm] = useState(false)
   const [showFinishSummary, setShowFinishSummary] = useState<WorkoutSession | null>(null)
@@ -125,6 +151,12 @@ export default function Tracker() {
     const id = window.setInterval(() => setTick((t) => t + 1), 1000)
     return () => window.clearInterval(id)
   }, [activeSession])
+
+  useEffect(() => {
+    if (activeSession && activeSession.exercises.length === 0) {
+      setShowAddForm(true)
+    }
+  }, [activeSession?.id, activeSession?.exercises.length])
 
   useEffect(() => {
     if (restSeconds === null || restSeconds <= 0) return
@@ -174,6 +206,66 @@ export default function Tracker() {
     if (!wasCompleted) setRestSeconds(90)
   }
 
+  function resetExerciseForm() {
+    setExerciseName('')
+    setSets('4')
+    setReps('10')
+    setWeight('')
+    setExerciseQuery('')
+  }
+
+  function quickAddExercise(name: string) {
+    const last = findLastExerciseLog(sessions, name)
+    const lastSet = last?.sets.find((s) => s.completed) ?? last?.sets[0]
+    const setCount = last?.sets.length ?? 3
+    const repCount = lastSet?.reps ?? 10
+    const weightVal = lastSet?.weight
+
+    addExercise(name, setCount, repCount, weightVal)
+    resetExerciseForm()
+    setShowAddForm(false)
+    setSelectedExercise(name)
+  }
+
+  function startMuscleSession(day: Weekday, group: ExerciseGroup) {
+    const items = exercisesForMuscle(plan[day], group).map((item) => {
+      const last = findLastExerciseLog(sessions, item.name)
+      const lastSet = last?.sets.find((s) => s.completed) ?? last?.sets[0]
+      return {
+        name: item.name,
+        sets: item.sets,
+        reps: item.reps,
+        weight: item.weight ?? lastSet?.weight,
+      }
+    })
+    startSessionWithExercises(`${WEEKDAY_LABELS[day]} · ${groupLabel(group)}`, items)
+    setView('workout')
+  }
+
+  function handleStartDayPlan(day: Weekday) {
+    const queue = muscleQueueForDay(plan[day])
+    if (queue.length === 0) return
+    const [first, ...remaining] = queue
+    setDayWorkoutFlow({ day, queue, remaining })
+    setReadyForNextMuscle(null)
+    startMuscleSession(day, first)
+  }
+
+  function handleContinueNextMuscle() {
+    if (!readyForNextMuscle || !dayWorkoutFlow) return
+    const { day, muscle } = readyForNextMuscle
+    setReadyForNextMuscle(null)
+    startMuscleSession(day, muscle)
+  }
+
+  function handleEndDayWorkout() {
+    if (readyForNextMuscle) {
+      setShowFinishSummary(readyForNextMuscle.lastSession)
+    }
+    setReadyForNextMuscle(null)
+    setDayWorkoutFlow(null)
+  }
+
   function handleAddExercise(e: FormEvent) {
     e.preventDefault()
     const setCount = parseInt(sets, 10)
@@ -183,186 +275,78 @@ export default function Tracker() {
     if (!exerciseName.trim() || setCount < 1 || repCount < 1) return
 
     addExercise(exerciseName, setCount, repCount, weightVal)
-    setExerciseName('')
-    setSets('4')
-    setReps('10')
-    setWeight('')
-    setExerciseQuery('')
+    resetExerciseForm()
     setShowAddForm(false)
     setSelectedExercise(exerciseName.trim())
   }
 
   function handleFinish() {
     const completed = finishSession()
-    if (completed) {
-      setShowFinishSummary(completed)
-      setView('workout')
+    if (!completed) return
+
+    if (dayWorkoutFlow && dayWorkoutFlow.remaining.length > 0) {
+      const [next, ...rest] = dayWorkoutFlow.remaining
+      setDayWorkoutFlow({ ...dayWorkoutFlow, remaining: rest })
+      setReadyForNextMuscle({
+        day: dayWorkoutFlow.day,
+        muscle: next,
+        lastSession: completed,
+      })
+      return
     }
+
+    setDayWorkoutFlow(null)
+    setShowFinishSummary(completed)
   }
 
-  function renderExerciseCard(exercise: TrackedExercise, index: number) {
-    const done = isExerciseComplete(exercise)
+  function renderExerciseCard(exercise: TrackedExercise) {
     const lastLog = findLastExerciseLog(sessions, exercise.name)
     const lastPerf = lastLog ? formatLastPerformance(lastLog) : null
 
     return (
       <li
         key={exercise.id}
-        className="rounded-2xl bg-surface p-3 ring-1 ring-border"
+        className="rounded-2xl bg-surface p-4 ring-1 ring-border"
       >
-        <div className="flex gap-3">
-          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-black">
-            {(() => {
-              const video = findVideoForExercise(exercise.name)
-              if (video?.available) {
-                return (
-                  <video
-                    src={video.videoPath}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="h-full w-full object-cover"
-                  />
-                )
-              }
-              return (
-                <img src={heroImage} alt="" className="h-full w-full object-cover opacity-60" />
-              )
-            })()}
-            <span className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-[10px] font-bold text-white">
-              {index + 1}
-            </span>
-          </div>
-
+        <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedExercise(exercise.name)
-                    setView('progress')
-                  }}
-                  className="truncate text-left font-semibold hover:underline"
-                >
-                  {exercise.name}
-                </button>
-                {lastPerf && (
-                  <p className="mt-0.5 text-xs text-muted">
-                    Last time: <span className="text-foreground">{lastPerf}</span>
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => removeExercise(exercise.id)}
-                  className="text-muted hover:text-red-500"
-                  aria-label={`Remove ${exercise.name}`}
-                >
-                  <Trash2 size={14} />
-                </button>
-                <div
-                  className={[
-                    'flex h-8 w-8 items-center justify-center rounded-full',
-                    done ? 'bg-accent text-accent-foreground' : 'bg-surface-elevated text-muted',
-                  ].join(' ')}
-                >
-                  <Check size={16} />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-3 space-y-2">
-              {exercise.sets.map((set, setIndex) => (
-                <div
-                  key={set.id}
-                  className={[
-                    'flex items-center gap-2 rounded-xl px-2 py-1.5',
-                    set.isWarmup ? 'bg-amber-500/10 ring-1 ring-amber-500/20' : 'bg-background/50',
-                  ].join(' ')}
-                >
-                  <span className="w-5 text-center text-[10px] font-medium text-muted">
-                    {setIndex + 1}
-                  </span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.5}
-                    value={set.weight ?? ''}
-                    onChange={(e) =>
-                      updateSet(
-                        exercise.id,
-                        set.id,
-                        set.reps,
-                        e.target.value ? parseFloat(e.target.value) : undefined,
-                      )
-                    }
-                    placeholder="kg"
-                    className="w-16 rounded-lg bg-surface px-2 py-1.5 text-center text-sm outline-none ring-1 ring-border"
-                  />
-                  <span className="text-xs text-muted">×</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={set.reps}
-                    onChange={(e) =>
-                      updateSet(
-                        exercise.id,
-                        set.id,
-                        parseInt(e.target.value, 10) || 1,
-                        set.weight,
-                      )
-                    }
-                    className="w-14 rounded-lg bg-surface px-2 py-1.5 text-center text-sm outline-none ring-1 ring-border"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => toggleSetWarmup(exercise.id, set.id)}
-                    className={[
-                      'rounded-lg px-2 py-1 text-[10px] font-medium',
-                      set.isWarmup ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300' : 'text-muted hover:bg-surface-elevated',
-                    ].join(' ')}
-                  >
-                    W
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleSetComplete(exercise.id, set.id, !!set.completed)}
-                    className={[
-                      'ml-auto flex h-8 w-8 items-center justify-center rounded-full transition',
-                      set.completed
-                        ? 'bg-accent text-accent-foreground'
-                        : 'bg-surface-elevated text-muted hover:text-foreground',
-                    ].join(' ')}
-                  >
-                    <Check size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeSet(exercise.id, set.id)}
-                    className="text-muted hover:text-red-500"
-                    aria-label={`Remove set ${setIndex + 1}`}
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  const last = exercise.sets[exercise.sets.length - 1]
-                  addSetToExercise(exercise.id, last?.reps ?? 10, last?.weight)
-                }}
-                className="flex w-full items-center justify-center gap-1 rounded-xl py-2 text-xs font-medium text-muted ring-1 ring-dashed ring-border hover:text-foreground"
-              >
-                <Plus size={12} />
-                Add set
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedExercise(exercise.name)
+                setView('progress')
+              }}
+              className="text-left text-base font-semibold leading-snug hover:underline"
+            >
+              {exercise.name}
+            </button>
+            {lastPerf && (
+              <p className="mt-1 text-xs text-muted">Last · {lastPerf}</p>
+            )}
           </div>
+          <button
+            type="button"
+            onClick={() => removeExercise(exercise.id)}
+            className="shrink-0 rounded-lg px-2 py-1 text-xs text-muted transition hover:bg-red-500/10 hover:text-red-500"
+            aria-label={`Remove ${exercise.name}`}
+          >
+            Remove
+          </button>
         </div>
+
+        <ExerciseSetTable
+          exercise={exercise}
+          lastLog={lastLog}
+          onUpdateSet={(setId, reps, weight) => updateSet(exercise.id, setId, reps, weight)}
+          onToggleComplete={(setId, completed) =>
+            handleToggleSetComplete(exercise.id, setId, completed)
+          }
+          onRemoveSet={(setId) => removeSet(exercise.id, setId)}
+          onAddSet={() => {
+            const last = exercise.sets[exercise.sets.length - 1]
+            addSetToExercise(exercise.id, last?.reps ?? 10, last?.weight)
+          }}
+        />
       </li>
     )
   }
@@ -389,10 +373,11 @@ export default function Tracker() {
         </button>
       </header>
 
-      <nav className="mx-5 mb-4 flex gap-1 rounded-2xl bg-surface p-1 ring-1 ring-border lg:mx-10">
+      <nav className="mx-5 mb-4 flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border lg:mx-10">
         {(
           [
             { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
+            { id: 'plan' as const, label: 'Plan', icon: Calendar },
             { id: 'history' as const, label: 'History', icon: History },
             { id: 'progress' as const, label: 'Progress', icon: BarChart3 },
           ] as const
@@ -404,7 +389,7 @@ export default function Tracker() {
             className={[
               'flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium transition',
               view === id
-                ? 'bg-foreground text-background'
+                ? 'bg-foreground text-background shadow-sm'
                 : 'text-muted hover:text-foreground',
             ].join(' ')}
           >
@@ -429,7 +414,7 @@ export default function Tracker() {
       )}
 
       {showFinishSummary && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
+        <div className="pb-modal-mobile fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
           <div className="w-full max-w-md rounded-3xl bg-surface p-6 ring-1 ring-border">
             <div className="flex items-start justify-between">
               <div>
@@ -669,30 +654,76 @@ export default function Tracker() {
         </section>
       )}
 
-      {view === 'workout' && !activeSession && (
+      {view === 'plan' && (
         <section className="px-5 pb-8 lg:px-10">
+          <WeeklyPlanPanel
+            plan={plan}
+            onAddMuscle={addMuscleToDay}
+            onRemoveMuscle={removeMuscleFromDay}
+            onAddExercise={addPlanExercise}
+            onRemoveExercise={removePlanExercise}
+            onStartDay={handleStartDayPlan}
+          />
+        </section>
+      )}
+
+      {view === 'workout' && !activeSession && !readyForNextMuscle && (
+        <section className="space-y-6 px-5 pb-8 lg:px-10">
+          {(() => {
+            const today = getTodayWeekday()
+            const todayPlan = plan[today]
+            const hasToday = todayPlan.muscles.some(
+              (g) => exercisesForMuscle(todayPlan, g).length > 0,
+            )
+            if (!hasToday) return null
+            return (
+              <button
+                type="button"
+                onClick={() => handleStartDayPlan(today)}
+                className="flex w-full items-center justify-between rounded-2xl bg-surface p-4 text-left ring-1 ring-border transition hover:ring-foreground/20"
+              >
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    Today&apos;s plan
+                  </p>
+                  <p className="mt-1 font-semibold">{WEEKDAY_LABELS[today]}</p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {todayPlan.muscles.length} muscle group{todayPlan.muscles.length === 1 ? '' : 's'}
+                  </p>
+                </div>
+                <span className="rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background">
+                  Start
+                </span>
+              </button>
+            )
+          })()}
+
           <div className="relative overflow-hidden rounded-3xl">
-            <img src={heroImage} alt="" className="h-56 w-full object-cover opacity-50" />
+            <img src={heroImage} alt="" className="h-48 w-full object-cover opacity-50" />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
             <div className="absolute inset-0 flex flex-col items-center justify-end p-8 text-center text-white">
               <p className="text-xs font-semibold uppercase tracking-widest text-white/70">
                 Ready to train
               </p>
               <h2 className="mt-2 text-2xl font-bold">Start your session</h2>
-              <p className="mt-2 max-w-xs text-sm text-white/70">
-                Log sets, track volume, and watch your strength grow over time.
-              </p>
               <Button
                 className="mt-6 w-full max-w-xs py-3.5"
                 onClick={() => startSession("Today's Workout")}
               >
-                Start Empty Workout
+                Start empty workout
               </Button>
+              <button
+                type="button"
+                onClick={() => setView('plan')}
+                className="mt-3 text-sm text-white/70 underline-offset-2 hover:text-white hover:underline"
+              >
+                Edit weekly plan
+              </button>
             </div>
           </div>
 
           {sessions.length > 0 && (
-            <div className="mt-6">
+            <div>
               <h3 className="mb-3 text-sm font-semibold text-muted">Repeat last workout</h3>
               <button
                 type="button"
@@ -710,6 +741,17 @@ export default function Tracker() {
             </div>
           )}
         </section>
+      )}
+
+      {view === 'workout' && !activeSession && readyForNextMuscle && (
+        <NextMuscleReady
+          day={readyForNextMuscle.day}
+          muscle={readyForNextMuscle.muscle}
+          plan={plan}
+          lastSession={readyForNextMuscle.lastSession}
+          onContinue={handleContinueNextMuscle}
+          onDone={handleEndDayWorkout}
+        />
       )}
 
       {view === 'workout' && activeSession && (
@@ -755,101 +797,90 @@ export default function Tracker() {
             <section className="mt-6 px-5 lg:px-0">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold">Exercises</h2>
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm((v) => !v)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface text-muted ring-1 ring-border hover:text-foreground"
-                  aria-label="Add exercise"
-                >
-                  <Plus size={16} />
-                </button>
+                {activeSession.exercises.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm((v) => !v)}
+                    className={[
+                      'flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium ring-1 ring-border transition',
+                      showAddForm
+                        ? 'bg-foreground text-background'
+                        : 'bg-surface text-muted hover:text-foreground',
+                    ].join(' ')}
+                    aria-label="Add exercise"
+                  >
+                    <Plus size={14} />
+                    Add
+                  </button>
+                )}
               </div>
 
-              {showAddForm && (
-                <form
-                  onSubmit={handleAddExercise}
-                  className="mt-4 rounded-2xl bg-surface p-4 ring-1 ring-border"
-                >
-                  <div className="relative">
-                    <Search size={16} className="absolute left-3 top-3.5 text-muted" />
-                    <input
-                      type="text"
-                      placeholder="Search exercises..."
-                      value={exerciseQuery || exerciseName}
-                      onChange={(e) => {
-                        setExerciseQuery(e.target.value)
-                        setExerciseName(e.target.value)
-                      }}
-                      className="w-full rounded-xl bg-background py-3 pl-9 pr-4 text-sm outline-none ring-1 ring-border"
-                      required
-                    />
-                  </div>
-                  {exerciseSuggestions.length > 0 && (
-                    <ul className="mt-2 max-h-36 overflow-y-auto rounded-xl bg-background ring-1 ring-border">
-                      {exerciseSuggestions.map((ex) => (
-                        <li key={ex.id}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setExerciseName(ex.name)
-                              setExerciseQuery(ex.name)
-                            }}
-                            className="block w-full px-3 py-2 text-left text-sm hover:bg-surface-elevated"
-                          >
-                            {ex.name}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      placeholder="Sets"
-                      value={sets}
-                      onChange={(e) => setSets(e.target.value)}
-                      className="rounded-xl bg-background px-3 py-2.5 text-center text-sm outline-none ring-1 ring-border"
-                    />
-                    <input
-                      type="number"
-                      min={1}
-                      placeholder="Reps"
-                      value={reps}
-                      onChange={(e) => setReps(e.target.value)}
-                      className="rounded-xl bg-background px-3 py-2.5 text-center text-sm outline-none ring-1 ring-border"
-                    />
-                    <input
-                      type="number"
-                      min={0}
-                      step={0.5}
-                      placeholder="kg"
-                      value={weight}
-                      onChange={(e) => setWeight(e.target.value)}
-                      className="rounded-xl bg-background px-3 py-2.5 text-center text-sm outline-none ring-1 ring-border"
-                    />
-                  </div>
-                  <Button type="submit" fullWidth className="mt-3 py-2.5">
-                    Add exercise
-                  </Button>
-                </form>
-              )}
-
               {activeSession.exercises.length === 0 ? (
-                <div className="mt-4 rounded-2xl bg-surface px-6 py-10 text-center ring-1 ring-border">
-                  <p className="text-muted">No exercises yet</p>
-                  <p className="mt-1 text-sm text-muted">Tap + to add your first exercise</p>
+                <div className="mt-4">
+                  <AddExerciseForm
+                    variant="prominent"
+                    exerciseName={exerciseName}
+                    exerciseQuery={exerciseQuery}
+                    sets={sets}
+                    reps={reps}
+                    weight={weight}
+                    suggestions={exerciseSuggestions}
+                    recentExercises={loggedExercises}
+                    onQueryChange={(v) => {
+                      setExerciseQuery(v)
+                      setExerciseName(v)
+                    }}
+                    onSetsChange={setSets}
+                    onRepsChange={setReps}
+                    onWeightChange={setWeight}
+                    onSelectExercise={(name) => {
+                      setExerciseName(name)
+                      setExerciseQuery(name)
+                    }}
+                    onQuickAdd={quickAddExercise}
+                    onSubmit={handleAddExercise}
+                  />
                 </div>
               ) : (
-                <ul className="mt-4 space-y-3">
-                  {activeSession.exercises.map((exercise, index) =>
-                    renderExerciseCard(exercise, index),
+                <>
+                  {showAddForm && (
+                    <div className="mt-4">
+                      <AddExerciseForm
+                        variant="compact"
+                        exerciseName={exerciseName}
+                        exerciseQuery={exerciseQuery}
+                        sets={sets}
+                        reps={reps}
+                        weight={weight}
+                        suggestions={exerciseSuggestions}
+                        recentExercises={loggedExercises}
+                        onQueryChange={(v) => {
+                          setExerciseQuery(v)
+                          setExerciseName(v)
+                        }}
+                        onSetsChange={setSets}
+                        onRepsChange={setReps}
+                        onWeightChange={setWeight}
+                        onSelectExercise={(name) => {
+                          setExerciseName(name)
+                          setExerciseQuery(name)
+                        }}
+                        onQuickAdd={quickAddExercise}
+                        onSubmit={handleAddExercise}
+                      />
+                    </div>
                   )}
-                </ul>
+
+                  <ul className="mt-4 space-y-3">
+                    {activeSession.exercises.map((exercise) =>
+                      renderExerciseCard(exercise),
+                    )}
+                  </ul>
+                </>
               )}
 
               {activeSession.exercises.length > 0 && (
-                <div className="mt-6 space-y-3 pb-8">
+                <div className="mt-6 space-y-3 pb-4 lg:pb-8">
                   <textarea
                     value={activeSession.note ?? ''}
                     onChange={(e) => updateSessionNote(e.target.value)}
@@ -891,7 +922,8 @@ export default function Tracker() {
               </div>
             ) : (
               <div className="rounded-2xl bg-surface p-6 text-center text-sm text-muted ring-1 ring-border">
-                Add an exercise to see its progress chart here.
+                <Dumbbell size={20} className="mx-auto mb-2 opacity-50" />
+                Add an exercise to see your progress chart.
               </div>
             )}
           </aside>

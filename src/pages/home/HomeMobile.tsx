@@ -94,7 +94,7 @@ export default function HomeMobile({
         </label>
       </header>
 
-      <div className="space-y-8 px-5 pb-8">
+      <div className="space-y-8 px-5 pb-4 lg:pb-8">
         <WorkoutCalendar sessions={sessions} />
 
         <div className="grid grid-cols-2 gap-2">

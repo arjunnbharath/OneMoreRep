@@ -83,6 +83,31 @@ export function useWorkoutTracker() {
     return session
   }
 
+  function startSessionWithExercises(
+    name: string,
+    items: { name: string; sets: number; reps: number; weight?: number }[],
+  ) {
+    const session: WorkoutSession = {
+      id: createId(),
+      name,
+      date: new Date().toISOString(),
+      startedAt: new Date().toISOString(),
+      note: '',
+      exercises: items.map((item) => ({
+        id: createId(),
+        name: item.name.trim(),
+        sets: Array.from({ length: Math.max(1, item.sets) }, () => ({
+          id: createId(),
+          reps: Math.max(1, item.reps),
+          weight: item.weight || undefined,
+          completed: false,
+        })),
+      })),
+    }
+    setActiveSession(session)
+    return session
+  }
+
   function addExercise(name: string, setCount: number, reps: number, weight?: number) {
     const sets: WorkoutSet[] = Array.from({ length: setCount }, () => ({
       id: createId(),
@@ -269,6 +294,7 @@ export function useWorkoutTracker() {
     activeSession,
     ready,
     startSession,
+    startSessionWithExercises,
     addExercise,
     removeExercise,
     addSetToExercise,

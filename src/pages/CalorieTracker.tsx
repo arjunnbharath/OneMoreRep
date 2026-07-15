@@ -17,9 +17,7 @@ import {
 } from 'lucide-react'
 import Button from '../components/Button'
 import {
-  CalorieRing,
-  MacroBar,
-  StatChip,
+  DailyCalorieSummary,
   sumByMeal,
   WeekStrip,
   WeeklyBarChart,
@@ -122,7 +120,7 @@ function OnboardingForm({ onComplete }: { onComplete: () => void }) {
   }
 
   return (
-    <div className="min-h-full bg-background px-5 py-10 lg:px-10">
+    <div className="min-h-full bg-background px-5 py-10 pb-4 lg:px-10 lg:pb-10">
       <div className="mx-auto max-w-lg">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-foreground text-background">
@@ -346,7 +344,7 @@ function SettingsPanel({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
+    <div className="pb-modal-mobile fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
       <div className="w-full max-w-md rounded-3xl bg-background p-6 ring-1 ring-border">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Edit targets</h2>
@@ -673,8 +671,6 @@ function DailyLog() {
   if (!profile) return null
 
   const isToday = selectedDate === toLocalDateKey()
-  const consumed = Math.round(dayTotals.calories)
-  const remaining = Math.max(0, profile.dailyCalorieTarget - consumed)
 
   function openAdd(meal: MealType) {
     setAddMeal(meal)
@@ -723,26 +719,17 @@ function DailyLog() {
             </button>
           )}
 
-          <div className="mt-6 rounded-3xl bg-surface p-5 ring-1 ring-border lg:p-6">
-            <div className="grid items-center gap-6 lg:grid-cols-[auto_1fr]">
-              <CalorieRing
-                consumed={dayTotals.calories}
-                target={profile.dailyCalorieTarget}
-                size="lg"
-              />
-              <div>
-                <div className="grid grid-cols-3 gap-2">
-                  <StatChip label="Eaten" value={consumed} sub="kcal" />
-                  <StatChip label="Left" value={remaining} sub="kcal" />
-                  <StatChip label="Target" value={profile.dailyCalorieTarget} sub="kcal" />
-                </div>
-                <div className="mt-5 space-y-3">
-                  <MacroBar label="Protein" current={dayTotals.protein} target={profile.proteinTargetG} color="protein" />
-                  <MacroBar label="Carbs" current={dayTotals.carbs} target={profile.carbsTargetG} color="carbs" />
-                  <MacroBar label="Fat" current={dayTotals.fat} target={profile.fatTargetG} color="fat" />
-                </div>
-              </div>
-            </div>
+          <div className="mt-6">
+            <DailyCalorieSummary
+              consumed={dayTotals.calories}
+              target={profile.dailyCalorieTarget}
+              protein={dayTotals.protein}
+              proteinTarget={profile.proteinTargetG}
+              carbs={dayTotals.carbs}
+              carbsTarget={profile.carbsTargetG}
+              fat={dayTotals.fat}
+              fatTarget={profile.fatTargetG}
+            />
           </div>
 
           <section className="mt-6 rounded-3xl bg-surface p-5 ring-1 ring-border">
@@ -781,7 +768,7 @@ function DailyLog() {
             </div>
           </div>
 
-          <div className="mt-4 space-y-3 pb-28 lg:pb-8">
+          <div className="mt-4 space-y-3 pb-4 lg:pb-8">
             {MEALS.map((meal) => {
               const Icon = meal.icon
               const mealLogs = dayLogs.filter((l) => l.mealType === meal.id)
@@ -879,7 +866,8 @@ function DailyLog() {
       <button
         type="button"
         onClick={() => openAdd(addMeal)}
-        className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition hover:scale-105 lg:hidden"
+        className="fixed right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition hover:scale-105 lg:hidden"
+        style={{ bottom: 'calc(var(--mobile-nav-height) + 1rem)' }}
         aria-label="Add food"
       >
         <Plus size={24} />
@@ -888,11 +876,13 @@ function DailyLog() {
       {showAdd && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/50 lg:hidden">
           <button type="button" className="flex-1" onClick={() => setShowAdd(false)} aria-label="Close" />
-          <AddFoodPanel
-            onClose={() => setShowAdd(false)}
-            dateKey={selectedDate}
-            defaultMeal={addMeal}
-          />
+          <div style={{ marginBottom: 'var(--mobile-nav-height)' }}>
+            <AddFoodPanel
+              onClose={() => setShowAdd(false)}
+              dateKey={selectedDate}
+              defaultMeal={addMeal}
+            />
+          </div>
         </div>
       )}
 

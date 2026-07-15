@@ -1,59 +1,118 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Calendar,
-  Dumbbell,
+  Activity,
+  ChevronRight,
   Flame,
   LogOut,
-  Mail,
   Moon,
   Sun,
   Trash2,
-  TrendingUp,
-  User,
 } from 'lucide-react'
-import Button from '../components/Button'
 import UserAvatar from '../components/UserAvatar'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import { useCalorieTracker } from '../hooks/useCalorieTracker'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
+import { toLocalDateKey } from '../lib/nutritionMath'
+import { getSessionDurationSeconds, sessionVolume } from '../lib/workoutProgress'
+import { computeStreak, toDateKey } from './home/homeUtils'
 
-function computeStreak(dates: string[]) {
-  if (dates.length === 0) return 0
-  const uniqueDays = [...new Set(dates.map((d) => d.slice(0, 10)))].sort().reverse()
-  let streak = 0
+function formatShortDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+function getWeekKeys() {
   const today = new Date()
-  for (let i = 0; i < uniqueDays.length; i++) {
-    const expected = new Date(today)
-    expected.setDate(today.getDate() - i)
-    const expectedKey = expected.toISOString().slice(0, 10)
-    if (uniqueDays.includes(expectedKey)) streak++
-    else break
-  }
-  return streak
+  const mondayOffset = (today.getDay() + 6) % 7
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - mondayOffset)
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
+    return toDateKey(d)
+  })
+}
+
+function SettingsRow({
+  icon,
+  label,
+  value,
+  onClick,
+  destructive,
+}: {
+  icon: ReactNode
+  label: string
+  value?: string
+  onClick?: () => void
+  destructive?: boolean
+}) {
+  const Tag = onClick ? 'button' : 'div'
+  return (
+    <Tag
+      type={onClick ? 'button' : undefined}
+      onClick={onClick}
+      className={[
+        'flex w-full items-center gap-3 px-4 py-3.5 text-left transition',
+        onClick ? 'hover:bg-surface-elevated/80 active:bg-surface-elevated' : '',
+      ].join(' ')}
+    >
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span
+          className={[
+            'block text-sm font-medium',
+            destructive ? 'text-red-600 dark:text-red-400' : '',
+          ].join(' ')}
+        >
+          {label}
+        </span>
+        {value && <span className="block truncate text-xs text-muted">{value}</span>}
+      </span>
+      {onClick && !destructive && <ChevronRight size={16} className="shrink-0 text-muted" />}
+    </Tag>
+  )
 }
 
 export default function Profile() {
   const navigate = useNavigate()
   const { user, logout, deleteAccount } = useAuth()
-  const { isDark, toggleTheme } = useTheme()
+  const { isDark, setTheme } = useTheme()
   const { sessions } = useWorkoutTracker()
+  const { profile: nutritionProfile, logs, ready: nutritionReady } = useCalorieTracker()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
 
   const firstName = user?.name?.split(' ')[0] ?? 'Athlete'
+  const todayKey = toLocalDateKey()
 
   const stats = useMemo(() => {
-    const completed = sessions.length
-    const minutes = completed > 0
-      ? sessions.reduce((sum, s) => sum + Math.max(s.exercises.length * 8, 15), 0)
-      : 0
-    const calories = completed > 0 ? Math.round(minutes * 10.8) : 0
+    const workouts = sessions.length
     const streak = computeStreak(sessions.map((s) => s.date))
+    const minutes = sessions.reduce(
+      (sum, s) => sum + Math.floor(getSessionDurationSeconds(s) / 60),
+      0,
+    )
+    const todayCals =
+      nutritionReady && nutritionProfile?.onboarded
+        ? logs
+            .filter((e) => toLocalDateKey(new Date(e.loggedAt)) === todayKey)
+            .reduce((sum, e) => sum + e.calories, 0)
+        : null
 
-    return { completed, minutes, calories, streak }
+    return { workouts, streak, minutes, todayCals }
+  }, [sessions, logs, nutritionReady, nutritionProfile, todayKey])
+
+  const workoutDays = useMemo(() => {
+    const set = new Set(sessions.map((s) => toDateKey(new Date(s.date))))
+    return set
   }, [sessions])
+
+  const weekKeys = useMemo(() => getWeekKeys(), [])
+  const recentSessions = sessions.slice(0, 3)
 
   async function handleDelete() {
     setError('')
@@ -67,153 +126,251 @@ export default function Profile() {
     }
   }
 
-  function handleLogout() {
-    logout()
-    navigate('/login')
-  }
-
   return (
     <div className="min-h-full bg-background text-foreground">
-      <header className="px-5 pt-8 lg:px-10">
-        <div className="flex items-center gap-2">
-          <Dumbbell size={20} />
-          <span className="text-xs font-bold tracking-widest text-muted">PROFILE</span>
-        </div>
-        <h1 className="mt-2 text-2xl font-bold lg:text-3xl">Hey, {firstName}</h1>
-        <p className="mt-1 text-sm text-muted">Manage your account & preferences</p>
-      </header>
-
-      <div className="mt-8 px-5 lg:px-10">
-        <div className="relative overflow-hidden rounded-3xl bg-surface p-6 ring-1 ring-border">
-          <div className="relative flex items-center gap-4">
-            <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} size="lg" />
-            <div className="min-w-0">
-              <h2 className="truncate text-xl font-bold">{user?.name}</h2>
-              <p className="mt-0.5 truncate text-sm text-muted">{user?.email}</p>
-              <span className="mt-2 inline-block rounded-full bg-foreground/10 px-3 py-0.5 text-xs font-semibold">
-                Member
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <section className="mt-6 grid grid-cols-2 gap-3">
-          {[
-            { icon: Dumbbell, value: stats.completed, label: 'Workouts' },
-            { icon: Flame, value: stats.calories, label: 'Calories' },
-            { icon: Calendar, value: stats.minutes, label: 'Minutes' },
-            { icon: TrendingUp, value: stats.streak, label: 'Day streak' },
-          ].map(({ icon: Icon, value, label }) => (
-            <div
-              key={label}
-              className="rounded-2xl bg-surface px-4 py-4 ring-1 ring-border"
-            >
-              <Icon size={16} className="text-foreground" />
-              <p className="mt-2 text-xl font-bold">{value}</p>
-              <p className="text-xs text-muted">{label}</p>
-            </div>
-          ))}
-        </section>
-
-        <section className="mt-8">
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted">
-            Settings
-          </h3>
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="flex w-full items-center justify-between rounded-2xl bg-surface px-4 py-4 ring-1 ring-border transition hover:ring-foreground/20"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-elevated">
-                  {isDark ? <Sun size={18} /> : <Moon size={18} />}
-                </div>
-                <div className="text-left">
-                  <p className="font-medium">Appearance</p>
-                  <p className="text-xs text-muted">{isDark ? 'Dark' : 'Light'}</p>
-                </div>
-              </div>
-              <div
-                className={[
-                  'relative h-7 w-12 rounded-full transition-colors',
-                  isDark ? 'bg-accent' : 'bg-border',
-                ].join(' ')}
-              >
-                <span
-                  className={[
-                    'absolute top-0.5 h-6 w-6 rounded-full bg-background transition-transform',
-                    isDark ? 'left-5' : 'left-0.5',
-                  ].join(' ')}
-                />
-              </div>
-            </button>
-
-            <div className="flex items-center gap-4 rounded-2xl bg-surface px-4 py-4 ring-1 ring-border">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-elevated">
-                <User size={18} className="text-muted" />
-              </div>
-              <div>
-                <p className="text-xs text-muted">Full name</p>
-                <p className="font-medium">{user?.name}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 rounded-2xl bg-surface px-4 py-4 ring-1 ring-border">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-elevated">
-                <Mail size={18} className="text-muted" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-muted">Email</p>
-                <p className="truncate font-medium">{user?.email}</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="mt-8 space-y-3 pb-8">
-          <Button variant="outline" fullWidth className="gap-2 py-3.5" onClick={handleLogout}>
-            <LogOut size={18} />
-            Log out
-          </Button>
-
-          {!showDeleteConfirm ? (
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 py-3.5 text-sm font-semibold text-red-600 transition hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50"
-            >
-              <Trash2 size={18} />
-              Delete account
-            </button>
-          ) : (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/30">
-              <p className="text-sm font-semibold text-red-600 dark:text-red-400">Delete your account?</p>
-              <p className="mt-1 text-sm text-red-600/80 dark:text-red-400/70">
-                This permanently removes your account and cannot be undone.
-              </p>
-              {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
-              <div className="mt-4 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  disabled={deleting}
-                  className="flex-1 rounded-xl bg-surface-elevated py-2.5 text-sm font-semibold transition hover:opacity-80"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
-                >
-                  {deleting ? 'Deleting...' : 'Yes, delete'}
-                </button>
-              </div>
-            </div>
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-[#0a0a0a] px-5 pb-16 pt-10 text-white dark:bg-[#0c0c0e] lg:px-10 lg:pt-12">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/40 dark:from-white/5 dark:to-black/60" />
+        <div className="relative mx-auto max-w-lg text-center lg:max-w-2xl">
+          <UserAvatar
+            name={user?.name}
+            avatarUrl={user?.avatarUrl}
+            size="xl"
+            className="mx-auto ring-2 ring-white/20"
+          />
+          <h1 className="mt-5 text-2xl font-semibold tracking-tight">{user?.name}</h1>
+          <p className="mt-1 text-sm text-white/55">{user?.email}</p>
+          {stats.streak > 0 && (
+            <p className="mt-4 text-xs font-medium tracking-wide text-white/70">
+              {stats.streak} day streak · keep it going, {firstName}
+            </p>
           )}
         </div>
+      </section>
+
+      {/* Floating stats */}
+      <div className="relative z-10 mx-auto -mt-10 max-w-lg px-5 lg:max-w-2xl">
+        <div className="grid grid-cols-3 gap-2 rounded-2xl bg-surface p-1 shadow-lg ring-1 ring-border">
+          {[
+            { value: stats.workouts, label: 'Workouts' },
+            { value: stats.minutes, label: 'Minutes' },
+            {
+              value:
+                nutritionProfile?.onboarded && stats.todayCals !== null
+                  ? stats.todayCals
+                  : stats.streak,
+              label:
+                nutritionProfile?.onboarded && stats.todayCals !== null
+                  ? 'Kcal today'
+                  : 'Streak',
+            },
+          ].map(({ value, label }) => (
+            <div key={label} className="rounded-xl px-2 py-4 text-center">
+              <p className="text-xl font-semibold tabular-nums">{value}</p>
+              <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
+                {label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-lg space-y-6 px-5 pb-4 pt-8 lg:max-w-2xl lg:pb-8">
+        {/* This week */}
+        <section>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+            This week
+          </h2>
+          <div className="flex justify-between gap-1 rounded-2xl bg-surface px-4 py-4 ring-1 ring-border">
+            {weekKeys.map((key) => {
+              const [, , d] = key.split('-').map(Number)
+              const active = workoutDays.has(key)
+              const isToday = key === toDateKey(new Date())
+              return (
+                <div key={key} className="flex flex-col items-center gap-2">
+                  <span className="text-[10px] font-medium text-muted">
+                    {new Date(key + 'T12:00:00').toLocaleDateString('en-US', {
+                      weekday: 'narrow',
+                    })}
+                  </span>
+                  <span
+                    className={[
+                      'flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold tabular-nums',
+                      active
+                        ? 'bg-foreground text-background'
+                        : 'bg-background text-muted ring-1 ring-border',
+                      isToday && !active ? 'text-red-500 ring-red-500/30' : '',
+                    ].join(' ')}
+                  >
+                    {d}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* Recent */}
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+              Recent
+            </h2>
+            {sessions.length > 0 && (
+              <button
+                type="button"
+                onClick={() => navigate('/tracker')}
+                className="text-xs font-medium text-muted hover:text-foreground"
+              >
+                See all
+              </button>
+            )}
+          </div>
+
+          {recentSessions.length === 0 ? (
+            <button
+              type="button"
+              onClick={() => navigate('/tracker')}
+              className="flex w-full items-center gap-3 rounded-2xl bg-surface p-4 text-left ring-1 ring-border transition hover:ring-foreground/15"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-foreground text-background">
+                <Activity size={18} />
+              </span>
+              <span>
+                <span className="block text-sm font-semibold">Start your first workout</span>
+                <span className="mt-0.5 block text-xs text-muted">Log sets and track progress</span>
+              </span>
+              <ChevronRight size={16} className="ml-auto text-muted" />
+            </button>
+          ) : (
+            <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+              {recentSessions.map((session, i) => {
+                const vol = sessionVolume(session)
+                return (
+                  <button
+                    key={session.id}
+                    type="button"
+                    onClick={() => navigate('/tracker')}
+                    className={[
+                      'flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-elevated/60',
+                      i > 0 ? 'border-t border-border' : '',
+                    ].join(' ')}
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-xs font-bold ring-1 ring-border">
+                      {session.exercises.length}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{session.name}</span>
+                      <span className="block text-xs text-muted">
+                        {formatShortDate(session.date)}
+                        {vol > 0 ? ` · ${vol.toLocaleString()} kg` : ''}
+                      </span>
+                    </span>
+                    <ChevronRight size={14} className="shrink-0 text-muted" />
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Nutrition nudge */}
+        {nutritionReady && !nutritionProfile?.onboarded && (
+          <button
+            type="button"
+            onClick={() => navigate('/calories')}
+            className="flex w-full items-center gap-3 rounded-2xl bg-surface p-4 text-left ring-1 ring-border transition hover:ring-foreground/15"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-background ring-1 ring-border">
+              <Flame size={18} />
+            </span>
+            <span className="flex-1">
+              <span className="block text-sm font-semibold">Set up calorie tracking</span>
+              <span className="mt-0.5 block text-xs text-muted">Goals, macros, and daily logs</span>
+            </span>
+            <ChevronRight size={16} className="text-muted" />
+          </button>
+        )}
+
+        {/* Settings */}
+        <section>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+            Settings
+          </h2>
+          <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-background">
+                  {isDark ? <Moon size={16} /> : <Sun size={16} />}
+                </span>
+                <span className="text-sm font-medium">Appearance</span>
+              </div>
+              <div className="flex rounded-xl bg-background p-0.5 ring-1 ring-border">
+                {(['light', 'dark'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setTheme(mode)}
+                    className={[
+                      'rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition',
+                      (mode === 'dark') === isDark
+                        ? 'bg-foreground text-background'
+                        : 'text-muted',
+                    ].join(' ')}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-b border-border">
+              <SettingsRow icon={<LogOut size={16} />} label="Log out" onClick={() => {
+                logout()
+                navigate('/login')
+              }} />
+            </div>
+
+            {!showDeleteConfirm ? (
+              <SettingsRow
+                icon={<Trash2 size={16} />}
+                label="Delete account"
+                destructive
+                onClick={() => setShowDeleteConfirm(true)}
+              />
+            ) : (
+              <div className="border-t border-border bg-red-50/80 p-4 dark:bg-red-950/20">
+                <p className="text-sm font-medium text-red-600 dark:text-red-400">
+                  Permanently delete your account?
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  All workouts, calories, and progress will be erased.
+                </p>
+                {error && (
+                  <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>
+                )}
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={deleting}
+                    className="flex-1 rounded-xl bg-background py-2.5 text-sm font-medium ring-1 ring-border"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {deleting ? 'Deleting…' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   )
