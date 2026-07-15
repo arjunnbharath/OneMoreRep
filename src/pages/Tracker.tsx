@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import {
-  ArrowLeft,
   BarChart3,
   Calendar,
   Clock,
@@ -12,7 +11,6 @@ import {
   History,
   Plus,
   Star,
-  Timer,
   Trash2,
   Trophy,
   Weight,
@@ -98,7 +96,7 @@ type DayWorkoutFlow = {
 }
 
 export default function Tracker() {
-  const navigate = useNavigate()
+  const location = useLocation()
   const {
     sessions,
     activeSession,
@@ -127,6 +125,7 @@ export default function Tracker() {
   } = useWorkoutPlan()
 
   const [view, setView] = useState<View>('workout')
+  const [planSwipeHintKey, setPlanSwipeHintKey] = useState(0)
   const [dayWorkoutFlow, setDayWorkoutFlow] = useState<DayWorkoutFlow | null>(null)
   const [readyForNextMuscle, setReadyForNextMuscle] = useState<{
     day: Weekday
@@ -145,6 +144,12 @@ export default function Tracker() {
   const [sets, setSets] = useState('4')
   const [reps, setReps] = useState('10')
   const [weight, setWeight] = useState('')
+
+  useEffect(() => {
+    if (view === 'plan') {
+      setPlanSwipeHintKey((key) => key + 1)
+    }
+  }, [view])
 
   useEffect(() => {
     if (!activeSession || activeSession.completedAt) return
@@ -251,6 +256,23 @@ export default function Tracker() {
     startMuscleSession(day, first)
   }
 
+  const handleStartDayPlanRef = useRef(handleStartDayPlan)
+  handleStartDayPlanRef.current = handleStartDayPlan
+
+  useEffect(() => {
+    const state = location.state as { view?: View; startDay?: Weekday } | null
+    if (!state?.view && !state?.startDay) return
+
+    if (state.view === 'plan') setView('plan')
+    if (state.startDay) handleStartDayPlanRef.current(state.startDay)
+
+    window.history.replaceState(
+      null,
+      '',
+      `${location.pathname}${location.search}${location.hash}`,
+    )
+  }, [location.pathname, location.search, location.hash, location.state])
+
   function handleContinueNextMuscle() {
     if (!readyForNextMuscle || !dayWorkoutFlow) return
     const { day, muscle } = readyForNextMuscle
@@ -352,28 +374,45 @@ export default function Tracker() {
   }
 
   return (
-    <div className="min-h-full bg-background text-foreground">
-      <header className="flex items-center justify-between px-5 py-4 lg:px-10">
-        <button
-          type="button"
-          onClick={() => navigate('/home')}
-          aria-label="Back to home"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-muted transition hover:bg-surface hover:text-foreground"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-base font-semibold">Progress Tracker</h1>
-        <button
-          type="button"
-          onClick={() => setRestSeconds(90)}
-          aria-label="Rest timer"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-muted transition hover:bg-surface hover:text-foreground"
-        >
-          <Timer size={20} />
-        </button>
+    <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-7xl">
+      <header className="hidden border-b border-border lg:block lg:px-10 lg:py-6">
+        <div className="flex items-center justify-between gap-8">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+              Training
+            </p>
+            <h1 className="text-2xl font-semibold tracking-tight">Progress</h1>
+          </div>
+
+          <nav className="flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border">
+            {(
+              [
+                { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
+                { id: 'plan' as const, label: 'Plan', icon: Calendar },
+                { id: 'history' as const, label: 'History', icon: History },
+                { id: 'progress' as const, label: 'Progress', icon: BarChart3 },
+              ] as const
+            ).map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setView(id)}
+                className={[
+                  'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition',
+                  view === id
+                    ? 'bg-foreground text-background shadow-sm'
+                    : 'text-muted hover:text-foreground',
+                ].join(' ')}
+              >
+                <Icon size={15} />
+                {label}
+              </button>
+            ))}
+          </nav>
+        </div>
       </header>
 
-      <nav className="mx-5 mb-4 flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border lg:mx-10">
+      <nav className="mx-5 mb-4 mt-5 flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border lg:hidden">
         {(
           [
             { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
@@ -576,7 +615,7 @@ export default function Tracker() {
 
       {view === 'progress' && (
         <section className="px-5 pb-8 lg:px-10">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+          <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-8">
             <div>
               <label className="text-sm font-medium text-muted">Exercise</label>
               <select
@@ -594,7 +633,7 @@ export default function Tracker() {
 
               {selectedExercise && (
                 <div className="mt-4">
-                  <ExerciseHistoryChart points={exerciseHistory} height={220} />
+                  <ExerciseHistoryChart points={exerciseHistory} height={300} />
                 </div>
               )}
 
@@ -620,7 +659,7 @@ export default function Tracker() {
             </div>
 
             {selectedExercise && (
-              <div className="mt-6 lg:mt-8">
+              <div className="mt-6 lg:mt-0">
                 <h3 className="mb-3 text-sm font-semibold">Session history</h3>
                 {exerciseHistory.length === 0 ? (
                   <p className="text-sm text-muted">No logged sets yet.</p>
@@ -655,20 +694,23 @@ export default function Tracker() {
       )}
 
       {view === 'plan' && (
-        <section className="px-5 pb-8 lg:px-10">
-          <WeeklyPlanPanel
+        <section className="overflow-x-hidden px-5 pb-8 lg:px-10">
+          <div className="lg:max-w-4xl">
+            <WeeklyPlanPanel
             plan={plan}
             onAddMuscle={addMuscleToDay}
             onRemoveMuscle={removeMuscleFromDay}
             onAddExercise={addPlanExercise}
             onRemoveExercise={removePlanExercise}
             onStartDay={handleStartDayPlan}
+            swipeHintKey={planSwipeHintKey}
           />
+          </div>
         </section>
       )}
 
       {view === 'workout' && !activeSession && !readyForNextMuscle && (
-        <section className="space-y-6 px-5 pb-8 lg:px-10">
+        <section className="space-y-6 px-5 pb-8 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:px-10">
           {(() => {
             const today = getTodayWeekday()
             const todayPlan = plan[today]
@@ -914,7 +956,7 @@ export default function Tracker() {
                     sessions,
                     selectedExercise || activeSession.exercises[0]?.name || '',
                   )}
-                  height={260}
+                  height={300}
                 />
                 <p className="mt-2 text-xs text-muted">
                   Est. 1RM uses the Epley formula. Warmup sets are excluded from volume.

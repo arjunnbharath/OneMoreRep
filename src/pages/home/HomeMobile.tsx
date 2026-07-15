@@ -1,12 +1,15 @@
 import type { RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Play, Search } from 'lucide-react'
+import { ArrowRight, Play } from 'lucide-react'
 import WorkoutCard from '../../components/WorkoutCard'
 import WorkoutCalendar from '../../components/WorkoutCalendar'
 import UserAvatar from '../../components/UserAvatar'
+import TodayPlanCard from '../../components/home/TodayPlanCard'
 import { exerciseGuides } from '../../data/exerciseGuides'
 import { findVideoForExercise } from '../../data/workoutVideos'
+import { getTodayWeekday } from '../../lib/workoutPlan'
 import type { MuscleGroup, Workout } from '../../data/mockData'
+import type { WeeklyPlan } from '../../types/workoutPlan'
 import type { HomeFilter } from './homeTypes'
 
 interface HomeMobileProps {
@@ -15,8 +18,7 @@ interface HomeMobileProps {
   avatarUrl?: string | null
   stats: { completed: number; minutes: number; streak: number }
   sessions: import('../../types/tracker').WorkoutSession[]
-  search: string
-  onSearchChange: (value: string) => void
+  plan: WeeklyPlan
   activeFilter: MuscleGroup | 'all'
   onFilterChange: (filter: MuscleGroup | 'all') => void
   homeFilters: HomeFilter[]
@@ -32,8 +34,7 @@ export default function HomeMobile({
   avatarUrl,
   stats,
   sessions,
-  search,
-  onSearchChange,
+  plan,
   activeFilter,
   onFilterChange,
   homeFilters,
@@ -82,16 +83,15 @@ export default function HomeMobile({
           ))}
         </div>
 
-        <label className="mt-5 flex items-center gap-3 rounded-2xl bg-surface px-4 py-3 ring-1 ring-border">
-          <Search size={17} className="shrink-0 text-muted" />
-          <input
-            type="search"
-            placeholder="Search workouts"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-transparent text-sm outline-none placeholder:text-muted"
+        <div className="mt-5 overflow-x-hidden">
+          <TodayPlanCard
+            plan={plan}
+            onPlan={() => navigate('/tracker', { state: { view: 'plan' } })}
+            onStart={() =>
+              navigate('/tracker', { state: { startDay: getTodayWeekday() } })
+            }
           />
-        </label>
+        </div>
       </header>
 
       <div className="space-y-8 px-5 pb-4 lg:pb-8">

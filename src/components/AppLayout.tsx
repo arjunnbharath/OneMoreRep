@@ -59,8 +59,8 @@ export default function AppLayout() {
         <p className="px-2 text-[11px] text-muted">Train hard. Track everything.</p>
       </aside>
 
-      <div className="flex min-h-dvh flex-1 flex-col">
-        <main className="flex-1 lg:pb-8">
+      <div className="flex min-h-dvh flex-1 flex-col overflow-x-hidden">
+        <main className="flex-1 overflow-x-hidden lg:pb-8">
           <Outlet />
         </main>
         <div className="mobile-nav-spacer lg:hidden" aria-hidden="true" />

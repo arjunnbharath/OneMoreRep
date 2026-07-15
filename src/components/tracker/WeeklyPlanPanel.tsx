@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { ArrowLeft, ChevronRight, Plus } from 'lucide-react'
 import Button from '../Button'
+import SwipeablePlanDayCard, { SWIPE_HINT_TOTAL_MS } from '../plan/SwipeablePlanDayCard'
 import {
   exerciseGroupLabels,
   exerciseGuides,
@@ -15,7 +15,6 @@ import {
   muscleExerciseCount,
   PLAN_GROUPS,
   WEEKDAY_LABELS,
-  WEEKDAY_SHORT,
 } from '../../lib/workoutPlan'
 import { WEEKDAYS, type PlanExercise, type Weekday, type WeeklyPlan } from '../../types/workoutPlan'
 
@@ -38,19 +37,24 @@ interface WeeklyPlanPanelProps {
   ) => void
   onRemoveExercise: (day: Weekday, group: ExerciseGroup, exerciseId: string) => void
   onStartDay: (day: Weekday) => void
+  swipeHintKey?: number
 }
 
 function WeekGrid({
   plan,
   onSelectDay,
+  onStartDay,
+  playSwipeHint = false,
 }: {
   plan: WeeklyPlan
   onSelectDay: (day: Weekday) => void
+  onStartDay: (day: Weekday) => void
+  playSwipeHint?: boolean
 }) {
   const today = getTodayWeekday()
 
   return (
-    <ul className="space-y-3">
+    <ul className="space-y-3 overflow-x-hidden">
       {WEEKDAYS.map((day) => {
         const dayPlan = plan[day]
         const muscles = dayPlan.muscles
@@ -60,17 +64,19 @@ function WeekGrid({
           (sum, g) => sum + muscleExerciseCount(dayPlan, g),
           0,
         )
+        const canStart = muscles.some((g) => muscleExerciseCount(dayPlan, g) > 0)
 
         return (
-          <li key={day}>
-            <button
-              type="button"
-              onClick={() => onSelectDay(day)}
-              className={[
-                'group relative w-full overflow-hidden rounded-2xl text-left transition active:scale-[0.99]',
-                isToday ? 'ring-2 ring-foreground ring-offset-2 ring-offset-background' : '',
-              ].join(' ')}
-            >
+          <SwipeablePlanDayCard
+            key={day}
+            as="li"
+            day={day}
+            canStart={canStart}
+            isToday={isToday}
+            playHint={playSwipeHint && isToday}
+            onSelect={() => onSelectDay(day)}
+            onStart={() => onStartDay(day)}
+          >
               <img
                 src={imageForDayPlan(day, dayPlan)}
                 alt=""
@@ -79,11 +85,8 @@ function WeekGrid({
               <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/75 to-black/55" />
 
               <div className="relative flex min-h-[5.5rem] items-center gap-3 px-4 py-4 text-white">
-                <div className="w-11 shrink-0">
-                  <p className="text-lg font-bold leading-none">{WEEKDAY_SHORT[day]}</p>
-                  <p className="mt-1 text-[10px] font-medium text-white/60">
-                    {WEEKDAY_LABELS[day]}
-                  </p>
+                <div className="shrink-0">
+                  <p className="text-base font-bold leading-tight">{WEEKDAY_LABELS[day]}</p>
                   {isToday && (
                     <span className="mt-1.5 inline-block rounded-full bg-white px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-black">
                       Today
@@ -117,8 +120,7 @@ function WeekGrid({
 
                 <ChevronRight size={18} className="shrink-0 text-white/50" />
               </div>
-            </button>
-          </li>
+          </SwipeablePlanDayCard>
         )
       })}
     </ul>
@@ -368,8 +370,24 @@ export default function WeeklyPlanPanel({
   onAddExercise,
   onRemoveExercise,
   onStartDay,
+  swipeHintKey = 0,
 }: WeeklyPlanPanelProps) {
   const [screen, setScreen] = useState<Screen>({ step: 'week' })
+  const [playSwipeHint, setPlaySwipeHint] = useState(false)
+
+  useEffect(() => {
+    if (screen.step !== 'week' || !swipeHintKey) return
+    if (window.matchMedia('(min-width: 1024px)').matches) return
+
+    setPlaySwipeHint(false)
+    const frame = window.requestAnimationFrame(() => setPlaySwipeHint(true))
+    const reset = window.setTimeout(() => setPlaySwipeHint(false), SWIPE_HINT_TOTAL_MS + 200)
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(reset)
+    }
+  }, [screen.step, swipeHintKey])
 
   if (screen.step === 'muscle') {
     return (
@@ -401,7 +419,12 @@ export default function WeeklyPlanPanel({
   return (
     <div className="space-y-3">
       <h2 className="text-xl font-bold">Weekly plan</h2>
-      <WeekGrid plan={plan} onSelectDay={(day) => setScreen({ step: 'day', day })} />
+      <WeekGrid
+        plan={plan}
+        onSelectDay={(day) => setScreen({ step: 'day', day })}
+        onStartDay={onStartDay}
+        playSwipeHint={playSwipeHint}
+      />
     </div>
   )
 }

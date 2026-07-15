@@ -6,16 +6,18 @@ import {
   Calendar,
   Clock,
   Play,
-  Search,
   TrendingUp,
 } from 'lucide-react'
 import WorkoutCard from '../../components/WorkoutCard'
 import WorkoutCalendar from '../../components/WorkoutCalendar'
 import UserAvatar from '../../components/UserAvatar'
+import TodayPlanCard from '../../components/home/TodayPlanCard'
 import { exerciseGuides } from '../../data/exerciseGuides'
 import { findVideoForExercise } from '../../data/workoutVideos'
+import { getTodayWeekday } from '../../lib/workoutPlan'
 import type { MuscleGroup, Workout } from '../../data/mockData'
 import type { WorkoutSession } from '../../types/tracker'
+import type { WeeklyPlan } from '../../types/workoutPlan'
 import type { HomeFilter } from './homeTypes'
 
 interface HomeDesktopProps {
@@ -24,8 +26,7 @@ interface HomeDesktopProps {
   avatarUrl?: string | null
   stats: { completed: number; minutes: number; streak: number }
   sessions: WorkoutSession[]
-  search: string
-  onSearchChange: (value: string) => void
+  plan: WeeklyPlan
   activeFilter: MuscleGroup | 'all'
   onFilterChange: (filter: MuscleGroup | 'all') => void
   homeFilters: HomeFilter[]
@@ -42,8 +43,7 @@ export default function HomeDesktop({
   avatarUrl,
   stats,
   sessions,
-  search,
-  onSearchChange,
+  plan,
   activeFilter,
   onFilterChange,
   homeFilters,
@@ -76,17 +76,7 @@ export default function HomeDesktop({
             </h1>
           </div>
 
-          <div className="flex flex-1 items-center justify-end gap-4">
-            <label className="flex w-full max-w-md items-center gap-3 rounded-xl bg-surface px-4 py-2.5 ring-1 ring-border">
-              <Search size={17} className="text-muted" />
-              <input
-                type="search"
-                placeholder="Search workouts, muscle groups..."
-                value={search}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full bg-transparent text-sm outline-none placeholder:text-muted"
-              />
-            </label>
+          <div className="flex items-center justify-end gap-4">
             <button
               type="button"
               onClick={() => navigate('/profile')}
@@ -96,6 +86,16 @@ export default function HomeDesktop({
               <UserAvatar name={userName} avatarUrl={avatarUrl} size="md" />
             </button>
           </div>
+        </div>
+
+        <div className="mt-6 max-w-xl overflow-x-hidden">
+          <TodayPlanCard
+            plan={plan}
+            onPlan={() => navigate('/tracker', { state: { view: 'plan' } })}
+            onStart={() =>
+              navigate('/tracker', { state: { startDay: getTodayWeekday() } })
+            }
+          />
         </div>
       </div>
 

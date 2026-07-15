@@ -128,29 +128,55 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-full bg-background text-foreground">
+    <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-6xl">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-[#0a0a0a] px-5 pb-16 pt-10 text-white dark:bg-[#0c0c0e] lg:px-10 lg:pt-12">
+      <section className="relative overflow-hidden bg-[#0a0a0a] px-5 pb-16 pt-10 text-white dark:bg-[#0c0c0e] lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pb-12 lg:pt-12">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/40 dark:from-white/5 dark:to-black/60" />
-        <div className="relative mx-auto max-w-lg text-center lg:max-w-2xl">
+        <div className="relative mx-auto flex max-w-lg flex-col items-center text-center lg:mx-0 lg:max-w-none lg:flex-1 lg:flex-row lg:items-center lg:gap-8 lg:text-left">
           <UserAvatar
             name={user?.name}
             avatarUrl={user?.avatarUrl}
             size="xl"
-            className="mx-auto ring-2 ring-white/20"
+            className="mx-auto ring-2 ring-white/20 lg:mx-0"
           />
-          <h1 className="mt-5 text-2xl font-semibold tracking-tight">{user?.name}</h1>
-          <p className="mt-1 text-sm text-white/55">{user?.email}</p>
-          {stats.streak > 0 && (
-            <p className="mt-4 text-xs font-medium tracking-wide text-white/70">
-              {stats.streak} day streak · keep it going, {firstName}
-            </p>
-          )}
+          <div className="mt-5 lg:mt-0">
+            <h1 className="text-2xl font-semibold tracking-tight">{user?.name}</h1>
+            <p className="mt-1 text-sm text-white/55">{user?.email}</p>
+            {stats.streak > 0 && (
+              <p className="mt-4 text-xs font-medium tracking-wide text-white/70">
+                {stats.streak} day streak · keep it going, {firstName}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="relative z-10 mx-auto mt-8 hidden w-full max-w-md grid-cols-3 gap-2 rounded-2xl bg-white/10 p-2 backdrop-blur-sm lg:grid lg:max-w-sm">
+          {[
+            { value: stats.workouts, label: 'Workouts' },
+            { value: stats.minutes, label: 'Minutes' },
+            {
+              value:
+                nutritionProfile?.onboarded && stats.todayCals !== null
+                  ? stats.todayCals
+                  : stats.streak,
+              label:
+                nutritionProfile?.onboarded && stats.todayCals !== null
+                  ? 'Kcal today'
+                  : 'Streak',
+            },
+          ].map(({ value, label }) => (
+            <div key={label} className="rounded-xl px-2 py-4 text-center">
+              <p className="text-xl font-semibold tabular-nums">{value}</p>
+              <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-white/60">
+                {label}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Floating stats */}
-      <div className="relative z-10 mx-auto -mt-10 max-w-lg px-5 lg:max-w-2xl">
+      {/* Floating stats — mobile */}
+      <div className="relative z-10 mx-auto -mt-10 max-w-lg px-5 lg:hidden">
         <div className="grid grid-cols-3 gap-2 rounded-2xl bg-surface p-1 shadow-lg ring-1 ring-border">
           {[
             { value: stats.workouts, label: 'Workouts' },
@@ -176,7 +202,8 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-lg space-y-6 px-5 pb-4 pt-8 lg:max-w-2xl lg:pb-8">
+      <div className="mx-auto max-w-lg space-y-6 px-5 pb-4 pt-8 lg:grid lg:max-w-none lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8 lg:px-10 lg:pb-10 lg:pt-10">
+        <div className="space-y-6">
         {/* This week */}
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
@@ -274,7 +301,9 @@ export default function Profile() {
             </div>
           )}
         </section>
+        </div>
 
+        <div className="space-y-6 lg:sticky lg:top-8 lg:self-start">
         {/* Nutrition nudge */}
         {nutritionReady && !nutritionProfile?.onboarded && (
           <button
@@ -344,6 +373,7 @@ export default function Profile() {
             />
           </div>
         </section>
+        </div>
       </div>
     </div>
   )

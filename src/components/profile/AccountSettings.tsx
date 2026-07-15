@@ -97,8 +97,8 @@ export default function AccountSettings({
   }
 
   return (
-    <div className="min-h-full bg-background text-foreground">
-      <header className="flex items-center gap-3 px-5 py-4 lg:px-10">
+    <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-3xl">
+      <header className="flex items-center gap-3 px-5 py-4 lg:border-b lg:border-border lg:px-10 lg:py-6">
         <button
           type="button"
           onClick={onBack}
@@ -107,10 +107,15 @@ export default function AccountSettings({
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-semibold">Account</h1>
+        <div>
+          <p className="hidden text-[11px] font-semibold uppercase tracking-[0.16em] text-muted lg:block">
+            Profile
+          </p>
+          <h1 className="text-lg font-semibold lg:text-2xl lg:tracking-tight">Account</h1>
+        </div>
       </header>
 
-      <div className="mx-auto max-w-lg space-y-6 px-5 pb-8 lg:max-w-2xl lg:px-10">
+      <div className="mx-auto max-w-lg space-y-6 px-5 pb-8 lg:max-w-none lg:px-10 lg:pb-10">
         <div className="flex flex-col items-center rounded-2xl bg-surface px-4 py-6 ring-1 ring-border">
           <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} size="lg" />
           <p className="mt-4 text-lg font-semibold">{user?.name}</p>

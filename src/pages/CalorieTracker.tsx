@@ -121,7 +121,7 @@ function OnboardingForm({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="min-h-full bg-background px-5 py-10 pb-4 lg:px-10 lg:pb-10">
-      <div className="mx-auto max-w-lg">
+      <div className="mx-auto max-w-lg lg:max-w-2xl">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-foreground text-background">
             <Flame size={20} />
@@ -679,9 +679,28 @@ function DailyLog() {
 
   return (
     <div className="min-h-full bg-background">
-      <div className="mx-auto max-w-6xl lg:grid lg:grid-cols-[1fr_380px] lg:gap-8 lg:px-10 lg:py-8">
+      <header className="hidden border-b border-border lg:block">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-10 py-6">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+              Nutrition
+            </p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight">Calorie tracker</h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowSettings(true)}
+            aria-label="Settings"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface ring-1 ring-border transition hover:ring-foreground/20"
+          >
+            <Settings size={18} />
+          </button>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10 lg:px-10 lg:py-8">
         <div className="px-5 py-6 lg:px-0 lg:py-0">
-          <header className="flex items-start justify-between">
+          <header className="flex items-start justify-between lg:hidden">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
                 Nutrition
@@ -700,7 +719,11 @@ function DailyLog() {
             </button>
           </header>
 
-          <div className="mt-5">
+          <p className="mt-1 hidden text-2xl font-semibold tracking-tight lg:block">
+            {formatDisplayDate(selectedDate)}
+          </p>
+
+          <div className="mt-5 lg:mt-6">
             <WeekStrip
               selectedDate={selectedDate}
               onSelect={setSelectedDate}
@@ -719,7 +742,7 @@ function DailyLog() {
             </button>
           )}
 
-          <div className="mt-6">
+          <div className="mt-6 lg:hidden">
             <DailyCalorieSummary
               consumed={dayTotals.calories}
               target={profile.dailyCalorieTarget}
@@ -732,7 +755,7 @@ function DailyLog() {
             />
           </div>
 
-          <section className="mt-6 rounded-3xl bg-surface p-5 ring-1 ring-border">
+          <section className="mt-6 rounded-3xl bg-surface p-5 ring-1 ring-border lg:hidden">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold">This week</h2>
               <span className="text-xs text-muted">{profile.dailyCalorieTarget} kcal goal</span>
@@ -746,7 +769,7 @@ function DailyLog() {
             </div>
           </section>
 
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex items-center justify-between lg:mt-8">
             <h2 className="text-lg font-semibold">Meals</h2>
             <div className="flex gap-1">
               <button
@@ -853,7 +876,32 @@ function DailyLog() {
         </div>
 
         <aside className="hidden lg:block">
-          <div className="sticky top-8">
+          <div className="sticky top-8 space-y-6">
+            <DailyCalorieSummary
+              consumed={dayTotals.calories}
+              target={profile.dailyCalorieTarget}
+              protein={dayTotals.protein}
+              proteinTarget={profile.proteinTargetG}
+              carbs={dayTotals.carbs}
+              carbsTarget={profile.carbsTargetG}
+              fat={dayTotals.fat}
+              fatTarget={profile.fatTargetG}
+            />
+
+            <section className="rounded-3xl bg-surface p-5 ring-1 ring-border">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold">This week</h2>
+                <span className="text-xs text-muted">{profile.dailyCalorieTarget} kcal goal</span>
+              </div>
+              <div className="mt-4">
+                <WeeklyBarChart
+                  caloriesByDay={caloriesByDay}
+                  target={profile.dailyCalorieTarget}
+                  selectedDate={selectedDate}
+                />
+              </div>
+            </section>
+
             <AddFoodPanel
               onClose={() => {}}
               dateKey={selectedDate}
