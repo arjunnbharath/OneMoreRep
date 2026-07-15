@@ -7,9 +7,10 @@ import {
   LogOut,
   Moon,
   Sun,
-  Trash2,
+  User,
 } from 'lucide-react'
 import UserAvatar from '../components/UserAvatar'
+import AccountSettings from '../components/profile/AccountSettings'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useCalorieTracker } from '../hooks/useCalorieTracker'
@@ -78,13 +79,11 @@ function SettingsRow({
 
 export default function Profile() {
   const navigate = useNavigate()
-  const { user, logout, deleteAccount } = useAuth()
+  const { user, logout, deleteAccount, changePassword } = useAuth()
   const { isDark, setTheme } = useTheme()
   const { sessions } = useWorkoutTracker()
   const { profile: nutritionProfile, logs, ready: nutritionReady } = useCalorieTracker()
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const [error, setError] = useState('')
+  const [showAccount, setShowAccount] = useState(false)
 
   const firstName = user?.name?.split(' ')[0] ?? 'Athlete'
   const todayKey = toLocalDateKey()
@@ -114,16 +113,18 @@ export default function Profile() {
   const weekKeys = useMemo(() => getWeekKeys(), [])
   const recentSessions = sessions.slice(0, 3)
 
-  async function handleDelete() {
-    setError('')
-    setDeleting(true)
-    try {
-      await deleteAccount()
-      navigate('/login')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete account')
-      setDeleting(false)
-    }
+  if (showAccount) {
+    return (
+      <AccountSettings
+        user={user}
+        onBack={() => setShowAccount(false)}
+        onChangePassword={changePassword}
+        onDeleteAccount={async () => {
+          await deleteAccount()
+          navigate('/login')
+        }}
+      />
+    )
   }
 
   return (
@@ -325,50 +326,22 @@ export default function Profile() {
             </div>
 
             <div className="border-b border-border">
-              <SettingsRow icon={<LogOut size={16} />} label="Log out" onClick={() => {
-                logout()
-                navigate('/login')
-              }} />
+              <SettingsRow
+                icon={<User size={16} />}
+                label="Account"
+                value="Details, password, delete"
+                onClick={() => setShowAccount(true)}
+              />
             </div>
 
-            {!showDeleteConfirm ? (
-              <SettingsRow
-                icon={<Trash2 size={16} />}
-                label="Delete account"
-                destructive
-                onClick={() => setShowDeleteConfirm(true)}
-              />
-            ) : (
-              <div className="border-t border-border bg-red-50/80 p-4 dark:bg-red-950/20">
-                <p className="text-sm font-medium text-red-600 dark:text-red-400">
-                  Permanently delete your account?
-                </p>
-                <p className="mt-1 text-xs text-muted">
-                  All workouts, calories, and progress will be erased.
-                </p>
-                {error && (
-                  <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>
-                )}
-                <div className="mt-3 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowDeleteConfirm(false)}
-                    disabled={deleting}
-                    className="flex-1 rounded-xl bg-background py-2.5 text-sm font-medium ring-1 ring-border"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-                  >
-                    {deleting ? 'Deleting…' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            )}
+            <SettingsRow
+              icon={<LogOut size={16} />}
+              label="Log out"
+              onClick={() => {
+                logout()
+                navigate('/login')
+              }}
+            />
           </div>
         </section>
       </div>

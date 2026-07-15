@@ -114,7 +114,37 @@ async function getUserFromToken(token) {
     name: user.name,
     email: user.email,
     avatarUrl: user.avatar_url ?? null,
+    createdAt: user.created_at,
   }
+}
+
+async function changeUserPassword(token, currentPassword, newPassword) {
+  await ensureDb()
+
+  if (!currentPassword || !newPassword) {
+    throw new AuthError('Current and new password are required', 400)
+  }
+
+  if (newPassword.length < 6) {
+    throw new AuthError('Password must be at least 6 characters', 400)
+  }
+
+  const payload = jwt.verify(token, JWT_SECRET)
+  const result = await query('SELECT password_hash FROM users WHERE id = $1', [payload.userId])
+
+  if (result.rows.length === 0) {
+    throw new AuthError('User not found', 401)
+  }
+
+  const valid = await bcrypt.compare(currentPassword, result.rows[0].password_hash)
+  if (!valid) {
+    throw new AuthError('Current password is incorrect', 401)
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10)
+  await query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, payload.userId])
+
+  return { success: true }
 }
 
 async function deleteUser(token) {
@@ -130,4 +160,4 @@ async function deleteUser(token) {
   return { success: true }
 }
 
-module.exports = { AuthError, registerUser, loginUser, getUserFromToken, deleteUser }
+module.exports = { AuthError, registerUser, loginUser, getUserFromToken, changeUserPassword, deleteUser }

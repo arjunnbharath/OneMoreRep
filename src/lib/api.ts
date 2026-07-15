@@ -3,6 +3,7 @@ export interface User {
   name: string
   email: string
   avatarUrl?: string | null
+  createdAt?: string
 }
 
 export interface AuthResponse {
@@ -94,6 +95,21 @@ export async function deleteAccount(token: string): Promise<{ success: boolean }
   return request<{ success: boolean }>(apiUrl('/api/auth/delete'), {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function changePassword(
+  token: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>(apiUrl('/api/auth/change-password'), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
   })
 }
 

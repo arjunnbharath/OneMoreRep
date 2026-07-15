@@ -5,7 +5,6 @@ export const USER_DATA_KEYS = {
   foodLogs: 'food_logs',
   customFoods: 'custom_foods',
   bookmarks: 'bookmarks',
-  weeklyRoutine: 'weekly_routine',
   workoutPlan: 'workout_plan',
 } as const
 

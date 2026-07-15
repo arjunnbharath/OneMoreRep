@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { AuthError, deleteUser, getUserFromToken, loginUser, registerUser } from '../auth-bridge.js'
+import { AuthError, changeUserPassword, deleteUser, getUserFromToken, loginUser, registerUser } from '../auth-bridge.js'
 
 const router = Router()
 
@@ -71,6 +71,28 @@ router.delete('/delete', async (req, res) => {
     }
     console.error('Delete account error:', err)
     res.status(500).json({ error: 'Failed to delete account' })
+  }
+})
+
+router.post('/change-password', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader?.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Not authenticated' })
+      return
+    }
+
+    const token = authHeader.slice(7)
+    const { currentPassword, newPassword } = req.body ?? {}
+    await changeUserPassword(token, currentPassword, newPassword)
+    res.json({ success: true })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Change password error:', err)
+    res.status(500).json({ error: 'Failed to change password' })
   }
 })
 

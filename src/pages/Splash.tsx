@@ -1,15 +1,14 @@
 import { useNavigate } from 'react-router-dom'
 import { Dumbbell } from 'lucide-react'
+import AuthVideoBackground from '../components/AuthVideoBackground'
 import Button from '../components/Button'
-import { heroImage } from '../data/mockData'
 
 export default function Splash() {
   const navigate = useNavigate()
 
   return (
     <div className="relative min-h-dvh bg-background">
-      <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-50 dark:opacity-60" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40 dark:from-black dark:via-black/70 dark:to-black/40" />
+      <AuthVideoBackground variant="splash" />
 
       <div className="relative flex min-h-dvh flex-col px-6 pb-12 pt-14 text-foreground sm:px-10">
         <div className="flex items-center gap-2">
