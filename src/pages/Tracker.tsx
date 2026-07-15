@@ -10,7 +10,6 @@ import {
   Flame,
   History,
   Plus,
-  Star,
   Trash2,
   Trophy,
   Weight,
@@ -19,6 +18,7 @@ import {
 import Button from '../components/Button'
 import WorkoutCalendar from '../components/WorkoutCalendar'
 import ExerciseHistoryChart from '../components/tracker/ExerciseHistoryChart'
+import ProgressVolumeChart from '../components/tracker/ProgressVolumeChart'
 import AddExerciseForm from '../components/tracker/AddExerciseForm'
 import ExerciseSetTable from '../components/tracker/ExerciseSetTable'
 import NextMuscleReady from '../components/tracker/NextMuscleReady'
@@ -40,7 +40,9 @@ import {
   formatLastPerformance,
   getExerciseHistory,
   getLoggedExerciseNames,
+  getMonthlyProgress,
   getSessionDurationSeconds,
+  getWeeklyProgress,
   sessionVolume,
 } from '../lib/workoutProgress'
 import type { TrackedExercise, WorkoutSession } from '../types/tracker'
@@ -178,10 +180,8 @@ export default function Tracker() {
 
   const loggedExercises = useMemo(() => getLoggedExerciseNames(sessions), [sessions])
 
-  const exerciseHistory = useMemo(
-    () => (selectedExercise ? getExerciseHistory(sessions, selectedExercise) : []),
-    [sessions, selectedExercise],
-  )
+  const weeklyProgress = useMemo(() => getWeeklyProgress(sessions), [sessions])
+  const monthlyProgress = useMemo(() => getMonthlyProgress(sessions), [sessions])
 
   const exerciseSuggestions = useMemo(() => {
     const q = exerciseQuery.trim().toLowerCase()
@@ -193,18 +193,6 @@ export default function Tracker() {
     if (!selectedHistoryDay) return []
     return sessions.filter((s) => toDateKey(s.date) === selectedHistoryDay)
   }, [sessions, selectedHistoryDay])
-
-  const recentPRs = useMemo(() => {
-    const prs: { exercise: string; date: string }[] = []
-    for (let i = 0; i < Math.min(sessions.length, 10); i++) {
-      const session = sessions[i]
-      const past = sessions.slice(i + 1)
-      for (const name of detectSessionPRs(session, past)) {
-        prs.push({ exercise: name, date: session.date })
-      }
-    }
-    return prs.slice(0, 5)
-  }, [sessions])
 
   function handleToggleSetComplete(exerciseId: string, setId: string, wasCompleted: boolean) {
     toggleSetComplete(exerciseId, setId)
@@ -412,7 +400,7 @@ export default function Tracker() {
         </div>
       </header>
 
-      <nav className="mx-5 mb-4 mt-5 flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border lg:hidden">
+      <nav className="mx-5 mb-4 mt-[max(2.5rem,env(safe-area-inset-top))] flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border lg:hidden">
         {(
           [
             { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
@@ -614,81 +602,9 @@ export default function Tracker() {
       )}
 
       {view === 'progress' && (
-        <section className="px-5 pb-8 lg:px-10">
-          <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-8">
-            <div>
-              <label className="text-sm font-medium text-muted">Exercise</label>
-              <select
-                value={selectedExercise}
-                onChange={(e) => setSelectedExercise(e.target.value)}
-                className="mt-2 w-full rounded-xl bg-surface px-4 py-3 text-sm outline-none ring-1 ring-border"
-              >
-                <option value="">Select an exercise</option>
-                {loggedExercises.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-
-              {selectedExercise && (
-                <div className="mt-4">
-                  <ExerciseHistoryChart points={exerciseHistory} height={300} />
-                </div>
-              )}
-
-              {recentPRs.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
-                    <Star size={14} />
-                    Recent PRs
-                  </h3>
-                  <ul className="space-y-2">
-                    {recentPRs.map((pr, i) => (
-                      <li
-                        key={`${pr.exercise}-${pr.date}-${i}`}
-                        className="flex items-center justify-between rounded-xl bg-surface px-3 py-2 text-sm ring-1 ring-border"
-                      >
-                        <span className="font-medium">{pr.exercise}</span>
-                        <span className="text-xs text-muted">{formatDate(pr.date)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {selectedExercise && (
-              <div className="mt-6 lg:mt-0">
-                <h3 className="mb-3 text-sm font-semibold">Session history</h3>
-                {exerciseHistory.length === 0 ? (
-                  <p className="text-sm text-muted">No logged sets yet.</p>
-                ) : (
-                  <div className="overflow-hidden rounded-2xl ring-1 ring-border">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-surface text-xs text-muted">
-                        <tr>
-                          <th className="px-3 py-2 font-medium">Date</th>
-                          <th className="px-3 py-2 font-medium">Est. 1RM</th>
-                          <th className="px-3 py-2 font-medium">Volume</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...exerciseHistory].reverse().map((row) => (
-                          <tr key={row.date} className="border-t border-border">
-                            <td className="px-3 py-2">{row.label}</td>
-                            <td className="px-3 py-2 font-medium">{row.est1RM} kg</td>
-                            <td className="px-3 py-2 text-muted">
-                              {row.volume.toLocaleString()} kg
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
+        <section className="px-5 pb-8 pt-4 lg:px-10 lg:pt-6">
+          <div className="mx-auto max-w-lg">
+            <ProgressVolumeChart weekly={weeklyProgress} monthly={monthlyProgress} />
           </div>
         </section>
       )}

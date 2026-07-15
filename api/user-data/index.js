@@ -3,6 +3,7 @@ const {
   getUserIdFromAuthHeader,
   getAllUserData,
   setUserDataEntry,
+  clearAllUserData,
 } = require('../lib/userData.js')
 
 module.exports = async function handler(req, res) {
@@ -23,6 +24,11 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid key' })
       }
       await setUserDataEntry(userId, key, data ?? null)
+      return res.status(200).json({ success: true })
+    }
+
+    if (req.method === 'DELETE') {
+      await clearAllUserData(userId)
       return res.status(200).json({ success: true })
     }
 

@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Play } from 'lucide-react'
 import WorkoutCard from '../../components/WorkoutCard'
 import WorkoutCalendar from '../../components/WorkoutCalendar'
-import UserAvatar from '../../components/UserAvatar'
 import TodayPlanCard from '../../components/home/TodayPlanCard'
+import HomeStatsStrip from '../../components/home/HomeStatsStrip'
+import AppWordmark from '../../components/AppWordmark'
 import { exerciseGuides } from '../../data/exerciseGuides'
 import { findVideoForExercise } from '../../data/workoutVideos'
 import { getTodayWeekday } from '../../lib/workoutPlan'
@@ -13,10 +14,8 @@ import type { WeeklyPlan } from '../../types/workoutPlan'
 import type { HomeFilter } from './homeTypes'
 
 interface HomeMobileProps {
-  firstName: string
-  userName?: string
-  avatarUrl?: string | null
   stats: { completed: number; minutes: number; streak: number }
+  todayCalories: number
   sessions: import('../../types/tracker').WorkoutSession[]
   plan: WeeklyPlan
   activeFilter: MuscleGroup | 'all'
@@ -29,10 +28,8 @@ interface HomeMobileProps {
 }
 
 export default function HomeMobile({
-  firstName,
-  userName,
-  avatarUrl,
   stats,
+  todayCalories,
   sessions,
   plan,
   activeFilter,
@@ -47,41 +44,9 @@ export default function HomeMobile({
 
   return (
     <div className="min-h-full bg-background text-foreground lg:hidden">
-      <header className="px-5 pb-6 pt-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
-              OneMoreRep
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-              Hi, {firstName}
-            </h1>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate('/profile')}
-            aria-label="Profile"
-            className="transition hover:opacity-70"
-          >
-            <UserAvatar name={userName} avatarUrl={avatarUrl} size="sm" />
-          </button>
-        </div>
-
-        <div className="mt-5 grid grid-cols-3 gap-2">
-          {[
-            { value: stats.completed, label: 'Sessions' },
-            { value: stats.minutes, label: 'Minutes' },
-            { value: stats.streak, label: 'Streak' },
-          ].map(({ value, label }) => (
-            <div
-              key={label}
-              className="rounded-2xl bg-surface px-3 py-3 ring-1 ring-border"
-            >
-              <p className="text-xl font-semibold tabular-nums">{value}</p>
-              <p className="mt-0.5 text-[10px] text-muted">{label}</p>
-            </div>
-          ))}
-        </div>
+      <header className="px-5 pb-6 pt-[max(2rem,env(safe-area-inset-top))]">
+        <AppWordmark className="mb-4" />
+        <HomeStatsStrip stats={stats} todayCalories={todayCalories} />
 
         <div className="mt-5 overflow-x-hidden">
           <TodayPlanCard

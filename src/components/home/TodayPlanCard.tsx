@@ -1,4 +1,3 @@
-import { ChevronRight } from 'lucide-react'
 import SwipeablePlanDayCard from '../plan/SwipeablePlanDayCard'
 import { exerciseGroupLabels } from '../../data/exerciseGuides'
 import {
@@ -80,8 +79,6 @@ export default function TodayPlanCard({
             </>
           )}
         </div>
-
-        <ChevronRight size={18} className="shrink-0 text-white/50" />
       </div>
     </SwipeablePlanDayCard>
   )

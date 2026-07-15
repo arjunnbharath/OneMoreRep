@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { ArrowLeft, ChevronRight, KeyRound, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Eraser, KeyRound, Trash2 } from 'lucide-react'
 import Button from '../Button'
 import Input from '../Input'
 import UserAvatar from '../UserAvatar'
@@ -27,6 +27,7 @@ interface AccountSettingsProps {
   user: User | null
   onBack: () => void
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>
+  onClearAllData: () => Promise<void>
   onDeleteAccount: () => Promise<void>
 }
 
@@ -34,6 +35,7 @@ export default function AccountSettings({
   user,
   onBack,
   onChangePassword,
+  onClearAllData,
   onDeleteAccount,
 }: AccountSettingsProps) {
   const [showChangePassword, setShowChangePassword] = useState(false)
@@ -47,6 +49,10 @@ export default function AccountSettings({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteError, setDeleteError] = useState('')
   const [deleting, setDeleting] = useState(false)
+
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [clearError, setClearError] = useState('')
+  const [clearing, setClearing] = useState(false)
 
   async function handleChangePassword(e: FormEvent) {
     e.preventDefault()
@@ -93,6 +99,17 @@ export default function AccountSettings({
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : 'Failed to delete account')
       setDeleting(false)
+    }
+  }
+
+  async function handleClearAllData() {
+    setClearError('')
+    setClearing(true)
+    try {
+      await onClearAllData()
+    } catch (err) {
+      setClearError(err instanceof Error ? err.message : 'Failed to clear data')
+      setClearing(false)
     }
   }
 
@@ -213,6 +230,55 @@ export default function AccountSettings({
             Danger zone
           </h2>
           <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+            {!showClearConfirm ? (
+              <button
+                type="button"
+                onClick={() => setShowClearConfirm(true)}
+                className="flex w-full items-center gap-3 border-b border-border px-4 py-3.5 text-left transition hover:bg-surface-elevated/80"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <Eraser size={16} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium">Clear all data</span>
+                  <span className="block text-xs text-muted">
+                    Erase workouts, plans, calories & bookmarks
+                  </span>
+                </div>
+              </button>
+            ) : (
+              <div className="border-b border-border bg-amber-50/80 p-4 dark:bg-amber-950/20">
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                  Clear all app data?
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  Your name, email, and password will stay. Everything else is removed from the
+                  database.
+                </p>
+                {clearError && (
+                  <p className="mt-2 text-xs text-red-600 dark:text-red-400">{clearError}</p>
+                )}
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowClearConfirm(false)}
+                    disabled={clearing}
+                    className="flex-1 rounded-xl bg-background py-2.5 text-sm font-medium ring-1 ring-border"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearAllData}
+                    disabled={clearing}
+                    className="flex-1 rounded-xl bg-amber-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {clearing ? 'Clearing…' : 'Clear data'}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {!showDeleteConfirm ? (
               <button
                 type="button"

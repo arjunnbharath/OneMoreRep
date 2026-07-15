@@ -135,3 +135,10 @@ export async function putUserData(
     body: JSON.stringify({ key, data }),
   })
 }
+
+export async function clearAllUserData(token: string): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>(apiUrl('/api/user-data'), {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}

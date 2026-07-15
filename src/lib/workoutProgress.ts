@@ -139,3 +139,92 @@ export function getSessionDurationSeconds(session: WorkoutSession) {
     : Date.now()
   return Math.max(0, Math.floor((end - start) / 1000))
 }
+
+export interface PeriodProgressPoint {
+  key: string
+  label: string
+  sessions: number
+  volume: number
+  minutes: number
+}
+
+function toDateKeyFromDate(date: Date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function startOfWeek(date: Date) {
+  const d = new Date(date)
+  const weekday = d.getDay()
+  const diff = weekday === 0 ? -6 : 1 - weekday
+  d.setDate(d.getDate() + diff)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+export function getWeeklyProgress(
+  sessions: WorkoutSession[],
+  weekCount = 8,
+): PeriodProgressPoint[] {
+  const now = new Date()
+  const buckets = new Map<string, PeriodProgressPoint>()
+
+  for (let i = weekCount - 1; i >= 0; i--) {
+    const d = new Date(now)
+    d.setDate(d.getDate() - i * 7)
+    const start = startOfWeek(d)
+    const key = toDateKeyFromDate(start)
+    buckets.set(key, {
+      key,
+      label: start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      sessions: 0,
+      volume: 0,
+      minutes: 0,
+    })
+  }
+
+  for (const session of sessions) {
+    const key = toDateKeyFromDate(startOfWeek(new Date(session.date)))
+    const bucket = buckets.get(key)
+    if (!bucket) continue
+    bucket.sessions += 1
+    bucket.volume += sessionVolume(session)
+    bucket.minutes += Math.max(1, Math.floor(getSessionDurationSeconds(session) / 60))
+  }
+
+  return [...buckets.values()]
+}
+
+export function getMonthlyProgress(
+  sessions: WorkoutSession[],
+  monthCount = 6,
+): PeriodProgressPoint[] {
+  const now = new Date()
+  const buckets = new Map<string, PeriodProgressPoint>()
+
+  for (let i = monthCount - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    buckets.set(key, {
+      key,
+      label: d.toLocaleDateString('en-US', { month: 'short' }),
+      sessions: 0,
+      volume: 0,
+      minutes: 0,
+    })
+  }
+
+  for (const session of sessions) {
+    const d = new Date(session.date)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const bucket = buckets.get(key)
+    if (!bucket) continue
+    bucket.sessions += 1
+    bucket.volume += sessionVolume(session)
+    bucket.minutes += Math.max(1, Math.floor(getSessionDurationSeconds(session) / 60))
+  }
+
+  return [...buckets.values()]
+}

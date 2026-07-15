@@ -3,15 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
   BookOpen,
-  Calendar,
-  Clock,
   Play,
-  TrendingUp,
 } from 'lucide-react'
 import WorkoutCard from '../../components/WorkoutCard'
 import WorkoutCalendar from '../../components/WorkoutCalendar'
-import UserAvatar from '../../components/UserAvatar'
 import TodayPlanCard from '../../components/home/TodayPlanCard'
+import HomeStatsStrip from '../../components/home/HomeStatsStrip'
 import { exerciseGuides } from '../../data/exerciseGuides'
 import { findVideoForExercise } from '../../data/workoutVideos'
 import { getTodayWeekday } from '../../lib/workoutPlan'
@@ -21,10 +18,8 @@ import type { WeeklyPlan } from '../../types/workoutPlan'
 import type { HomeFilter } from './homeTypes'
 
 interface HomeDesktopProps {
-  firstName: string
-  userName?: string
-  avatarUrl?: string | null
   stats: { completed: number; minutes: number; streak: number }
+  todayCalories: number
   sessions: WorkoutSession[]
   plan: WeeklyPlan
   activeFilter: MuscleGroup | 'all'
@@ -38,10 +33,8 @@ interface HomeDesktopProps {
 }
 
 export default function HomeDesktop({
-  firstName,
-  userName,
-  avatarUrl,
   stats,
+  todayCalories,
   sessions,
   plan,
   activeFilter,
@@ -62,33 +55,19 @@ export default function HomeDesktop({
   return (
     <div className="hidden min-h-full bg-background text-foreground lg:block">
       <div className="border-b border-border px-10 py-6">
-        <div className="flex items-center justify-between gap-6">
-          <div>
-            <p className="text-xs text-muted">
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </p>
-            <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-              Welcome back, {firstName}
-            </h1>
-          </div>
+        <p className="text-xs text-muted">
+          {new Date().toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+          })}
+        </p>
 
-          <div className="flex items-center justify-end gap-4">
-            <button
-              type="button"
-              onClick={() => navigate('/profile')}
-              aria-label="Profile"
-              className="transition hover:opacity-70"
-            >
-              <UserAvatar name={userName} avatarUrl={avatarUrl} size="md" />
-            </button>
-          </div>
+        <div className="mt-4 max-w-xl">
+          <HomeStatsStrip stats={stats} todayCalories={todayCalories} />
         </div>
 
-        <div className="mt-6 max-w-xl overflow-x-hidden">
+        <div className="mt-4 max-w-xl overflow-x-hidden">
           <TodayPlanCard
             plan={plan}
             onPlan={() => navigate('/tracker', { state: { view: 'plan' } })}
@@ -107,22 +86,8 @@ export default function HomeDesktop({
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
               Overview
             </p>
-            <div className="mt-4 space-y-4">
-              {[
-                { icon: Calendar, value: stats.completed, label: 'Total sessions' },
-                { icon: Clock, value: stats.minutes, label: 'Minutes trained' },
-                { icon: TrendingUp, value: stats.streak, label: 'Current streak' },
-              ].map(({ icon: Icon, value, label }) => (
-                <div key={label} className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface ring-1 ring-border">
-                    <Icon size={16} />
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold tabular-nums">{value}</p>
-                    <p className="text-xs text-muted">{label}</p>
-                  </div>
-                </div>
-              ))}
+            <div className="mt-4">
+              <HomeStatsStrip stats={stats} todayCalories={todayCalories} />
             </div>
           </div>
 

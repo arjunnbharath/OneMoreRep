@@ -7,6 +7,7 @@ const {
   getUserIdFromAuthHeader,
   getAllUserData,
   setUserDataEntry,
+  clearAllUserData,
 } = require('../../api/lib/userData.js')
 
 const router = Router()
@@ -47,6 +48,21 @@ router.put('/', async (req, res) => {
     }
     console.error('User data PUT error:', err)
     res.status(500).json({ error: 'Failed to save user data' })
+  }
+})
+
+router.delete('/', async (req, res) => {
+  try {
+    const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+    await clearAllUserData(userId)
+    res.json({ success: true })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('User data DELETE error:', err)
+    res.status(500).json({ error: 'Failed to clear user data' })
   }
 })
 

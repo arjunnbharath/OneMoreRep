@@ -1,5 +1,5 @@
 import { getUserData, putUserData } from './api'
-import type { UserDataKey } from './userDataKeys'
+import { USER_DATA_KEYS, type UserDataKey } from './userDataKeys'
 
 let cachedUserId: number | null = null
 let cachedStore: Record<string, unknown> | null = null
@@ -26,6 +26,25 @@ export function clearUserDataCache() {
   inflight = null
   for (const timer of pendingSaves.values()) clearTimeout(timer)
   pendingSaves.clear()
+}
+
+const LEGACY_LOCAL_KEYS = [
+  'onemorerep-tracker',
+  'onemorerep-active-session',
+  'onemorerep-nutrition-profile',
+  'onemorerep-food-logs',
+  'onemorerep-custom-foods',
+  'onemorerep-bookmarks',
+] as const
+
+export function clearLocalUserData(userId: number) {
+  for (const key of Object.values(USER_DATA_KEYS)) {
+    localStorage.removeItem(scopedLocalKey(userId, key))
+  }
+  for (const key of LEGACY_LOCAL_KEYS) {
+    localStorage.removeItem(key)
+  }
+  clearUserDataCache()
 }
 
 async function ensureRemoteStore(userId: number, token: string) {

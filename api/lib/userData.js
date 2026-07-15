@@ -34,8 +34,14 @@ async function setUserDataEntry(userId, dataKey, data) {
   )
 }
 
+async function clearAllUserData(userId) {
+  await ensureDb()
+  await query('DELETE FROM user_data WHERE user_id = $1', [userId])
+}
+
 module.exports = {
   getUserIdFromAuthHeader,
   getAllUserData,
   setUserDataEntry,
+  clearAllUserData,
 }

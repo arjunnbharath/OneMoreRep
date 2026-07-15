@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
 import { useBookmarks } from '../hooks/useBookmarks'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
+import { useCalorieTracker } from '../hooks/useCalorieTracker'
+import { toLocalDateKey } from '../lib/nutritionMath'
 import { homeFilters, workouts, type MuscleGroup } from '../data/mockData'
 import HomeDesktop from './home/HomeDesktop'
 import HomeMobile from './home/HomeMobile'
@@ -11,16 +12,16 @@ import { getFeaturedWorkout, useHomeStats } from './home/homeUtils'
 
 export default function Home() {
   const location = useLocation()
-  const { user } = useAuth()
   const { sessions } = useWorkoutTracker()
+  const { caloriesByDay } = useCalorieTracker()
   const { plan } = useWorkoutPlan()
   const { toggleBookmark, isBookmarked } = useBookmarks()
   const workoutsRef = useRef<HTMLElement>(null)
 
   const [activeFilter, setActiveFilter] = useState<MuscleGroup | 'all'>('all')
 
-  const firstName = user?.name?.split(' ')[0] ?? 'Athlete'
   const stats = useHomeStats(sessions)
+  const todayCalories = caloriesByDay[toLocalDateKey()] ?? 0
 
   const filteredWorkouts = useMemo(() => {
     if (activeFilter === 'all') return workouts
@@ -39,10 +40,8 @@ export default function Home() {
   }, [location.hash])
 
   const shared = {
-    firstName,
-    userName: user?.name,
-    avatarUrl: user?.avatarUrl,
     stats,
+    todayCalories,
     sessions,
     plan,
     activeFilter,

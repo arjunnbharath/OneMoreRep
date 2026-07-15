@@ -12,6 +12,8 @@ import {
 import UserAvatar from '../components/UserAvatar'
 import AccountSettings from '../components/profile/AccountSettings'
 import { useAuth } from '../context/AuthContext'
+import { clearAllUserData as apiClearAllUserData } from '../lib/api'
+import { clearLocalUserData, clearUserDataCache } from '../lib/userDataSync'
 import { useTheme } from '../context/ThemeContext'
 import { useCalorieTracker } from '../hooks/useCalorieTracker'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
@@ -79,7 +81,7 @@ function SettingsRow({
 
 export default function Profile() {
   const navigate = useNavigate()
-  const { user, logout, deleteAccount, changePassword } = useAuth()
+  const { user, token, logout, deleteAccount, changePassword } = useAuth()
   const { isDark, setTheme } = useTheme()
   const { sessions } = useWorkoutTracker()
   const { profile: nutritionProfile, logs, ready: nutritionReady } = useCalorieTracker()
@@ -119,6 +121,13 @@ export default function Profile() {
         user={user}
         onBack={() => setShowAccount(false)}
         onChangePassword={changePassword}
+        onClearAllData={async () => {
+          if (!token || !user?.id) throw new Error('Not signed in')
+          clearUserDataCache()
+          await apiClearAllUserData(token)
+          clearLocalUserData(user.id)
+          window.location.reload()
+        }}
         onDeleteAccount={async () => {
           await deleteAccount()
           navigate('/login')
