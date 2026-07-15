@@ -1,0 +1,65 @@
+import { NavLink, useLocation } from 'react-router-dom'
+import type { LucideIcon } from 'lucide-react'
+import { Activity, Flame, Home, User } from 'lucide-react'
+
+const navItems: {
+  to: string
+  icon: LucideIcon
+  label: string
+  exact?: boolean
+}[] = [
+  { to: '/home', icon: Home, label: 'Home', exact: true },
+  { to: '/calories', icon: Flame, label: 'Calories' },
+  { to: '/tracker', icon: Activity, label: 'Progress' },
+  { to: '/profile', icon: User, label: 'Profile' },
+]
+
+function isActive(pathname: string, to: string, exact?: boolean) {
+  if (pathname.startsWith('/workout/') && to === '/tracker') return true
+  if (exact) return pathname === to
+  return pathname === to || pathname.startsWith(`${to}/`)
+}
+
+export default function MobileBottomNav() {
+  const { pathname } = useLocation()
+
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur-md lg:hidden"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      aria-label="Main navigation"
+    >
+      <div className="mx-auto grid h-16 max-w-lg grid-cols-4">
+        {navItems.map(({ to, icon: Icon, label, exact }) => {
+          const active = isActive(pathname, to, exact)
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              aria-label={label}
+              aria-current={active ? 'page' : undefined}
+              className="relative flex flex-col items-center justify-center gap-1 px-1"
+            >
+              {active && (
+                <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-foreground" />
+              )}
+              <Icon
+                size={20}
+                strokeWidth={active ? 2.25 : 1.75}
+                className={active ? 'text-foreground' : 'text-muted'}
+              />
+              <span
+                className={[
+                  'text-[10px] leading-none',
+                  active ? 'font-semibold text-foreground' : 'font-medium text-muted',
+                ].join(' ')}
+              >
+                {label}
+              </span>
+            </NavLink>
+          )
+        })}
+      </div>
+    </nav>
+  )
+}

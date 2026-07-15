@@ -67,6 +67,15 @@ async function ensureDb() {
   await getSql().query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT
   `)
+  await getSql().query(`
+    CREATE TABLE IF NOT EXISTS user_data (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      data_key VARCHAR(64) NOT NULL,
+      data JSONB NOT NULL DEFAULT '{}',
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (user_id, data_key)
+    )
+  `)
   dbReady = true
 }
 

@@ -1,29 +1,57 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { USER_DATA_KEYS } from '../lib/userDataKeys'
+import { loadUserDataValue, scheduleUserDataSave } from '../lib/userDataSync'
 
-const STORAGE_KEY = 'onemorerep-bookmarks'
-
-function loadBookmarks(): Set<string> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? new Set(JSON.parse(raw) as string[]) : new Set()
-  } catch {
-    return new Set()
-  }
-}
-
-function saveBookmarks(bookmarks: Set<string>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...bookmarks]))
-}
+const LEGACY_BOOKMARKS_KEY = 'onemorerep-bookmarks'
 
 export function useBookmarks() {
-  const [bookmarks, setBookmarks] = useState<Set<string>>(loadBookmarks)
+  const { user, token } = useAuth()
+  const userId = user?.id
+
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set())
+  const [ready, setReady] = useState(false)
+  const activeUserRef = useRef<number | undefined>(undefined)
+
+  useEffect(() => {
+    if (!userId || !token) {
+      setBookmarks(new Set())
+      setReady(false)
+      activeUserRef.current = undefined
+      return
+    }
+
+    let cancelled = false
+    setReady(false)
+    activeUserRef.current = userId
+
+    loadUserDataValue<string[]>(
+      userId,
+      token,
+      USER_DATA_KEYS.bookmarks,
+      [],
+      LEGACY_BOOKMARKS_KEY,
+    ).then((ids) => {
+      if (cancelled || activeUserRef.current !== userId) return
+      setBookmarks(new Set(ids))
+      setReady(true)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [userId, token])
+
+  useEffect(() => {
+    if (!userId || !token || !ready) return
+    scheduleUserDataSave(userId, token, USER_DATA_KEYS.bookmarks, [...bookmarks])
+  }, [bookmarks, userId, token, ready])
 
   const toggleBookmark = useCallback((id: string) => {
     setBookmarks((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
-      saveBookmarks(next)
       return next
     })
   }, [])

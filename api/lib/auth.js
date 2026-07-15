@@ -18,12 +18,13 @@ async function registerUser(name, email, password, avatar) {
     throw new AuthError('Name, email, and password are required', 400)
   }
 
-  if (!avatar || typeof avatar !== 'string' || !avatar.startsWith('data:image/')) {
-    throw new AuthError('A profile selfie is required', 400)
-  }
-
-  if (avatar.length > 500000) {
-    throw new AuthError('Selfie image is too large', 400)
+  if (avatar != null && avatar !== '') {
+    if (typeof avatar !== 'string' || !avatar.startsWith('data:image/')) {
+      throw new AuthError('Invalid profile image', 400)
+    }
+    if (avatar.length > 500000) {
+      throw new AuthError('Profile image is too large', 400)
+    }
   }
 
   if (password.length < 6) {
@@ -38,9 +39,10 @@ async function registerUser(name, email, password, avatar) {
   }
 
   const passwordHash = await bcrypt.hash(password, 10)
+  const avatarUrl = avatar && typeof avatar === 'string' && avatar.length > 0 ? avatar : null
   const result = await query(
     'INSERT INTO users (name, email, password_hash, avatar_url) VALUES ($1, $2, $3, $4) RETURNING id, name, email, avatar_url, created_at',
-    [name.trim(), normalizedEmail, passwordHash, avatar],
+    [name.trim(), normalizedEmail, passwordHash, avatarUrl],
   )
 
   const user = result.rows[0]

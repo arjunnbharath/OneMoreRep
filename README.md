@@ -44,3 +44,15 @@ This starts the frontend at [http://localhost:5173](http://localhost:5173) and t
 
 - **Mobile:** Bottom navigation bar, vertical card stack
 - **Desktop:** Left sidebar navigation, multi-column workout grid, split-screen workout detail
+
+## Flutter app (Android + Windows)
+
+A native Dart/Flutter client lives in [`flutter_app/`](flutter_app/). It shares the same API and workout data as the web app.
+
+```bash
+cd flutter_app
+flutter pub get
+flutter run -d windows --dart-define=API_BASE_URL=http://localhost:3001 --dart-define=ASSET_BASE_URL=http://localhost:5173
+```
+
+See [`flutter_app/README.md`](flutter_app/README.md) for Android emulator URLs, release builds, and asset sync.

@@ -1,119 +1,71 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Activity, Bookmark, Dumbbell, Home, User } from 'lucide-react'
+import { Activity, Dumbbell, Flame, Home, User } from 'lucide-react'
+import MobileBottomNav from './MobileBottomNav'
 
 const navItems = [
   { to: '/home', icon: Home, label: 'Home', exact: true },
-  { to: '/home#workouts', icon: Bookmark, label: 'Workouts', hash: '#workouts' },
+  { to: '/calories', icon: Flame, label: 'Calories' },
   { to: '/tracker', icon: Activity, label: 'Progress' },
   { to: '/profile', icon: User, label: 'Profile' },
 ]
-
-const ISLAND_BG = '#1a1a1a'
-const INACTIVE_ICON = '#a1a1a6'
-
-function IslandNavLink({
-  to,
-  icon: Icon,
-  label,
-  active,
-}: {
-  to: string
-  icon: typeof Home
-  label: string
-  active: boolean
-}) {
-  return (
-    <NavLink
-      to={to}
-      aria-label={label}
-      aria-current={active ? 'page' : undefined}
-      className="flex flex-1 items-center justify-center"
-    >
-      <span
-        className={[
-          'flex h-[50px] w-[50px] items-center justify-center',
-          active ? 'rounded-[13px] bg-white' : '',
-        ].join(' ')}
-        style={{ color: active ? ISLAND_BG : INACTIVE_ICON }}
-      >
-        <Icon size={22} strokeWidth={active ? 2.25 : 1.75} />
-      </span>
-    </NavLink>
-  )
-}
 
 export default function AppLayout() {
   const location = useLocation()
   const isWorkoutDetail = location.pathname.startsWith('/workout/')
 
-  function isNavActive(to: string, exact?: boolean, hash?: string) {
+  function isNavActive(to: string, exact?: boolean) {
     if (isWorkoutDetail && to.startsWith('/tracker')) return true
-    if (hash) return location.pathname === '/home' && location.hash === hash
-    if (exact) return location.pathname === to && !location.hash
-    return location.pathname === to
+    if (exact) return location.pathname === to
+    return location.pathname === to || location.pathname.startsWith(`${to}/`)
   }
 
   return (
     <div className="min-h-dvh bg-background text-foreground lg:flex">
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-border lg:px-6 lg:py-8">
-        <div className="mb-10 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent">
-            <Dumbbell size={18} className="text-accent-foreground" />
+      <aside className="hidden lg:flex lg:w-60 lg:flex-col lg:border-r lg:border-border lg:bg-surface/40 lg:px-5 lg:py-8 xl:w-64">
+        <div className="mb-10 flex items-center gap-3 px-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background">
+            <Dumbbell size={18} />
           </div>
-          <span className="text-xl font-bold tracking-tight">OneMoreRep</span>
+          <div>
+            <p className="text-base font-semibold tracking-tight">OneMoreRep</p>
+            <p className="text-[11px] text-muted">Fitness & nutrition</p>
+          </div>
         </div>
-        <nav className="flex flex-1 flex-col gap-1">
-          {navItems.map(({ to, icon: Icon, label, exact, hash }) => (
-            <NavLink
-              key={label}
-              to={to}
-              className={() =>
-                [
-                  'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors',
-                  isNavActive(to, exact, hash)
-                    ? 'bg-foreground/10 text-foreground'
-                    : 'text-muted hover:bg-surface hover:text-foreground',
-                ].join(' ')
-              }
-            >
-              <Icon size={20} />
-              {label}
-            </NavLink>
-          ))}
+
+        <nav className="flex flex-1 flex-col gap-0.5">
+          {navItems.map(({ to, icon: Icon, label, exact }) => {
+            const active = isNavActive(to, exact)
+            return (
+              <NavLink
+                key={label}
+                to={to}
+                className={[
+                  'relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                  active
+                    ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
+                    : 'text-muted hover:bg-background/60 hover:text-foreground',
+                ].join(' ')}
+              >
+                {active && (
+                  <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-foreground" />
+                )}
+                <Icon size={18} strokeWidth={active ? 2.25 : 1.75} />
+                {label}
+              </NavLink>
+            )
+          })}
         </nav>
-        <p className="text-xs text-muted">Train hard. Track everything.</p>
+
+        <p className="px-2 text-[11px] text-muted">Train hard. Track everything.</p>
       </aside>
 
       <div className="flex min-h-dvh flex-1 flex-col">
-        <main className="flex-1 pb-[5.5rem] lg:pb-8">
+        <main
+          className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-8"
+        >
           <Outlet />
         </main>
-
-        <nav
-          className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-5 pb-5 lg:hidden"
-          aria-label="Main navigation"
-        >
-          <div
-            className="pointer-events-auto isolate flex w-full max-w-[400px] items-center rounded-[26px] px-1 py-[5px]"
-            style={{
-              backgroundColor: ISLAND_BG,
-              boxShadow:
-                '0 4px 16px rgba(0,0,0,0.28), 0 1px 0 rgba(255,255,255,0.06) inset',
-              border: '1px solid rgba(255,255,255,0.08)',
-              WebkitFontSmoothing: 'antialiased',
-            }}
-          >
-            {navItems.map(({ to, icon, label, exact, hash }) => (
-              <IslandNavLink
-                key={label}
-                to={to}
-                icon={icon}
-                label={label}
-                active={isNavActive(to, exact, hash)}
-              />
-            ))}
-          </div>
-        </nav>
+        <MobileBottomNav />
       </div>
     </div>
   )

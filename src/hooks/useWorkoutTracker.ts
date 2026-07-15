@@ -1,51 +1,74 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
 import type { TrackedExercise, WorkoutSession, WorkoutSet } from '../types/tracker'
+import { USER_DATA_KEYS } from '../lib/userDataKeys'
+import { loadUserDataValue, scheduleUserDataSave } from '../lib/userDataSync'
 
-const STORAGE_KEY = 'onemorerep-tracker'
-const ACTIVE_KEY = 'onemorerep-active-session'
-
-function loadSessions(): WorkoutSession[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as WorkoutSession[]) : []
-  } catch {
-    return []
-  }
-}
-
-function loadActiveSession(): WorkoutSession | null {
-  try {
-    const raw = sessionStorage.getItem(ACTIVE_KEY)
-    return raw ? (JSON.parse(raw) as WorkoutSession) : null
-  } catch {
-    return null
-  }
-}
-
-function saveSessions(sessions: WorkoutSession[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions))
-}
-
-function saveActiveSession(session: WorkoutSession | null) {
-  if (session) sessionStorage.setItem(ACTIVE_KEY, JSON.stringify(session))
-  else sessionStorage.removeItem(ACTIVE_KEY)
-}
+const LEGACY_SESSIONS_KEY = 'onemorerep-tracker'
+const LEGACY_ACTIVE_KEY = 'onemorerep-active-session'
 
 function createId() {
   return crypto.randomUUID()
 }
 
 export function useWorkoutTracker() {
-  const [sessions, setSessions] = useState<WorkoutSession[]>(loadSessions)
-  const [activeSession, setActiveSession] = useState<WorkoutSession | null>(loadActiveSession)
+  const { user, token } = useAuth()
+  const userId = user?.id
+
+  const [sessions, setSessions] = useState<WorkoutSession[]>([])
+  const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null)
+  const [ready, setReady] = useState(false)
+  const activeUserRef = useRef<number | undefined>(undefined)
 
   useEffect(() => {
-    saveSessions(sessions)
-  }, [sessions])
+    if (!userId || !token) {
+      setSessions([])
+      setActiveSession(null)
+      setReady(false)
+      activeUserRef.current = undefined
+      return
+    }
+
+    let cancelled = false
+    setReady(false)
+    activeUserRef.current = userId
+
+    Promise.all([
+      loadUserDataValue<WorkoutSession[]>(
+        userId,
+        token,
+        USER_DATA_KEYS.trackerSessions,
+        [],
+        LEGACY_SESSIONS_KEY,
+      ),
+      loadUserDataValue<WorkoutSession | null>(
+        userId,
+        token,
+        USER_DATA_KEYS.trackerActive,
+        null,
+        LEGACY_ACTIVE_KEY,
+      ),
+    ]).then(([loadedSessions, loadedActive]) => {
+      if (cancelled || activeUserRef.current !== userId) return
+      setSessions(loadedSessions)
+      setActiveSession(loadedActive)
+      setReady(true)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [userId, token])
 
   useEffect(() => {
-    saveActiveSession(activeSession)
-  }, [activeSession])
+    if (!userId || !token || !ready) return
+    scheduleUserDataSave(userId, token, USER_DATA_KEYS.trackerSessions, sessions)
+  }, [sessions, userId, token, ready])
+
+  useEffect(() => {
+    if (!userId || !token || !ready) return
+    scheduleUserDataSave(userId, token, USER_DATA_KEYS.trackerActive, activeSession)
+  }, [activeSession, userId, token, ready])
 
   function startSession(name = "Today's Workout") {
     const session: WorkoutSession = {
@@ -156,6 +179,25 @@ export function useWorkoutTracker() {
     })
   }
 
+  function toggleSetWarmup(exerciseId: string, setId: string) {
+    setActiveSession((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        exercises: prev.exercises.map((ex) =>
+          ex.id === exerciseId
+            ? {
+                ...ex,
+                sets: ex.sets.map((s) =>
+                  s.id === setId ? { ...s, isWarmup: !s.isWarmup } : s,
+                ),
+              }
+            : ex,
+        ),
+      }
+    })
+  }
+
   function removeSet(exerciseId: string, setId: string) {
     setActiveSession((prev) => {
       if (!prev) return prev
@@ -174,8 +216,40 @@ export function useWorkoutTracker() {
 
   function finishSession() {
     if (!activeSession || activeSession.exercises.length === 0) return
-    setSessions((prev) => [activeSession, ...prev])
+    const completed: WorkoutSession = {
+      ...activeSession,
+      completedAt: new Date().toISOString(),
+    }
+    setSessions((prev) => [completed, ...prev])
     setActiveSession(null)
+    return completed
+  }
+
+  function duplicateSession(sessionId: string) {
+    const source = sessions.find((s) => s.id === sessionId)
+    if (!source) return
+
+    const now = new Date().toISOString()
+    const copy: WorkoutSession = {
+      id: createId(),
+      name: source.name,
+      date: now,
+      startedAt: now,
+      note: '',
+      exercises: source.exercises.map((ex) => ({
+        id: createId(),
+        name: ex.name,
+        sets: ex.sets.map((s) => ({
+          id: createId(),
+          reps: s.reps,
+          weight: s.weight,
+          completed: false,
+          isWarmup: s.isWarmup,
+        })),
+      })),
+    }
+    setActiveSession(copy)
+    return copy
   }
 
   function deleteSession(sessionId: string) {
@@ -193,14 +267,17 @@ export function useWorkoutTracker() {
   return {
     sessions,
     activeSession,
+    ready,
     startSession,
     addExercise,
     removeExercise,
     addSetToExercise,
     updateSet,
     toggleSetComplete,
+    toggleSetWarmup,
     removeSet,
     finishSession,
+    duplicateSession,
     deleteSession,
     updateSessionName,
     updateSessionNote,

@@ -1,11 +1,5 @@
-import { BarChart2, Bookmark, Clock, Flame } from 'lucide-react'
-import type { Difficulty, IntensityLevel } from '../data/mockData'
-
-const difficultyStyles: Record<Difficulty, string> = {
-  Beginner: 'text-white/90',
-  Intermediate: 'text-white',
-  Advanced: 'text-white font-extrabold',
-}
+import { Bookmark, Clock } from 'lucide-react'
+import type { Difficulty } from '../data/mockData'
 
 interface WorkoutCardProps {
   id: string
@@ -13,8 +7,6 @@ interface WorkoutCardProps {
   image: string
   video?: string
   duration: string
-  calories: number
-  intensity: IntensityLevel
   difficulty: Difficulty
   bookmarked?: boolean
   onBookmarkToggle?: () => void
@@ -26,15 +18,11 @@ export default function WorkoutCard({
   image,
   video,
   duration,
-  calories,
-  intensity,
   difficulty,
   bookmarked = false,
   onBookmarkToggle,
   onClick,
 }: WorkoutCardProps) {
-  const intensityLabel = intensity === 'Medium' ? 'Med' : intensity
-
   return (
     <div
       role="button"
@@ -46,7 +34,7 @@ export default function WorkoutCard({
           onClick?.()
         }
       }}
-      className="group relative aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-2xl text-left ring-1 ring-border transition hover:ring-foreground/30"
+      className="group relative aspect-[4/5] w-full cursor-pointer overflow-hidden rounded-xl bg-surface text-left ring-1 ring-border transition hover:ring-foreground/20"
     >
       {video ? (
         <video
@@ -57,25 +45,16 @@ export default function WorkoutCard({
           loop
           playsInline
           preload="auto"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
         />
       ) : (
         <img
           src={image}
           alt={title}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/20" />
-
-      <span
-        className={[
-          'absolute left-3 top-3 rounded-lg bg-black/60 px-2 py-1 text-[10px] font-bold uppercase tracking-wide backdrop-blur-sm',
-          difficultyStyles[difficulty],
-        ].join(' ')}
-      >
-        {difficulty}
-      </span>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
       <button
         type="button"
@@ -84,26 +63,19 @@ export default function WorkoutCard({
           onBookmarkToggle?.()
         }}
         aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark workout'}
-        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg bg-black/60 text-white backdrop-blur-sm transition hover:bg-black/80"
+        className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/50"
       >
-        <Bookmark size={14} className={bookmarked ? 'fill-white' : ''} />
+        <Bookmark size={13} className={bookmarked ? 'fill-white' : ''} />
       </button>
 
-      <div className="absolute bottom-0 left-0 right-0 p-3">
-        <h3 className="text-sm font-bold leading-tight text-white">{title}</h3>
-        <div className="mt-2 flex items-center gap-3 text-[10px] text-white/75">
-          <span className="flex items-center gap-1">
-            <Clock size={11} />
-            {duration}
-          </span>
-          <span className="flex items-center gap-1">
-            <Flame size={11} />
-            {calories}
-          </span>
-          <span className="flex items-center gap-1">
-            <BarChart2 size={11} />
-            {intensityLabel}
-          </span>
+      <div className="absolute bottom-0 left-0 right-0 p-3.5">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-white/60">
+          {difficulty}
+        </p>
+        <h3 className="mt-1 text-sm font-semibold leading-snug text-white">{title}</h3>
+        <div className="mt-2 flex items-center gap-1.5 text-[11px] text-white/70">
+          <Clock size={11} />
+          <span>{duration}</span>
         </div>
       </div>
     </div>

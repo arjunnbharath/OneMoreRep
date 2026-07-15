@@ -10,6 +10,11 @@ export interface AuthResponse {
   user: User
 }
 
+function apiUrl(path: string) {
+  const base = import.meta.env.VITE_API_URL?.replace(/\/$/, '') ?? ''
+  return `${base}${path}`
+}
+
 async function parseError(res: Response): Promise<string> {
   const text = await res.text()
 
@@ -48,7 +53,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     res = await fetch(url, options)
   } catch {
     throw new Error(
-      'Cannot reach the server. Run "npm run dev" to start both frontend and API.',
+      'Cannot reach the server. Check your internet connection or set VITE_API_URL for native builds.',
     )
   }
 
@@ -60,7 +65,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
-  return request<AuthResponse>('/api/auth/login', {
+  return request<AuthResponse>(apiUrl('/api/auth/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -71,24 +76,46 @@ export async function register(
   name: string,
   email: string,
   password: string,
-  avatar: string,
 ): Promise<AuthResponse> {
-  return request<AuthResponse>('/api/auth/register', {
+  return request<AuthResponse>(apiUrl('/api/auth/register'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, password, avatar }),
+    body: JSON.stringify({ name, email, password }),
   })
 }
 
 export async function getMe(token: string): Promise<{ user: User }> {
-  return request<{ user: User }>('/api/auth/me', {
+  return request<{ user: User }>(apiUrl('/api/auth/me'), {
     headers: { Authorization: `Bearer ${token}` },
   })
 }
 
 export async function deleteAccount(token: string): Promise<{ success: boolean }> {
-  return request<{ success: boolean }>('/api/auth/delete', {
+  return request<{ success: boolean }>(apiUrl('/api/auth/delete'), {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function getUserData(
+  token: string,
+): Promise<{ data: Record<string, unknown> }> {
+  return request<{ data: Record<string, unknown> }>(apiUrl('/api/user-data'), {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function putUserData(
+  token: string,
+  key: string,
+  data: unknown,
+): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>(apiUrl('/api/user-data'), {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ key, data }),
   })
 }

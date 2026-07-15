@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { deleteAccount as apiDeleteAccount, getMe, login as apiLogin, register as apiRegister, type User } from '../lib/api'
+import { clearUserDataCache } from '../lib/userDataSync'
 
 const TOKEN_KEY = 'onemorerep-token'
 const USER_KEY = 'onemorerep-user'
@@ -17,7 +18,7 @@ interface AuthContextValue {
   token: string | null
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (name: string, email: string, password: string, avatar: string) => Promise<void>
+  register: (name: string, email: string, password: string) => Promise<void>
   logout: () => void
   deleteAccount: () => Promise<void>
 }
@@ -33,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   const persist = useCallback((newToken: string, newUser: User) => {
+    clearUserDataCache()
     localStorage.setItem(TOKEN_KEY, newToken)
     localStorage.setItem(USER_KEY, JSON.stringify(newUser))
     setToken(newToken)
@@ -42,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
+    clearUserDataCache()
     setToken(null)
     setUser(null)
   }, [])
@@ -70,8 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const register = useCallback(
-    async (name: string, email: string, password: string, avatar: string) => {
-      const data = await apiRegister(name, email, password, avatar)
+    async (name: string, email: string, password: string) => {
+      const data = await apiRegister(name, email, password)
       persist(data.token, data.user)
     },
     [persist],
