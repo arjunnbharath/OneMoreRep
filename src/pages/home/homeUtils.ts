@@ -1,5 +1,5 @@
-import type { WorkoutSession } from '../types/tracker'
-import type { Workout } from '../data/mockData'
+import type { WorkoutSession } from '../../types/tracker'
+import type { Workout } from '../../data/mockData'
 
 export function toDateKey(date: Date) {
   const y = date.getFullYear()

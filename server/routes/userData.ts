@@ -7,7 +7,7 @@ const {
   getUserIdFromAuthHeader,
   getAllUserData,
   setUserDataEntry,
-} = require('../api/lib/userData.js')
+} = require('../../api/lib/userData.js')
 
 const router = Router()
 
