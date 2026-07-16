@@ -1,19 +1,12 @@
-import { useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Dumbbell, Lightbulb, ListOrdered, Video } from 'lucide-react'
-import ExerciseVideoPlayer from '../components/ExerciseVideoPlayer'
+import { ArrowLeft, Dumbbell, Lightbulb, ListOrdered } from 'lucide-react'
 import Button from '../components/Button'
 import { exerciseGroupLabels, getExerciseById } from '../data/exerciseGuides'
-import { findVideoForExercise, workoutVideoCategories } from '../data/workoutVideos'
 
 export default function ExerciseDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const exercise = getExerciseById(id ?? '')
-  const video = useMemo(
-    () => (exercise ? findVideoForExercise(exercise.name) : null),
-    [exercise],
-  )
 
   if (!exercise) {
     return (
@@ -33,20 +26,11 @@ export default function ExerciseDetail() {
   return (
     <div className="min-h-full bg-background text-foreground">
       <div className="relative h-64 lg:h-80">
-        {video?.available ? (
-          <ExerciseVideoPlayer
-            src={video.videoPath}
-            poster={exercise.image}
-            title={exercise.name}
-            className="h-full"
-          />
-        ) : (
-          <img src={exercise.image} alt="" className="h-full w-full object-cover" />
-        )}
+        <img src={exercise.image} alt="" className="h-full w-full object-cover" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30" />
         <button
           type="button"
-          onClick={() => navigate('/exercises')}
+          onClick={() => navigate(-1)}
           className="absolute left-5 top-6 flex h-10 w-10 items-center justify-center rounded-xl bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
         >
           <ArrowLeft size={20} />
@@ -62,16 +46,6 @@ export default function ExerciseDetail() {
           <Dumbbell size={14} />
           {exercise.equipment}
         </p>
-        {video?.available ? (
-          <p className="mt-2 flex items-center gap-2 text-xs text-muted">
-            <Video size={14} />
-            Demo playing — {video.label}
-          </p>
-        ) : workoutVideoCategories.length === 0 ? (
-          <p className="mt-2 text-xs text-muted">
-            Run npm run prepare:videos to load exercise demo videos.
-          </p>
-        ) : null}
         <p className="mt-4 leading-relaxed text-muted">{exercise.description}</p>
 
         <section className="mt-8">

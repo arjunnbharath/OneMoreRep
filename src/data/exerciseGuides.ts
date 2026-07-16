@@ -31,14 +31,14 @@ export const exerciseGroupLabels: Record<ExerciseGroup, string> = {
 }
 
 const groupImages: Record<ExerciseGroup, string> = {
-  chest: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80',
-  back: 'https://images.unsplash.com/photo-1603286561831-8f228e251213?w=800&q=80',
-  shoulders: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=800&q=80',
-  biceps: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=800&q=80',
-  triceps: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80',
-  abdominals: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b46d2?w=800&q=80',
-  legs: 'https://images.unsplash.com/photo-1434682881348-1deda2a010f5?w=800&q=80',
-  calves: 'https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=800&q=80',
+  chest: '/images/workout-pic/chest/chest.jpg',
+  back: '/images/workout-pic/back/back.jpg',
+  shoulders: '/images/workout-pic/shoulders/shoulder.jpg',
+  biceps: '/images/workout-pic/biceps/biceps.jpg',
+  triceps: '/images/workout-pic/triceps/triceps.jpg',
+  abdominals: '/images/workout-pic/abdominals/abs.jpg',
+  legs: '/images/workout-pic/legs/leg.jpg',
+  calves: '/images/workout-pic/calves/calves.jpg',
 }
 
 function slugify(name: string) {
@@ -264,4 +264,12 @@ export function getExerciseById(id: string) {
 
 export function getExercisesByGroup(group: ExerciseGroup) {
   return exerciseGuides.filter((e) => e.group === group)
+}
+
+export function getExerciseGroupById(id: string) {
+  return exerciseGroups.find((group) => group.id === id)
+}
+
+export function isExerciseGroup(id: string): id is ExerciseGroup {
+  return id in exerciseGroupLabels
 }

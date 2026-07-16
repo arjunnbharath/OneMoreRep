@@ -133,19 +133,6 @@ OneMoreRep/
 
 ---
 
-## Workout videos (optional)
-
-Download and trim Kaggle workout clips into `public/videos/workouts/`:
-
-```bash
-# Add KAGGLE_USERNAME + KAGGLE_API_TOKEN to .env (see .env.example)
-npm run setup:videos   # Windows: creates venv + runs script
-# or
-npm run prepare:videos
-```
-
----
-
 ## Android app (Capacitor)
 
 The React web app is wrapped as a native Android app with [Capacitor](https://capacitorjs.com/).
@@ -212,7 +199,6 @@ See [`flutter_app/README.md`](flutter_app/README.md) for emulator URLs and relea
 | `npm run build:android` | Build web app and sync to `android/` |
 | `npm run android:open` | Open Android project in Android Studio |
 | `npm run android:run` | Build, sync, and run on device/emulator |
-| `npm run prepare:videos` | Fetch & process workout videos |
 | `node scripts/test-db.mjs` | Quick Neon connection test |
 
 ---

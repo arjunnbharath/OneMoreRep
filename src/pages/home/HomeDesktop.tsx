@@ -1,34 +1,19 @@
 import type { RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  ArrowRight,
-  BookOpen,
-  Play,
-} from 'lucide-react'
-import WorkoutCard from '../../components/WorkoutCard'
+import { Play } from 'lucide-react'
 import WorkoutCalendar from '../../components/WorkoutCalendar'
 import TodayPlanCard from '../../components/home/TodayPlanCard'
 import HomeStatsStrip from '../../components/home/HomeStatsStrip'
-import { exerciseGuides } from '../../data/exerciseGuides'
-import { findVideoForExercise } from '../../data/workoutVideos'
+import MuscleExerciseList from '../../components/home/MuscleExerciseList'
 import { getTodayWeekday } from '../../lib/workoutPlan'
-import type { MuscleGroup, Workout } from '../../data/mockData'
 import type { WorkoutSession } from '../../types/tracker'
 import type { WeeklyPlan } from '../../types/workoutPlan'
-import type { HomeFilter } from './homeTypes'
 
 interface HomeDesktopProps {
   stats: { completed: number; minutes: number; streak: number }
   todayCalories: number
   sessions: WorkoutSession[]
   plan: WeeklyPlan
-  activeFilter: MuscleGroup | 'all'
-  onFilterChange: (filter: MuscleGroup | 'all') => void
-  homeFilters: HomeFilter[]
-  filteredWorkouts: Workout[]
-  featuredWorkout: Workout | null
-  isBookmarked: (id: string) => boolean
-  onBookmarkToggle: (id: string) => void
   workoutsRef: RefObject<HTMLElement | null>
 }
 
@@ -37,20 +22,10 @@ export default function HomeDesktop({
   todayCalories,
   sessions,
   plan,
-  activeFilter,
-  onFilterChange,
-  homeFilters,
-  filteredWorkouts,
-  featuredWorkout,
-  isBookmarked,
-  onBookmarkToggle,
   workoutsRef,
 }: HomeDesktopProps) {
   const navigate = useNavigate()
   const recentSessions = sessions.slice(0, 4)
-  const featuredVideo = featuredWorkout
-    ? findVideoForExercise(featuredWorkout.exercises[0]?.name ?? featuredWorkout.title)
-    : null
 
   return (
     <div className="hidden min-h-full bg-background text-foreground lg:block">
@@ -122,135 +97,18 @@ export default function HomeDesktop({
               Open tracker
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={() => navigate('/exercises')}
-            className="group flex w-full items-center gap-3 rounded-2xl border border-border p-4 text-left transition hover:bg-surface"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface ring-1 ring-border">
-              <BookOpen size={18} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium">Exercise library</p>
-              <p className="text-xs text-muted">{exerciseGuides.length}+ guides</p>
-            </div>
-            <ArrowRight size={16} className="text-muted group-hover:text-foreground" />
-          </button>
         </aside>
 
         <div className="min-w-0 space-y-8">
-          {featuredWorkout && (
-            <section className="relative overflow-hidden rounded-2xl ring-1 ring-border">
-              {featuredVideo?.available ? (
-                <video
-                  src={featuredVideo.videoPath}
-                  poster={featuredWorkout.image}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : (
-                <img
-                  src={featuredWorkout.image}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/20" />
-              <div className="relative flex min-h-[220px] flex-col justify-end p-8">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
-                  Featured workout
-                </p>
-                <h2 className="mt-2 max-w-lg text-3xl font-semibold text-white">
-                  {featuredWorkout.title}
-                </h2>
-                <p className="mt-2 text-sm text-white/70">
-                  {featuredWorkout.duration} · {featuredWorkout.difficulty} ·{' '}
-                  {featuredWorkout.calories} cal
-                </p>
-                <button
-                  type="button"
-                  onClick={() => navigate(`/workout/${featuredWorkout.id}`)}
-                  className="mt-5 flex w-fit items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90"
-                >
-                  <Play size={16} />
-                  Start workout
-                </button>
-              </div>
-            </section>
-          )}
-
           <section id="workouts" ref={workoutsRef}>
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold tracking-tight">All workouts</h2>
-                <p className="mt-1 text-sm text-muted">
-                  {filteredWorkouts.length} program{filteredWorkouts.length === 1 ? '' : 's'}
-                </p>
-              </div>
-              {activeFilter !== 'all' && (
-                <button
-                  type="button"
-                  onClick={() => onFilterChange('all')}
-                  className="text-sm font-medium text-muted hover:text-foreground"
-                >
-                  Clear filter
-                </button>
-              )}
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight">Workouts</h2>
+              <p className="mt-1 text-sm text-muted">Tap a muscle group to browse exercises</p>
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-2">
-              {homeFilters.map((filter) => {
-                const isActive = activeFilter === filter.id
-                return (
-                  <button
-                    key={filter.id}
-                    type="button"
-                    onClick={() => onFilterChange(filter.id)}
-                    className={[
-                      'rounded-full px-4 py-2 text-sm font-medium transition',
-                      isActive
-                        ? 'bg-foreground text-background'
-                        : 'text-muted ring-1 ring-border hover:text-foreground',
-                    ].join(' ')}
-                  >
-                    {filter.label}
-                  </button>
-                )
-              })}
+            <div className="mt-6 max-w-2xl">
+              <MuscleExerciseList />
             </div>
-
-            {filteredWorkouts.length > 0 ? (
-              <div className="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-3">
-                {filteredWorkouts.map((workout) => {
-                  const video = findVideoForExercise(
-                    workout.exercises[0]?.name ?? workout.title,
-                  )
-                  return (
-                    <WorkoutCard
-                      key={workout.id}
-                      id={workout.id}
-                      title={workout.shortTitle ?? workout.title}
-                      duration={workout.duration}
-                      difficulty={workout.difficulty}
-                      image={workout.image}
-                      video={video?.available ? video.videoPath : undefined}
-                      bookmarked={isBookmarked(workout.id)}
-                      onBookmarkToggle={() => onBookmarkToggle(workout.id)}
-                      onClick={() => navigate(`/workout/${workout.id}`)}
-                    />
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="mt-6 rounded-2xl border border-dashed border-border px-6 py-20 text-center">
-                <p className="font-medium">No workouts found</p>
-                <p className="mt-1 text-sm text-muted">Try another filter or search term</p>
-              </div>
-            )}
           </section>
         </div>
       </div>

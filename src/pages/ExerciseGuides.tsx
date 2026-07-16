@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, BookOpen, ChevronRight, Search } from 'lucide-react'
 import { exerciseGroups, exerciseGuides, type ExerciseGroup } from '../data/exerciseGuides'
-import { findVideoForExercise } from '../data/workoutVideos'
 
 export default function ExerciseGuides() {
   const navigate = useNavigate()
@@ -39,7 +38,7 @@ export default function ExerciseGuides() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Exercise Guides</h1>
-            <p className="text-xs text-muted">{exerciseGuides.length}+ with demo videos</p>
+            <p className="text-xs text-muted">{exerciseGuides.length}+ exercises</p>
           </div>
         </div>
 
@@ -101,9 +100,7 @@ export default function ExerciseGuides() {
       <section className="mt-8 px-5 pb-4 lg:px-10 lg:pb-8">
         <p className="mb-4 text-sm text-muted">{filtered.length} exercises</p>
         <ul className="space-y-2">
-          {filtered.map((exercise) => {
-            const video = findVideoForExercise(exercise.name)
-            return (
+          {filtered.map((exercise) => (
               <li key={exercise.id}>
                 <button
                   type="button"
@@ -111,19 +108,7 @@ export default function ExerciseGuides() {
                   className="group flex w-full items-center gap-4 rounded-2xl bg-surface p-3 text-left ring-1 ring-border transition hover:ring-foreground/20"
                 >
                   <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-black">
-                    {video?.available ? (
-                      <video
-                        src={video.videoPath}
-                        poster={exercise.image}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <img src={exercise.image} alt="" className="h-full w-full object-cover" />
-                    )}
+                    <img src={exercise.image} alt="" className="h-full w-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{exercise.name}</p>
@@ -137,8 +122,7 @@ export default function ExerciseGuides() {
                   />
                 </button>
               </li>
-            )
-          })}
+          ))}
         </ul>
       </section>
     </div>

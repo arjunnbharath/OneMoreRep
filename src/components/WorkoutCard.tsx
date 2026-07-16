@@ -5,7 +5,6 @@ interface WorkoutCardProps {
   id: string
   title: string
   image: string
-  video?: string
   duration: string
   difficulty: Difficulty
   bookmarked?: boolean
@@ -16,7 +15,6 @@ interface WorkoutCardProps {
 export default function WorkoutCard({
   title,
   image,
-  video,
   duration,
   difficulty,
   bookmarked = false,
@@ -36,24 +34,11 @@ export default function WorkoutCard({
       }}
       className="group relative aspect-[4/5] w-full cursor-pointer overflow-hidden rounded-xl bg-surface text-left ring-1 ring-border transition hover:ring-foreground/20"
     >
-      {video ? (
-        <video
-          src={video}
-          poster={image}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-        />
-      ) : (
-        <img
-          src={image}
-          alt={title}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-        />
-      )}
+      <img
+        src={image}
+        alt={title}
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+      />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
       <button

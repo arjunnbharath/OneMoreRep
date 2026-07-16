@@ -1,62 +1,20 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import {
-  ArrowLeft,
-  Check,
-  Clock,
-  Flame,
-  Heart,
-  Play,
-  Star,
-} from 'lucide-react'
+import { ArrowLeft, Check, Clock, Flame, Heart, Star } from 'lucide-react'
 import Button from '../components/Button'
-import ExerciseVideoPlayer from '../components/ExerciseVideoPlayer'
 import { workouts } from '../data/mockData'
-import { findVideoForExercise, getDefaultWorkoutVideo } from '../data/workoutVideos'
 
 export default function WorkoutDetail() {
   const { id } = useParams()
   const workout = workouts.find((w) => w.id === id) ?? workouts[0]
-  const [activeTab, setActiveTab] = useState<'videos' | 'review'>('videos')
+  const [activeTab, setActiveTab] = useState<'exercises' | 'review'>('exercises')
   const [isFavorite, setIsFavorite] = useState(false)
-
-  const defaultVideo = useMemo(
-    () =>
-      findVideoForExercise(workout.exercises[0]?.name ?? workout.title) ??
-      getDefaultWorkoutVideo(),
-    [workout],
-  )
-
-  const [activeVideo, setActiveVideo] = useState(defaultVideo)
-
-  useEffect(() => {
-    setActiveVideo(defaultVideo)
-  }, [workout.id, defaultVideo])
-
-  const heroPoster = workout.image
-  const heroVideo = activeVideo?.available ? activeVideo : defaultVideo?.available ? defaultVideo : null
 
   return (
     <div className="min-h-full bg-background text-foreground lg:grid lg:min-h-[calc(100dvh-4rem)] lg:grid-cols-2">
-      <div className="relative aspect-video w-full lg:aspect-auto lg:min-h-full">
-        {heroVideo ? (
-          <ExerciseVideoPlayer
-            key={heroVideo.id}
-            src={heroVideo.videoPath}
-            poster={heroPoster}
-            title={heroVideo.label}
-            className="h-full min-h-full"
-          />
-        ) : (
-          <>
-            <img
-              src={heroPoster}
-              alt={workout.title}
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/40" />
-          </>
-        )}
+      <div className="relative aspect-[4/3] w-full lg:aspect-auto lg:min-h-full">
+        <img src={workout.image} alt={workout.title} className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-black/30" />
         <Link
           to="/home"
           className="absolute left-5 top-5 z-10 flex h-10 w-10 items-center justify-center rounded-xl bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
@@ -106,10 +64,10 @@ export default function WorkoutDetail() {
         <div className="mt-6 flex gap-2">
           <button
             type="button"
-            onClick={() => setActiveTab('videos')}
+            onClick={() => setActiveTab('exercises')}
             className={[
               'rounded-full px-5 py-2.5 text-sm font-semibold transition',
-              activeTab === 'videos'
+              activeTab === 'exercises'
                 ? 'bg-accent text-accent-foreground'
                 : 'bg-surface text-muted ring-1 ring-border',
             ].join(' ')}
@@ -130,65 +88,28 @@ export default function WorkoutDetail() {
           </button>
         </div>
 
-        {activeTab === 'videos' ? (
+        {activeTab === 'exercises' ? (
           <ul className="mt-6 space-y-2">
-            {workout.exercises.map((exercise) => {
-              const video = findVideoForExercise(exercise.name)
-              const isActive = video?.id === activeVideo?.id
-
-              return (
-                <li key={exercise.name}>
-                  <button
-                    type="button"
-                    onClick={() => video?.available && setActiveVideo(video)}
-                    disabled={!video?.available}
+            {workout.exercises.map((exercise) => (
+              <li key={exercise.name}>
+                <div className="flex w-full items-center gap-4 rounded-2xl bg-surface p-3 ring-1 ring-border">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{exercise.name}</p>
+                    <p className="text-xs text-muted">{exercise.duration}</p>
+                  </div>
+                  <div
                     className={[
-                      'flex w-full items-center gap-4 rounded-2xl p-3 text-left transition ring-1',
-                      isActive
-                        ? 'bg-foreground/10 ring-foreground/30'
-                        : 'bg-surface ring-border hover:ring-foreground/20',
-                      !video?.available ? 'opacity-60' : '',
+                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+                      exercise.completed
+                        ? 'bg-accent text-accent-foreground'
+                        : 'bg-surface-elevated text-muted',
                     ].join(' ')}
                   >
-                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-black">
-                      {video?.available ? (
-                        <video
-                          src={video.videoPath}
-                          autoPlay
-                          muted
-                          loop
-                          playsInline
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-surface-elevated">
-                          <Play size={18} className="text-muted" />
-                        </div>
-                      )}
-                      {isActive && (
-                        <div className="absolute inset-0 ring-2 ring-foreground ring-inset" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">{exercise.name}</p>
-                      <p className="text-xs text-muted">
-                        {video?.available ? 'Playing demo' : exercise.duration}
-                      </p>
-                    </div>
-                    <div
-                      className={[
-                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-                        exercise.completed
-                          ? 'bg-accent text-accent-foreground'
-                          : 'bg-surface-elevated text-muted',
-                      ].join(' ')}
-                    >
-                      <Check size={16} />
-                    </div>
-                  </button>
-                </li>
-              )
-            })}
+                    <Check size={16} />
+                  </div>
+                </div>
+              </li>
+            ))}
           </ul>
         ) : (
           <div className="mt-6 rounded-2xl bg-surface p-8 text-center ring-1 ring-border">

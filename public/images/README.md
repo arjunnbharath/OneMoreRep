@@ -4,6 +4,7 @@ Drop your image files here. They are served from the site root.
 
 | Folder | Use for |
 |--------|---------|
+| `workout-pic/` | Muscle group images (`chest/`, `back/`, `shoulders/`, etc.) |
 | `workouts/` | Home page workout card thumbnails |
 | `exercises/` | Exercise guide images |
 | `calendar/` | Workout calendar month backgrounds |
