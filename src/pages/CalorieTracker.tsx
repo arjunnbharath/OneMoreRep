@@ -20,7 +20,7 @@ import {
   DailyCalorieSummary,
   sumByMeal,
   WeekStrip,
-  WeeklyBarChart,
+  WeeklyCalorieSection,
 } from '../components/calories/CalorieWidgets'
 import {
   calculateBmr,
@@ -755,19 +755,13 @@ function DailyLog() {
             />
           </div>
 
-          <section className="mt-6 rounded-3xl bg-surface p-5 ring-1 ring-border lg:hidden">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold">This week</h2>
-              <span className="text-xs text-muted">{profile.dailyCalorieTarget} kcal goal</span>
-            </div>
-            <div className="mt-4">
-              <WeeklyBarChart
-                caloriesByDay={caloriesByDay}
-                target={profile.dailyCalorieTarget}
-                selectedDate={selectedDate}
-              />
-            </div>
-          </section>
+          <div className="mt-6 lg:hidden">
+            <WeeklyCalorieSection
+              caloriesByDay={caloriesByDay}
+              target={profile.dailyCalorieTarget}
+              selectedDate={selectedDate}
+            />
+          </div>
 
           <div className="mt-6 flex items-center justify-between lg:mt-8">
             <h2 className="text-lg font-semibold">Meals</h2>
@@ -888,19 +882,11 @@ function DailyLog() {
               fatTarget={profile.fatTargetG}
             />
 
-            <section className="rounded-3xl bg-surface p-5 ring-1 ring-border">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold">This week</h2>
-                <span className="text-xs text-muted">{profile.dailyCalorieTarget} kcal goal</span>
-              </div>
-              <div className="mt-4">
-                <WeeklyBarChart
-                  caloriesByDay={caloriesByDay}
-                  target={profile.dailyCalorieTarget}
-                  selectedDate={selectedDate}
-                />
-              </div>
-            </section>
+            <WeeklyCalorieSection
+              caloriesByDay={caloriesByDay}
+              target={profile.dailyCalorieTarget}
+              selectedDate={selectedDate}
+            />
 
             <AddFoodPanel
               onClose={() => {}}

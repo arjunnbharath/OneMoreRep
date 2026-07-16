@@ -1,5 +1,8 @@
 import type { DailyMacroTotals, UserNutritionProfile } from '../../types/nutrition'
 
+const CALORIES_SUMMARY_BG = '/images/gym_background/calories.jpg'
+const WEEK_CALORIES_BG = '/images/gym_background/week-calaores.jpg'
+
 const MACRO_COLORS = {
   protein: {
     bar: 'bg-red-500',
@@ -23,9 +26,10 @@ interface MacroColumnProps {
   current: number
   target: number
   color: keyof typeof MACRO_COLORS
+  onImage?: boolean
 }
 
-function MacroColumn({ label, current, target, color }: MacroColumnProps) {
+function MacroColumn({ label, current, target, color, onImage = false }: MacroColumnProps) {
   const eaten = Math.round(current)
   const goal = Math.round(target)
   const pct = goal > 0 ? Math.min(100, (current / goal) * 100) : 0
@@ -36,13 +40,15 @@ function MacroColumn({ label, current, target, color }: MacroColumnProps) {
     <div className="min-w-0">
       <div className="flex items-center gap-1.5">
         <span className={`h-2 w-2 shrink-0 rounded-full ${palette.dot}`} />
-        <span className="truncate text-[11px] font-medium text-muted">{label}</span>
+        <span className={['truncate text-[11px] font-medium', onImage ? 'text-white/70' : 'text-muted'].join(' ')}>
+          {label}
+        </span>
       </div>
       <p className="mt-2 text-xl font-semibold tabular-nums leading-none">
         {eaten}
-        <span className="ml-0.5 text-sm font-normal text-muted">g</span>
+        <span className={['ml-0.5 text-sm font-normal', onImage ? 'text-white/60' : 'text-muted'].join(' ')}>g</span>
       </p>
-      <div className={`mt-2.5 h-1.5 overflow-hidden rounded-full ${palette.track}`}>
+      <div className={`mt-2.5 h-1.5 overflow-hidden rounded-full ${onImage ? 'bg-white/20' : palette.track}`}>
         <div
           className={[
             'h-full rounded-full transition-all duration-500',
@@ -51,7 +57,7 @@ function MacroColumn({ label, current, target, color }: MacroColumnProps) {
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="mt-1.5 text-[10px] tabular-nums text-muted">of {goal}g</p>
+      <p className={['mt-1.5 text-[10px] tabular-nums', onImage ? 'text-white/60' : 'text-muted'].join(' ')}>of {goal}g</p>
     </div>
   )
 }
@@ -84,59 +90,67 @@ export function DailyCalorieSummary({
   const pct = goal > 0 ? Math.min(100, (eaten / goal) * 100) : 0
 
   return (
-    <div className="rounded-3xl bg-surface p-5 ring-1 ring-border lg:p-6">
+    <div className="relative overflow-hidden rounded-3xl ring-1 ring-border">
+      <img
+        src={CALORIES_SUMMARY_BG}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/60 to-black/80" />
+      <div className="relative p-5 text-white lg:p-6">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
             {over ? 'Over budget' : 'Remaining'}
           </p>
           <p
             className={[
               'mt-1 text-4xl font-bold tabular-nums tracking-tight sm:text-[2.75rem]',
-              over ? 'text-amber-600 dark:text-amber-400' : '',
+              over ? 'text-amber-300' : '',
             ].join(' ')}
           >
             {over ? eaten - goal : remaining}
           </p>
-          <p className="mt-0.5 text-sm text-muted">kcal</p>
+          <p className="mt-0.5 text-sm text-white/65">kcal</p>
         </div>
 
-        <div className="shrink-0 rounded-2xl bg-surface-elevated px-4 py-3 text-right ring-1 ring-border">
+        <div className="shrink-0 rounded-2xl bg-white/10 px-4 py-3 text-right ring-1 ring-white/15 backdrop-blur-sm">
           <p className="text-2xl font-semibold tabular-nums leading-none">{eaten}</p>
-          <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-muted">
+          <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-white/65">
             Eaten
           </p>
-          <div className="my-2 h-px bg-border" />
+          <div className="my-2 h-px bg-white/15" />
           <p className="text-sm font-semibold tabular-nums leading-none">{goal}</p>
-          <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-muted">
+          <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-white/65">
             Goal
           </p>
         </div>
       </div>
 
       <div className="mt-6">
-        <div className="flex items-center justify-between text-xs text-muted">
+        <div className="flex items-center justify-between text-xs text-white/65">
           <span>{eaten} kcal eaten</span>
           <span>{goal} kcal goal</span>
         </div>
-        <div className="mt-2 h-3 overflow-hidden rounded-full bg-surface-elevated">
+        <div className="mt-2 h-3 overflow-hidden rounded-full bg-white/20">
           <div
             className={[
               'h-full rounded-full transition-all duration-700',
-              over ? 'bg-amber-500' : 'bg-foreground',
+              over ? 'bg-amber-400' : 'bg-white',
             ].join(' ')}
             style={{ width: `${pct}%` }}
           />
         </div>
-        <p className="mt-2 text-center text-[11px] tabular-nums text-muted">
+        <p className="mt-2 text-center text-[11px] tabular-nums text-white/60">
           {Math.round(pct)}% of daily goal
         </p>
       </div>
 
-      <div className="mt-6 grid grid-cols-3 gap-4 border-t border-border pt-5">
-        <MacroColumn label="Protein" current={protein} target={proteinTarget} color="protein" />
-        <MacroColumn label="Carbs" current={carbs} target={carbsTarget} color="carbs" />
-        <MacroColumn label="Fat" current={fat} target={fatTarget} color="fat" />
+      <div className="mt-6 grid grid-cols-3 gap-4 border-t border-white/15 pt-5">
+        <MacroColumn label="Protein" current={protein} target={proteinTarget} color="protein" onImage />
+        <MacroColumn label="Carbs" current={carbs} target={carbsTarget} color="carbs" onImage />
+        <MacroColumn label="Fat" current={fat} target={fatTarget} color="fat" onImage />
+      </div>
       </div>
     </div>
   )
@@ -340,10 +354,12 @@ export function WeeklyBarChart({
   caloriesByDay,
   target,
   selectedDate,
+  onImage = false,
 }: {
   caloriesByDay: Record<string, number>
   target: number
   selectedDate: string
+  onImage?: boolean
 }) {
   const keys = getWeekKeys(selectedDate)
   const max = Math.max(target, ...keys.map((k) => caloriesByDay[k] ?? 0), 1)
@@ -360,18 +376,59 @@ export function WeeklyBarChart({
               <div
                 className={[
                   'w-full rounded-t-lg transition-all duration-500',
-                  isSelected ? 'bg-foreground' : 'bg-foreground/25',
+                  isSelected
+                    ? onImage
+                      ? 'bg-white'
+                      : 'bg-foreground'
+                    : onImage
+                      ? 'bg-white/35'
+                      : 'bg-foreground/25',
                 ].join(' ')}
                 style={{ height: `${h}%` }}
               />
             </div>
-            <span className="text-[9px] tabular-nums text-muted">
+            <span className={['text-[9px] tabular-nums', onImage ? 'text-white/65' : 'text-muted'].join(' ')}>
               {cals > 0 ? cals : '—'}
             </span>
           </div>
         )
       })}
     </div>
+  )
+}
+
+export function WeeklyCalorieSection({
+  caloriesByDay,
+  target,
+  selectedDate,
+}: {
+  caloriesByDay: Record<string, number>
+  target: number
+  selectedDate: string
+}) {
+  return (
+    <section className="relative overflow-hidden rounded-3xl ring-1 ring-border">
+      <img
+        src={WEEK_CALORIES_BG}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/60 to-black/80" />
+      <div className="relative p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-white">This week</h2>
+          <span className="text-xs text-white/65">{target} kcal goal</span>
+        </div>
+        <div className="mt-4">
+          <WeeklyBarChart
+            caloriesByDay={caloriesByDay}
+            target={target}
+            selectedDate={selectedDate}
+            onImage
+          />
+        </div>
+      </div>
+    </section>
   )
 }
 
