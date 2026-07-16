@@ -3,7 +3,7 @@ import { Search } from 'lucide-react'
 import Button from '../Button'
 
 const SET_PRESETS = [
-  { label: '3×10', sets: '3', reps: '10' },
+  { label: '3×12', sets: '3', reps: '12' },
   { label: '4×8', sets: '4', reps: '8' },
   { label: '5×5', sets: '5', reps: '5' },
 ]

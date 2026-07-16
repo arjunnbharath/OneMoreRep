@@ -1,14 +1,29 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 import {
   getExerciseGroupById,
   getExercisesByGroup,
   isExerciseGroup,
 } from '../data/exerciseGuides'
+import { saveScrollPosition } from '../lib/scrollRestore'
 
 export default function MuscleGroupExercises() {
   const { group: groupId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  function goBack() {
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate('/home')
+  }
+
+  function openExercise(exerciseId: string) {
+    saveScrollPosition(location.pathname, location.search, location.hash)
+    navigate(`/exercises/${exerciseId}`)
+  }
 
   if (!groupId || !isExerciseGroup(groupId)) {
     return (
@@ -16,7 +31,7 @@ export default function MuscleGroupExercises() {
         <p className="font-semibold">Muscle group not found</p>
         <button
           type="button"
-          onClick={() => navigate('/home')}
+          onClick={goBack}
           className="mt-4 text-sm text-foreground underline-offset-2 hover:underline"
         >
           Back to home
@@ -38,7 +53,7 @@ export default function MuscleGroupExercises() {
 
         <button
           type="button"
-          onClick={() => navigate('/home')}
+          onClick={goBack}
           className="absolute left-5 top-[max(1.5rem,env(safe-area-inset-top))] z-10 flex items-center gap-2 rounded-xl bg-white/95 px-3 py-2 text-sm font-medium text-foreground shadow-sm ring-1 ring-black/10 backdrop-blur transition hover:bg-white dark:bg-background/85 dark:shadow-none dark:ring-border"
         >
           <ArrowLeft size={16} />
@@ -60,7 +75,7 @@ export default function MuscleGroupExercises() {
             <li key={exercise.id}>
               <button
                 type="button"
-                onClick={() => navigate(`/exercises/${exercise.id}`)}
+                onClick={() => openExercise(exercise.id)}
                 className="group flex w-full items-center gap-4 rounded-2xl bg-surface p-3.5 text-left shadow-sm ring-1 ring-border transition hover:bg-surface-elevated hover:ring-foreground/15 dark:shadow-none"
               >
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface-elevated ring-1 ring-border/80">

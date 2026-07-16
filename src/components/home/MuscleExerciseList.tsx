@@ -1,8 +1,20 @@
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { exerciseGroups } from '../../data/exerciseGuides'
+import { saveScrollPosition } from '../../lib/scrollRestore'
 
-export default function MuscleExerciseList() {
+interface MuscleExerciseListProps {
+  onBeforeNavigate?: () => void
+}
+
+export default function MuscleExerciseList({ onBeforeNavigate }: MuscleExerciseListProps) {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  function openMuscle(groupId: string) {
+    saveScrollPosition(location.pathname, location.search, location.hash)
+    onBeforeNavigate?.()
+    navigate(`/muscle/${groupId}`)
+  }
 
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -10,7 +22,7 @@ export default function MuscleExerciseList() {
         <button
           key={group.id}
           type="button"
-          onClick={() => navigate(`/muscle/${group.id}`)}
+          onClick={() => openMuscle(group.id)}
           className="group relative block aspect-square w-full overflow-hidden rounded-2xl bg-surface text-left ring-1 ring-border"
         >
           <img

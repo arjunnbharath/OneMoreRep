@@ -281,6 +281,10 @@ export function useWorkoutTracker() {
     setSessions((prev) => prev.filter((s) => s.id !== sessionId))
   }
 
+  function cancelSession() {
+    setActiveSession(null)
+  }
+
   function updateSessionName(name: string) {
     setActiveSession((prev) => (prev ? { ...prev, name } : prev))
   }
@@ -305,8 +309,8 @@ export function useWorkoutTracker() {
     finishSession,
     duplicateSession,
     deleteSession,
+    cancelSession,
     updateSessionName,
     updateSessionNote,
-    setActiveSession,
   }
 }

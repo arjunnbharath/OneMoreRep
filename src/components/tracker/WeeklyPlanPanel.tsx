@@ -251,8 +251,8 @@ function MuscleScreen({
   onAddExercise: WeeklyPlanPanelProps['onAddExercise']
   onRemoveExercise: WeeklyPlanPanelProps['onRemoveExercise']
 }) {
-  const [sets, setSets] = useState('4')
-  const [reps, setReps] = useState('10')
+  const [sets, setSets] = useState('3')
+  const [reps, setReps] = useState('12')
   const [customName, setCustomName] = useState('')
 
   const library = useMemo(() => exerciseGuides.filter((e) => e.group === group), [group])
@@ -262,13 +262,13 @@ function MuscleScreen({
   )
 
   function addFromLibrary(name: string) {
-    onAddExercise(day, group, name, parseInt(sets, 10) || 4, parseInt(reps, 10) || 10)
+    onAddExercise(day, group, name, parseInt(sets, 10) || 3, parseInt(reps, 10) || 12)
   }
 
   function handleCustomAdd(e: FormEvent) {
     e.preventDefault()
     if (!customName.trim()) return
-    onAddExercise(day, group, customName, parseInt(sets, 10) || 4, parseInt(reps, 10) || 10)
+    onAddExercise(day, group, customName, parseInt(sets, 10) || 3, parseInt(reps, 10) || 12)
     setCustomName('')
   }
 

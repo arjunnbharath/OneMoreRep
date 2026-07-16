@@ -22,7 +22,9 @@ import ProgressVolumeChart from '../components/tracker/ProgressVolumeChart'
 import AddExerciseForm from '../components/tracker/AddExerciseForm'
 import ExerciseSetTable from '../components/tracker/ExerciseSetTable'
 import NextMuscleReady from '../components/tracker/NextMuscleReady'
+import ReadyToTrainPanel from '../components/tracker/ReadyToTrainPanel'
 import WeeklyPlanPanel from '../components/tracker/WeeklyPlanPanel'
+import MuscleExerciseList from '../components/home/MuscleExerciseList'
 import { exerciseGuides, type ExerciseGroup } from '../data/exerciseGuides'
 import { heroImage } from '../data/mockData'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
@@ -49,6 +51,12 @@ import type { TrackedExercise, WorkoutSession } from '../types/tracker'
 import type { Weekday } from '../types/workoutPlan'
 
 type View = 'workout' | 'plan' | 'history' | 'progress'
+
+const TRACKER_VIEW_KEY = 'onemorerep-tracker-view'
+
+function isTrackerView(value: string): value is View {
+  return value === 'workout' || value === 'plan' || value === 'history' || value === 'progress'
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -113,9 +121,9 @@ export default function Tracker() {
     finishSession,
     duplicateSession,
     deleteSession,
+    cancelSession,
     updateSessionName,
     updateSessionNote,
-    setActiveSession,
   } = useWorkoutTracker()
 
   const {
@@ -143,8 +151,8 @@ export default function Tracker() {
   const [exerciseQuery, setExerciseQuery] = useState('')
 
   const [exerciseName, setExerciseName] = useState('')
-  const [sets, setSets] = useState('4')
-  const [reps, setReps] = useState('10')
+  const [sets, setSets] = useState('3')
+  const [reps, setReps] = useState('12')
   const [weight, setWeight] = useState('')
 
   useEffect(() => {
@@ -152,6 +160,18 @@ export default function Tracker() {
       setPlanSwipeHintKey((key) => key + 1)
     }
   }, [view])
+
+  useEffect(() => {
+    const savedView = sessionStorage.getItem(TRACKER_VIEW_KEY)
+    if (savedView && isTrackerView(savedView)) {
+      setView(savedView)
+      sessionStorage.removeItem(TRACKER_VIEW_KEY)
+    }
+  }, [])
+
+  function rememberTrackerView() {
+    sessionStorage.setItem(TRACKER_VIEW_KEY, view)
+  }
 
   useEffect(() => {
     if (!activeSession || activeSession.completedAt) return
@@ -201,17 +221,38 @@ export default function Tracker() {
 
   function resetExerciseForm() {
     setExerciseName('')
-    setSets('4')
-    setReps('10')
+    setSets('3')
+    setReps('12')
     setWeight('')
     setExerciseQuery('')
+  }
+
+  function handleCancelSession() {
+    if (!activeSession) return
+
+    const hasProgress = activeSession.exercises.some((exercise) =>
+      exercise.sets.some((set) => set.completed),
+    )
+    if (
+      hasProgress &&
+      !window.confirm('Cancel this workout? Your progress will not be saved.')
+    ) {
+      return
+    }
+
+    cancelSession()
+    setDayWorkoutFlow(null)
+    setReadyForNextMuscle(null)
+    setSelectedExercise('')
+    setShowAddForm(false)
+    resetExerciseForm()
   }
 
   function quickAddExercise(name: string) {
     const last = findLastExerciseLog(sessions, name)
     const lastSet = last?.sets.find((s) => s.completed) ?? last?.sets[0]
     const setCount = last?.sets.length ?? 3
-    const repCount = lastSet?.reps ?? 10
+    const repCount = lastSet?.reps ?? 12
     const weightVal = lastSet?.weight
 
     addExercise(name, setCount, repCount, weightVal)
@@ -354,7 +395,7 @@ export default function Tracker() {
           onRemoveSet={(setId) => removeSet(exercise.id, setId)}
           onAddSet={() => {
             const last = exercise.sets[exercise.sets.length - 1]
-            addSetToExercise(exercise.id, last?.reps ?? 10, last?.weight)
+            addSetToExercise(exercise.id, last?.reps ?? 12, last?.weight)
           }}
         />
       </li>
@@ -602,10 +643,116 @@ export default function Tracker() {
       )}
 
       {view === 'progress' && (
-        <section className="px-5 pb-8 pt-4 lg:px-10 lg:pt-6">
+        <section className="space-y-8 px-5 pb-8 pt-4 lg:px-10 lg:pt-6">
+          {!activeSession && (
+            <div className="mx-auto max-w-lg">
+              <ReadyToTrainPanel
+                plan={plan}
+                lastSession={sessions[0] ?? null}
+                onStartToday={() => handleStartDayPlan(getTodayWeekday())}
+                onStartEmpty={() => startSession("Today's Workout")}
+                onEditPlan={() => setView('plan')}
+                onRepeatLast={
+                  sessions[0]
+                    ? () => {
+                        duplicateSession(sessions[0].id)
+                        setView('workout')
+                      }
+                    : undefined
+                }
+                formatSessionDate={formatDate}
+              />
+            </div>
+          )}
+
           <div className="mx-auto max-w-lg">
             <ProgressVolumeChart weekly={weeklyProgress} monthly={monthlyProgress} />
           </div>
+
+          {activeSession ? (
+            <div className="mx-auto max-w-lg">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold text-muted">Workout session</h3>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setView('workout')}
+                    className="text-xs font-medium text-foreground underline-offset-2 hover:underline"
+                  >
+                    Back to workout
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelSession}
+                    className="text-xs font-medium text-red-600 underline-offset-2 hover:underline dark:text-red-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+
+              {activeSession.exercises.length === 0 ? (
+                <p className="rounded-2xl bg-surface p-4 text-sm text-muted ring-1 ring-border">
+                  No exercises added yet. Go to Workout to add exercises or cancel the session.
+                </p>
+              ) : (
+                <>
+              <ul className="space-y-2">
+                {activeSession.exercises.map((exercise) => {
+                  const completedSets = exercise.sets.filter((s) => s.completed).length
+                  const totalSets = exercise.sets.length
+                  const isSelected = selectedExercise === exercise.name
+
+                  return (
+                    <li key={exercise.id}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedExercise(exercise.name)}
+                        className={[
+                          'flex w-full items-center justify-between gap-3 rounded-2xl p-4 text-left ring-1 transition',
+                          isSelected
+                            ? 'bg-foreground/10 ring-foreground/30'
+                            : 'bg-surface ring-border hover:ring-foreground/20',
+                        ].join(' ')}
+                      >
+                        <div className="min-w-0">
+                          <p className="font-semibold">{exercise.name}</p>
+                          <p className="mt-0.5 text-xs text-muted">
+                            {completedSets}/{totalSets} sets complete
+                          </p>
+                        </div>
+                        <BarChart3
+                          size={16}
+                          className={isSelected ? 'text-foreground' : 'text-muted'}
+                        />
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+
+              {(selectedExercise || activeSession.exercises[0]?.name) && (
+                <div className="mt-6">
+                  <h3 className="mb-3 text-sm font-semibold text-muted">Exercise progress</h3>
+                  <ExerciseHistoryChart
+                    points={getExerciseHistory(
+                      sessions,
+                      selectedExercise || activeSession.exercises[0]?.name || '',
+                    )}
+                    height={260}
+                  />
+                </div>
+              )}
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="mx-auto max-w-lg">
+              <h3 className="mb-1 text-base font-semibold">Workouts</h3>
+              <p className="mb-4 text-sm text-muted">Browse exercises by muscle group</p>
+              <MuscleExerciseList onBeforeNavigate={rememberTrackerView} />
+            </div>
+          )}
         </section>
       )}
 
@@ -626,78 +773,28 @@ export default function Tracker() {
       )}
 
       {view === 'workout' && !activeSession && !readyForNextMuscle && (
-        <section className="space-y-6 px-5 pb-8 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:px-10">
-          {(() => {
-            const today = getTodayWeekday()
-            const todayPlan = plan[today]
-            const hasToday = todayPlan.muscles.some(
-              (g) => exercisesForMuscle(todayPlan, g).length > 0,
-            )
-            if (!hasToday) return null
-            return (
-              <button
-                type="button"
-                onClick={() => handleStartDayPlan(today)}
-                className="flex w-full items-center justify-between rounded-2xl bg-surface p-4 text-left ring-1 ring-border transition hover:ring-foreground/20"
-              >
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                    Today&apos;s plan
-                  </p>
-                  <p className="mt-1 font-semibold">{WEEKDAY_LABELS[today]}</p>
-                  <p className="mt-0.5 text-xs text-muted">
-                    {todayPlan.muscles.length} muscle group{todayPlan.muscles.length === 1 ? '' : 's'}
-                  </p>
-                </div>
-                <span className="rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background">
-                  Start
-                </span>
-              </button>
-            )
-          })()}
-
-          <div className="relative overflow-hidden rounded-3xl">
-            <img src={heroImage} alt="" className="h-48 w-full object-cover opacity-50" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
-            <div className="absolute inset-0 flex flex-col items-center justify-end p-8 text-center text-white">
-              <p className="text-xs font-semibold uppercase tracking-widest text-white/70">
-                Ready to train
-              </p>
-              <h2 className="mt-2 text-2xl font-bold">Start your session</h2>
-              <Button
-                className="mt-6 w-full max-w-xs py-3.5"
-                onClick={() => startSession("Today's Workout")}
-              >
-                Start empty workout
-              </Button>
-              <button
-                type="button"
-                onClick={() => setView('plan')}
-                className="mt-3 text-sm text-white/70 underline-offset-2 hover:text-white hover:underline"
-              >
-                Edit weekly plan
-              </button>
-            </div>
+        <section className="space-y-8 px-5 pb-8 lg:px-10">
+          <div className="mx-auto max-w-lg lg:max-w-2xl">
+            <ReadyToTrainPanel
+              plan={plan}
+              lastSession={sessions[0] ?? null}
+              onStartToday={() => handleStartDayPlan(getTodayWeekday())}
+              onStartEmpty={() => startSession("Today's Workout")}
+              onEditPlan={() => setView('plan')}
+              onRepeatLast={
+                sessions[0]
+                  ? () => duplicateSession(sessions[0].id)
+                  : undefined
+              }
+              formatSessionDate={formatDate}
+            />
           </div>
 
-          {sessions.length > 0 && (
-            <div>
-              <h3 className="mb-3 text-sm font-semibold text-muted">Repeat last workout</h3>
-              <button
-                type="button"
-                onClick={() => duplicateSession(sessions[0].id)}
-                className="flex w-full items-center justify-between rounded-2xl bg-surface p-4 text-left ring-1 ring-border transition hover:ring-foreground/20"
-              >
-                <div>
-                  <p className="font-semibold">{sessions[0].name}</p>
-                  <p className="mt-0.5 text-xs text-muted">
-                    {formatDate(sessions[0].date)} · {sessions[0].exercises.length} exercises
-                  </p>
-                </div>
-                <Copy size={18} className="text-muted" />
-              </button>
-            </div>
-          )}
+          <div className="mx-auto max-w-lg lg:max-w-2xl">
+            <h3 className="mb-1 text-base font-semibold">Workouts</h3>
+            <p className="mb-4 text-sm text-muted">Browse exercises by muscle group</p>
+            <MuscleExerciseList onBeforeNavigate={rememberTrackerView} />
+          </div>
         </section>
       )}
 
@@ -718,6 +815,14 @@ export default function Tracker() {
             <section className="relative mx-5 overflow-hidden rounded-3xl lg:mx-0">
               <img src={heroImage} alt="" className="h-44 w-full object-cover lg:h-52" />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/30" />
+              <button
+                type="button"
+                onClick={handleCancelSession}
+                className="absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-xl bg-black/35 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 backdrop-blur-sm transition hover:bg-black/50"
+              >
+                <X size={14} />
+                Cancel
+              </button>
               <div className="absolute inset-0 flex flex-col justify-end p-5 text-white">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-white/70">
                   Active workout
@@ -798,6 +903,13 @@ export default function Tracker() {
                     onQuickAdd={quickAddExercise}
                     onSubmit={handleAddExercise}
                   />
+                  <button
+                    type="button"
+                    onClick={handleCancelSession}
+                    className="mt-4 w-full rounded-xl py-3 text-sm font-medium text-red-600 ring-1 ring-red-500/25 transition hover:bg-red-500/10 dark:text-red-400"
+                  >
+                    Cancel session
+                  </button>
                 </div>
               ) : (
                 <>
@@ -849,10 +961,10 @@ export default function Tracker() {
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={() => setActiveSession(null)}
-                      className="rounded-xl py-3 text-sm font-medium text-muted ring-1 ring-border hover:text-foreground"
+                      onClick={handleCancelSession}
+                      className="rounded-xl py-3 text-sm font-medium text-red-600 ring-1 ring-red-500/25 transition hover:bg-red-500/10 dark:text-red-400"
                     >
-                      Discard
+                      Cancel session
                     </button>
                     <Button className="py-3" onClick={handleFinish}>
                       Finish workout
