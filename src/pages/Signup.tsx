@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Dumbbell, Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
+import AuthPageShell from '../components/AuthPageShell'
 import AuthVideoBackground from '../components/AuthVideoBackground'
 import Button from '../components/Button'
 import Input from '../components/Input'
@@ -33,7 +34,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="relative min-h-dvh bg-background text-foreground">
+    <AuthPageShell className="relative">
       <AuthVideoBackground variant="auth" />
 
       <div className="relative z-10 flex min-h-dvh flex-col justify-center px-6 py-12">
@@ -114,6 +115,6 @@ export default function Signup() {
           </p>
         </div>
       </div>
-    </div>
+    </AuthPageShell>
   )
 }

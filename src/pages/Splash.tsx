@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Dumbbell } from 'lucide-react'
+import AuthPageShell from '../components/AuthPageShell'
 import AuthVideoBackground from '../components/AuthVideoBackground'
 import Button from '../components/Button'
 
@@ -7,10 +8,10 @@ export default function Splash() {
   const navigate = useNavigate()
 
   return (
-    <div className="relative min-h-dvh bg-background">
+    <AuthPageShell className="relative">
       <AuthVideoBackground variant="splash" />
 
-      <div className="relative flex min-h-dvh flex-col px-6 pb-12 pt-14 text-foreground sm:px-10">
+      <div className="relative flex min-h-dvh flex-col px-6 pb-12 pt-14 sm:px-10">
         <div className="flex items-center gap-2">
           <Dumbbell size={24} className="text-foreground" />
           <span className="text-sm font-bold tracking-[0.2em]">ONEMOREREP</span>
@@ -41,6 +42,6 @@ export default function Splash() {
           </div>
         </div>
       </div>
-    </div>
+    </AuthPageShell>
   )
 }

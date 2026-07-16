@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Activity,
   ChevronRight,
+  Database,
   Flame,
   LogOut,
   Moon,
@@ -11,12 +12,14 @@ import {
 } from 'lucide-react'
 import UserAvatar from '../components/UserAvatar'
 import AccountSettings from '../components/profile/AccountSettings'
+import DataSettings from '../components/profile/DataSettings'
 import { useAuth } from '../context/AuthContext'
 import { clearAllUserData as apiClearAllUserData } from '../lib/api'
 import { clearLocalUserData, clearUserDataCache } from '../lib/userDataSync'
 import { useTheme } from '../context/ThemeContext'
 import { useCalorieTracker } from '../hooks/useCalorieTracker'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
+import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { toLocalDateKey } from '../lib/nutritionMath'
 import { getSessionDurationSeconds, sessionVolume } from '../lib/workoutProgress'
 import { computeStreak, toDateKey } from './home/homeUtils'
@@ -60,7 +63,14 @@ function SettingsRow({
         onClick ? 'hover:bg-surface-elevated/80 active:bg-surface-elevated' : '',
       ].join(' ')}
     >
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
+      <span
+        className={[
+          'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+          destructive
+            ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+            : 'bg-surface-elevated text-muted',
+        ].join(' ')}
+      >
         {icon}
       </span>
       <span className="min-w-0 flex-1">
@@ -84,8 +94,10 @@ export default function Profile() {
   const { user, token, logout, deleteAccount, changePassword } = useAuth()
   const { isDark, setTheme } = useTheme()
   const { sessions } = useWorkoutTracker()
+  const { plan } = useWorkoutPlan()
   const { profile: nutritionProfile, logs, ready: nutritionReady } = useCalorieTracker()
   const [showAccount, setShowAccount] = useState(false)
+  const [showData, setShowData] = useState(false)
 
   const firstName = user?.name?.split(' ')[0] ?? 'Athlete'
   const todayKey = toLocalDateKey()
@@ -115,12 +127,15 @@ export default function Profile() {
   const weekKeys = useMemo(() => getWeekKeys(), [])
   const recentSessions = sessions.slice(0, 3)
 
-  if (showAccount) {
+  if (showData) {
     return (
-      <AccountSettings
-        user={user}
-        onBack={() => setShowAccount(false)}
-        onChangePassword={changePassword}
+      <DataSettings
+        userName={user?.name}
+        sessions={sessions}
+        plan={plan}
+        nutritionProfile={nutritionProfile}
+        foodLogs={logs}
+        onBack={() => setShowData(false)}
         onClearAllData={async () => {
           if (!token || !user?.id) throw new Error('Not signed in')
           clearUserDataCache()
@@ -128,6 +143,16 @@ export default function Profile() {
           clearLocalUserData(user.id)
           window.location.reload()
         }}
+      />
+    )
+  }
+
+  if (showAccount) {
+    return (
+      <AccountSettings
+        user={user}
+        onBack={() => setShowAccount(false)}
+        onChangePassword={changePassword}
         onDeleteAccount={async () => {
           await deleteAccount()
           navigate('/login')
@@ -139,8 +164,13 @@ export default function Profile() {
   return (
     <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-6xl">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-[#0a0a0a] px-5 pb-16 pt-10 text-white dark:bg-[#0c0c0e] lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pb-12 lg:pt-12">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/40 dark:from-white/5 dark:to-black/60" />
+      <section className="relative overflow-hidden px-5 pb-16 pt-10 text-white lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pb-12 lg:pt-12">
+        <img
+          src="/images/gym_background/gym-pic.jpg"
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-black/60 to-black/85" />
         <div className="relative mx-auto flex max-w-lg flex-col items-center text-center lg:mx-0 lg:max-w-none lg:flex-1 lg:flex-row lg:items-center lg:gap-8 lg:text-left">
           <UserAvatar
             name={user?.name}
@@ -372,9 +402,19 @@ export default function Profile() {
               />
             </div>
 
+            <div className="border-b border-border">
+              <SettingsRow
+                icon={<Database size={16} />}
+                label="Data"
+                value="Export or clear your data"
+                onClick={() => setShowData(true)}
+              />
+            </div>
+
             <SettingsRow
               icon={<LogOut size={16} />}
               label="Log out"
+              destructive
               onClick={() => {
                 logout()
                 navigate('/login')

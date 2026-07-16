@@ -160,4 +160,47 @@ async function deleteUser(token) {
   return { success: true }
 }
 
-module.exports = { AuthError, registerUser, loginUser, getUserFromToken, changeUserPassword, deleteUser }
+function normalizeAvatar(avatar) {
+  if (avatar == null || avatar === '') return null
+  if (typeof avatar !== 'string' || !avatar.startsWith('data:image/')) {
+    throw new AuthError('Invalid profile image', 400)
+  }
+  if (avatar.length > 500000) {
+    throw new AuthError('Profile image is too large', 400)
+  }
+  return avatar
+}
+
+async function updateUserAvatar(token, avatar) {
+  await ensureDb()
+
+  const avatarUrl = normalizeAvatar(avatar)
+  const payload = jwt.verify(token, JWT_SECRET)
+  const result = await query(
+    'UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING id, name, email, avatar_url, created_at',
+    [avatarUrl, payload.userId],
+  )
+
+  if (result.rows.length === 0) {
+    throw new AuthError('User not found', 401)
+  }
+
+  const user = result.rows[0]
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatarUrl: user.avatar_url ?? null,
+    createdAt: user.created_at,
+  }
+}
+
+module.exports = {
+  AuthError,
+  registerUser,
+  loginUser,
+  getUserFromToken,
+  changeUserPassword,
+  deleteUser,
+  updateUserAvatar,
+}

@@ -126,7 +126,7 @@ export default function Tracker() {
     removeExercise: removePlanExercise,
   } = useWorkoutPlan()
 
-  const [view, setView] = useState<View>('workout')
+  const [view, setView] = useState<View>('plan')
   const [planSwipeHintKey, setPlanSwipeHintKey] = useState(0)
   const [dayWorkoutFlow, setDayWorkoutFlow] = useState<DayWorkoutFlow | null>(null)
   const [readyForNextMuscle, setReadyForNextMuscle] = useState<{
@@ -375,8 +375,8 @@ export default function Tracker() {
           <nav className="flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border">
             {(
               [
+                { id: 'plan' as const, label: 'Plans', icon: Calendar },
                 { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
-                { id: 'plan' as const, label: 'Plan', icon: Calendar },
                 { id: 'history' as const, label: 'History', icon: History },
                 { id: 'progress' as const, label: 'Progress', icon: BarChart3 },
               ] as const
@@ -403,8 +403,8 @@ export default function Tracker() {
       <nav className="mx-5 mb-4 mt-[max(2.5rem,env(safe-area-inset-top))] flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border lg:hidden">
         {(
           [
+            { id: 'plan' as const, label: 'Plans', icon: Calendar },
             { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
-            { id: 'plan' as const, label: 'Plan', icon: Calendar },
             { id: 'history' as const, label: 'History', icon: History },
             { id: 'progress' as const, label: 'Progress', icon: BarChart3 },
           ] as const

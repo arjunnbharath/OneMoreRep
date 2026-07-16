@@ -146,6 +146,49 @@ npm run prepare:videos
 
 ---
 
+## Android app (Capacitor)
+
+The React web app is wrapped as a native Android app with [Capacitor](https://capacitorjs.com/).
+
+### Prerequisites
+
+1. [Android Studio](https://developer.android.com/studio) (includes Android SDK)
+2. Set `ANDROID_HOME` or install SDK to `%LOCALAPPDATA%\Android\Sdk`
+3. Set `VITE_API_URL` in `.env` to your deployed API (e.g. your Vercel URL)
+
+For **local API on emulator**, use:
+
+```bash
+VITE_API_URL=http://10.0.2.2:3001
+```
+
+(`10.0.2.2` is the emulator’s alias for your PC’s `localhost`.)
+
+### Build & run
+
+```bash
+npm run build:android   # build web app + sync to android/
+npm run android:open    # open project in Android Studio
+```
+
+In Android Studio: pick a device/emulator → **Run**.
+
+Or from the terminal (with SDK + device connected):
+
+```bash
+npm run android:run
+```
+
+### Release APK
+
+1. Set `VITE_API_URL` to your production API URL.
+2. `npm run build:android`
+3. Android Studio → **Build → Generate Signed Bundle / APK**
+
+App ID: `com.onemorerep.app`
+
+---
+
 ## Flutter app
 
 A Dart/Flutter client lives in [`flutter_app/`](flutter_app/) (Android + Windows). It shares the same API.
@@ -166,6 +209,9 @@ See [`flutter_app/README.md`](flutter_app/README.md) for emulator URLs and relea
 | `npm run dev` | Vite + Express API concurrently |
 | `npm run dev:client` | Frontend only |
 | `npm run dev:server` | API only |
+| `npm run build:android` | Build web app and sync to `android/` |
+| `npm run android:open` | Open Android project in Android Studio |
+| `npm run android:run` | Build, sync, and run on device/emulator |
 | `npm run prepare:videos` | Fetch & process workout videos |
 | `node scripts/test-db.mjs` | Quick Neon connection test |
 

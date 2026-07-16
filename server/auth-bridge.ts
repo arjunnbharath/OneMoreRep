@@ -9,3 +9,4 @@ export const loginUser = auth.loginUser
 export const getUserFromToken = auth.getUserFromToken
 export const changeUserPassword = auth.changeUserPassword
 export const deleteUser = auth.deleteUser
+export const updateUserAvatar = auth.updateUserAvatar

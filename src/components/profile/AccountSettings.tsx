@@ -1,10 +1,11 @@
-import { useState, type FormEvent } from 'react'
-import { ArrowLeft, ChevronRight, Eraser, KeyRound, Trash2 } from 'lucide-react'
+import { useState, useRef, type FormEvent, type ChangeEvent } from 'react'
+import { ArrowLeft, Camera, ChevronRight, KeyRound, Trash2 } from 'lucide-react'
 import Button from '../Button'
 import Input from '../Input'
 import UserAvatar from '../UserAvatar'
+import { useAuth } from '../../context/AuthContext'
+import { compressImageToDataUrl } from '../../lib/image'
 import type { User } from '../../lib/api'
-
 function formatMemberSince(iso?: string) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('en-US', {
@@ -27,7 +28,6 @@ interface AccountSettingsProps {
   user: User | null
   onBack: () => void
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>
-  onClearAllData: () => Promise<void>
   onDeleteAccount: () => Promise<void>
 }
 
@@ -35,9 +35,15 @@ export default function AccountSettings({
   user,
   onBack,
   onChangePassword,
-  onClearAllData,
   onDeleteAccount,
 }: AccountSettingsProps) {
+  const { updateAvatar } = useAuth()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [avatarError, setAvatarError] = useState('')
+  const [avatarSuccess, setAvatarSuccess] = useState('')
+  const [updatingAvatar, setUpdatingAvatar] = useState(false)
+
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -49,10 +55,6 @@ export default function AccountSettings({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteError, setDeleteError] = useState('')
   const [deleting, setDeleting] = useState(false)
-
-  const [showClearConfirm, setShowClearConfirm] = useState(false)
-  const [clearError, setClearError] = useState('')
-  const [clearing, setClearing] = useState(false)
 
   async function handleChangePassword(e: FormEvent) {
     e.preventDefault()
@@ -102,16 +104,51 @@ export default function AccountSettings({
     }
   }
 
-  async function handleClearAllData() {
-    setClearError('')
-    setClearing(true)
+  async function handleAvatarSelect(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setAvatarError('Please choose an image file')
+      return
+    }
+
+    setAvatarError('')
+    setAvatarSuccess('')
+    setUpdatingAvatar(true)
+
     try {
-      await onClearAllData()
+      const dataUrl = await compressImageToDataUrl(file)
+      setAvatarPreview(dataUrl)
+      await updateAvatar(dataUrl)
+      setAvatarPreview(null)
+      setAvatarSuccess('Profile picture updated')
     } catch (err) {
-      setClearError(err instanceof Error ? err.message : 'Failed to clear data')
-      setClearing(false)
+      setAvatarError(err instanceof Error ? err.message : 'Failed to update profile picture')
+      setAvatarPreview(null)
+    } finally {
+      setUpdatingAvatar(false)
     }
   }
+
+  async function handleRemoveAvatar() {
+    setAvatarError('')
+    setAvatarSuccess('')
+    setUpdatingAvatar(true)
+
+    try {
+      await updateAvatar(null)
+      setAvatarPreview(null)
+      setAvatarSuccess('Profile picture removed')
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : 'Failed to remove profile picture')
+    } finally {
+      setUpdatingAvatar(false)
+    }
+  }
+
+  const displayAvatarUrl = avatarPreview ?? user?.avatarUrl
 
   return (
     <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-3xl">
@@ -134,10 +171,74 @@ export default function AccountSettings({
 
       <div className="mx-auto max-w-lg space-y-6 px-5 pb-8 lg:max-w-none lg:px-10 lg:pb-10">
         <div className="flex flex-col items-center rounded-2xl bg-surface px-4 py-6 ring-1 ring-border">
-          <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} size="lg" />
+          <div className="relative">
+            <UserAvatar name={user?.name} avatarUrl={displayAvatarUrl} size="lg" />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={updatingAvatar}
+              aria-label="Set profile picture"
+              className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background shadow-sm ring-2 ring-surface transition hover:opacity-90 disabled:opacity-50"
+            >
+              <Camera size={14} />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarSelect}
+            />
+          </div>
           <p className="mt-4 text-lg font-semibold">{user?.name}</p>
           <p className="mt-0.5 text-sm text-muted">{user?.email}</p>
+          {avatarSuccess && (
+            <p className="mt-3 text-sm text-emerald-600 dark:text-emerald-400">{avatarSuccess}</p>
+          )}
+          {avatarError && (
+            <p className="mt-3 text-sm text-red-600 dark:text-red-400">{avatarError}</p>
+          )}
         </div>
+
+        <section>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+            Profile
+          </h2>
+          <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={updatingAvatar}
+              className="flex w-full items-center gap-3 border-b border-border px-4 py-3.5 text-left transition hover:bg-surface-elevated/80 disabled:opacity-50"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
+                <Camera size={16} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <span className="block text-sm font-medium">
+                  {updatingAvatar ? 'Updating picture…' : 'Set profile picture'}
+                </span>
+                <span className="block text-xs text-muted">Choose a photo from your device</span>
+              </div>
+              <ChevronRight size={16} className="shrink-0 text-muted" />
+            </button>
+            {displayAvatarUrl && (
+              <button
+                type="button"
+                onClick={handleRemoveAvatar}
+                disabled={updatingAvatar}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-elevated/80 disabled:opacity-50"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
+                  <Trash2 size={16} />
+                </span>
+                <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                  Remove profile picture
+                </span>
+              </button>
+            )}
+          </div>
+        </section>
 
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
@@ -230,55 +331,6 @@ export default function AccountSettings({
             Danger zone
           </h2>
           <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
-            {!showClearConfirm ? (
-              <button
-                type="button"
-                onClick={() => setShowClearConfirm(true)}
-                className="flex w-full items-center gap-3 border-b border-border px-4 py-3.5 text-left transition hover:bg-surface-elevated/80"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                  <Eraser size={16} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">Clear all data</span>
-                  <span className="block text-xs text-muted">
-                    Erase workouts, plans, calories & bookmarks
-                  </span>
-                </div>
-              </button>
-            ) : (
-              <div className="border-b border-border bg-amber-50/80 p-4 dark:bg-amber-950/20">
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-                  Clear all app data?
-                </p>
-                <p className="mt-1 text-xs text-muted">
-                  Your name, email, and password will stay. Everything else is removed from the
-                  database.
-                </p>
-                {clearError && (
-                  <p className="mt-2 text-xs text-red-600 dark:text-red-400">{clearError}</p>
-                )}
-                <div className="mt-3 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowClearConfirm(false)}
-                    disabled={clearing}
-                    className="flex-1 rounded-xl bg-background py-2.5 text-sm font-medium ring-1 ring-border"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleClearAllData}
-                    disabled={clearing}
-                    className="flex-1 rounded-xl bg-amber-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-                  >
-                    {clearing ? 'Clearing…' : 'Clear data'}
-                  </button>
-                </div>
-              </div>
-            )}
-
             {!showDeleteConfirm ? (
               <button
                 type="button"

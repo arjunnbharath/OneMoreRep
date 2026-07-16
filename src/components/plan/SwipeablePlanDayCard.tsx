@@ -6,7 +6,7 @@ import type { Weekday } from '../../types/workoutPlan'
 const SWIPE_ACTION_WIDTH = 112
 const SWIPE_START_THRESHOLD = 72
 const SWIPE_HINT_PEEK = SWIPE_ACTION_WIDTH
-const SWIPE_HINT_CYCLES = 4
+const SWIPE_HINT_CYCLES = 2
 const SWIPE_HINT_SLIDE_MS = 1000
 const SWIPE_HINT_HOLD_MS = 1000
 const SWIPE_HINT_BETWEEN_MS = 400

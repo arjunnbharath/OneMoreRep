@@ -41,6 +41,9 @@ async function parseError(res: Response): Promise<string> {
     } catch {
       // not JSON
     }
+    if (!text.trim()) {
+      return 'API server is not reachable. Run "npm run dev" locally, or check your deployed API.'
+    }
     return text.slice(0, 200) || 'Server error. Check DATABASE_URL is set in your environment.'
   }
 
@@ -110,6 +113,20 @@ export async function changePassword(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ currentPassword, newPassword }),
+  })
+}
+
+export async function updateAvatar(
+  token: string,
+  avatar: string | null,
+): Promise<{ user: User }> {
+  return request<{ user: User }>(apiUrl('/api/auth/avatar'), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ avatar }),
   })
 }
 

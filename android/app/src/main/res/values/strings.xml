@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">OneMoreRep</string>
+    <string name="title_activity_main">OneMoreRep</string>
+    <string name="package_name">com.onemorerep.app</string>
+    <string name="custom_url_scheme">com.onemorerep.app</string>
+</resources>

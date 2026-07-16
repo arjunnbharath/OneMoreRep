@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { changePassword as apiChangePassword, deleteAccount as apiDeleteAccount, getMe, login as apiLogin, register as apiRegister, type User } from '../lib/api'
+import { changePassword as apiChangePassword, deleteAccount as apiDeleteAccount, getMe, login as apiLogin, register as apiRegister, updateAvatar as apiUpdateAvatar, type User } from '../lib/api'
 import { clearUserDataCache } from '../lib/userDataSync'
 
 const TOKEN_KEY = 'onemorerep-token'
@@ -22,6 +22,7 @@ interface AuthContextValue {
   logout: () => void
   deleteAccount: () => Promise<void>
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>
+  updateAvatar: (avatar: string | null) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -95,9 +96,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [token],
   )
 
+  const updateAvatar = useCallback(
+    async (avatar: string | null) => {
+      if (!token) throw new Error('Not authenticated')
+      const { user: updatedUser } = await apiUpdateAvatar(token, avatar)
+      localStorage.setItem(USER_KEY, JSON.stringify(updatedUser))
+      setUser(updatedUser)
+    },
+    [token],
+  )
+
   const value = useMemo(
-    () => ({ user, token, isLoading, login, register, logout, deleteAccount, changePassword }),
-    [user, token, isLoading, login, register, logout, deleteAccount, changePassword],
+    () => ({ user, token, isLoading, login, register, logout, deleteAccount, changePassword, updateAvatar }),
+    [user, token, isLoading, login, register, logout, deleteAccount, changePassword, updateAvatar],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

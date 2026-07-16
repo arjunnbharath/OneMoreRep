@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { AuthError, changeUserPassword, deleteUser, getUserFromToken, loginUser, registerUser } from '../auth-bridge.js'
+import { AuthError, changeUserPassword, deleteUser, getUserFromToken, loginUser, registerUser, updateUserAvatar } from '../auth-bridge.js'
 
 const router = Router()
 
@@ -93,6 +93,28 @@ router.post('/change-password', async (req, res) => {
     }
     console.error('Change password error:', err)
     res.status(500).json({ error: 'Failed to change password' })
+  }
+})
+
+router.post('/avatar', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader?.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Not authenticated' })
+      return
+    }
+
+    const token = authHeader.slice(7)
+    const { avatar } = req.body ?? {}
+    const user = await updateUserAvatar(token, avatar)
+    res.json({ user })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Update avatar error:', err)
+    res.status(500).json({ error: 'Failed to update profile picture' })
   }
 })
 

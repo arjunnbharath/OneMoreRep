@@ -18,6 +18,20 @@ import {
 } from '../../lib/workoutPlan'
 import { WEEKDAYS, type PlanExercise, type Weekday, type WeeklyPlan } from '../../types/workoutPlan'
 
+const PLAN_SWIPE_HINT_STORAGE_KEY = 'onemorerep-plan-swipe-hint-count'
+const PLAN_SWIPE_HINT_MAX_SHOWS = 2
+
+function getPlanSwipeHintCount() {
+  const raw = localStorage.getItem(PLAN_SWIPE_HINT_STORAGE_KEY)
+  const count = raw ? Number.parseInt(raw, 10) : 0
+  return Number.isFinite(count) ? count : 0
+}
+
+function markPlanSwipeHintShown() {
+  const next = getPlanSwipeHintCount() + 1
+  localStorage.setItem(PLAN_SWIPE_HINT_STORAGE_KEY, String(next))
+}
+
 type Screen =
   | { step: 'week' }
   | { step: 'day'; day: Weekday }
@@ -82,7 +96,7 @@ function WeekGrid({
                 alt=""
                 className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/75 to-black/55" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/45 to-black/30" />
 
               <div className="relative flex min-h-[5.5rem] items-center gap-3 px-4 py-4 text-white">
                 <div className="shrink-0">
@@ -378,7 +392,9 @@ export default function WeeklyPlanPanel({
   useEffect(() => {
     if (screen.step !== 'week' || !swipeHintKey) return
     if (window.matchMedia('(min-width: 1024px)').matches) return
+    if (getPlanSwipeHintCount() >= PLAN_SWIPE_HINT_MAX_SHOWS) return
 
+    markPlanSwipeHintShown()
     setPlaySwipeHint(false)
     const frame = window.requestAnimationFrame(() => setPlaySwipeHint(true))
     const reset = window.setTimeout(() => setPlaySwipeHint(false), SWIPE_HINT_TOTAL_MS + 200)

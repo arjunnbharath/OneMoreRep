@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Dumbbell, Eye, EyeOff, Lock, Mail } from 'lucide-react'
+import AuthPageShell from '../components/AuthPageShell'
 import AuthVideoBackground from '../components/AuthVideoBackground'
 import Button from '../components/Button'
 import Input from '../components/Input'
@@ -32,7 +33,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-dvh bg-background text-foreground lg:grid lg:grid-cols-2">
+    <AuthPageShell className="lg:grid lg:grid-cols-2">
       <div className="relative hidden min-h-dvh lg:block">
         <AuthVideoBackground variant="auth" />
         <div className="absolute bottom-16 left-12 right-12 z-10 text-white">
@@ -120,6 +121,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </div>
+    </AuthPageShell>
   )
 }

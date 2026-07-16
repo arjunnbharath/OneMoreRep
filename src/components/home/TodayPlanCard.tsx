@@ -46,7 +46,7 @@ export default function TodayPlanCard({
         alt=""
         className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/75 to-black/55" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/45 to-black/30" />
 
       <div className="relative flex min-h-[5.5rem] items-center gap-3 px-4 py-4 text-white">
         <div className="shrink-0">
