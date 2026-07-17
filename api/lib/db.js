@@ -118,6 +118,15 @@ async function ensureDb() {
   await getSql().query(`
     CREATE INDEX IF NOT EXISTS push_subscriptions_user_idx ON push_subscriptions (user_id)
   `)
+  await getSql().query(`
+    CREATE TABLE IF NOT EXISTS friend_notification_mutes (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      muted_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (user_id, muted_user_id),
+      CHECK (user_id <> muted_user_id)
+    )
+  `)
   dbReady = true
 }
 

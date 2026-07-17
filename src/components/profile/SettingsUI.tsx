@@ -41,7 +41,7 @@ export function SettingsPageLayout({
         {children}
         {footer ?? (
           <p className="mt-auto pt-6 text-center text-[11px] font-medium tracking-[0.24em] text-muted/80">
-            onemorep
+            ONEMOREREP
           </p>
         )}
       </div>

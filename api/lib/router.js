@@ -21,6 +21,7 @@ const {
   getFriendProgress,
 } = require('./friends.js')
 const { sendNudge, listNudges, markNudgesRead } = require('./friendNudges.js')
+const { setFriendNotificationMute } = require('./friendMutes.js')
 const {
   getVapidPublicKey,
   saveSubscription,
@@ -206,6 +207,13 @@ async function handleFriendsNudgesRead(req, res) {
   return res.status(200).json(result)
 }
 
+async function handleFriendsMute(req, res) {
+  const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+  const { friendId, muted } = parseBody(req)
+  const result = await setFriendNotificationMute(userId, friendId, Boolean(muted))
+  return res.status(200).json(result)
+}
+
 async function handlePushVapidKey(_req, res) {
   const publicKey = getVapidPublicKey()
   return res.status(200).json({ publicKey })
@@ -244,6 +252,7 @@ const routes = [
   { route: 'friends/nudge', method: 'POST', handler: handleFriendsNudge },
   { route: 'friends/nudges', method: 'GET', handler: handleFriendsNudges },
   { route: 'friends/nudges/read', method: 'POST', handler: handleFriendsNudgesRead },
+  { route: 'friends/mute', method: 'PUT', handler: handleFriendsMute },
   { route: 'push/vapid-public-key', method: 'GET', handler: handlePushVapidKey },
   { route: 'push/subscribe', method: 'POST', handler: handlePushSubscribe },
   { route: 'push/subscribe', method: 'DELETE', handler: handlePushUnsubscribe },

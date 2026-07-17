@@ -1,6 +1,7 @@
 const { query, ensureDb } = require('./db.js')
 const { AuthError, getUserFromToken } = require('./auth.js')
 const { USER_DATA_KEYS } = require('./userDataKeys.js')
+const { getMutedUserIdSet } = require('./friendMutes.js')
 
 async function getUserIdFromAuthHeader(authHeader) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -34,12 +35,15 @@ async function listFriends(userId) {
     [userId],
   )
 
+  const mutedIds = await getMutedUserIdSet(userId)
+
   return result.rows.map((row) => ({
     id: row.id,
     name: row.name,
     username: row.username,
     avatarUrl: row.avatar_url ?? null,
     friendsSince: row.created_at,
+    notificationsMuted: mutedIds.has(row.id),
   }))
 }
 
@@ -144,12 +148,15 @@ async function getFriendProgress(userId, friendId) {
       : []
 
   const friend = friendResult.rows[0]
+  const mutedIds = await getMutedUserIdSet(userId)
+
   return {
     friend: {
       id: friend.id,
       name: friend.name,
       username: friend.username,
       avatarUrl: friend.avatar_url ?? null,
+      notificationsMuted: mutedIds.has(friend.id),
     },
     sessions,
   }

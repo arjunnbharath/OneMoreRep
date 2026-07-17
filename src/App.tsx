@@ -9,7 +9,7 @@ import ExerciseGuides from './pages/ExerciseGuides'
 import MuscleGroupExercises from './pages/MuscleGroupExercises'
 import Home from './pages/Home'
 import WorkoutDetail from './pages/WorkoutDetail'
-import Tracker from './pages/Tracker'
+import TrackerRoute from './components/tracker/TrackerRoute'
 import { CalorieTrackerPage } from './pages/CalorieTracker'
 import Profile from './pages/Profile'
 import AppLayout from './components/AppLayout'
@@ -31,7 +31,7 @@ export default function App() {
           <Route path="/exercises" element={<ExerciseGuides />} />
           <Route path="/exercises/:id" element={<ExerciseDetail />} />
           <Route path="/workout/:id" element={<WorkoutDetail />} />
-          <Route path="/tracker" element={<Tracker />} />
+          <Route path="/tracker/*" element={<TrackerRoute />} />
           <Route path="/calories" element={<CalorieTrackerPage />} />
           <Route path="/profile/*" element={<Profile />} />
         </Route>

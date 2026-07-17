@@ -303,7 +303,7 @@ export default function Tracker() {
     const state = location.state as { view?: View; startDay?: Weekday } | null
     if (!state?.view && !state?.startDay) return
 
-    if (state.view === 'plan') setView('plan')
+    if (state.view && isTrackerView(state.view)) setView(state.view)
     if (state.startDay) handleStartDayPlanRef.current(state.startDay)
 
     window.history.replaceState(

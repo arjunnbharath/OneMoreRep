@@ -4,6 +4,7 @@ import {
   getFriendProgress,
   getFriends,
   removeFriend as apiRemoveFriend,
+  setFriendNotificationMute,
   type FriendUser,
 } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
@@ -67,6 +68,19 @@ export function useFriends() {
     [token],
   )
 
+  const setNotificationMute = useCallback(
+    async (friendId: number, muted: boolean) => {
+      if (!token) throw new Error('Not signed in')
+      await setFriendNotificationMute(token, friendId, muted)
+      setFriends((current) =>
+        current.map((friend) =>
+          friend.id === friendId ? { ...friend, notificationsMuted: muted } : friend,
+        ),
+      )
+    },
+    [token],
+  )
+
   return {
     friends,
     loading,
@@ -75,5 +89,6 @@ export function useFriends() {
     addFriend,
     removeFriend,
     loadFriendProgress,
+    setNotificationMute,
   }
 }

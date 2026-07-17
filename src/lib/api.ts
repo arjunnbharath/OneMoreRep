@@ -13,6 +13,7 @@ export interface FriendUser {
   username: string | null
   avatarUrl?: string | null
   friendsSince?: string
+  notificationsMuted?: boolean
 }
 
 export interface FriendProgressResponse {
@@ -214,7 +215,7 @@ export async function getFriendProgress(
   })
 }
 
-export type NudgeType = 'wave' | 'workout_reminder'
+export type NudgeType = 'wave' | 'workout_reminder' | 'cheer_streak' | 'rest_day'
 
 export interface FriendNudge {
   id: number
@@ -256,6 +257,21 @@ export async function markFriendNudgesRead(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ nudgeIds }),
+  })
+}
+
+export async function setFriendNotificationMute(
+  token: string,
+  friendId: number,
+  muted: boolean,
+): Promise<{ friendId: number; muted: boolean }> {
+  return request<{ friendId: number; muted: boolean }>(apiUrl('/api/friends/mute'), {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ friendId, muted }),
   })
 }
 

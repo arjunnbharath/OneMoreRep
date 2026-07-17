@@ -11,6 +11,7 @@ const {
   getFriendProgress,
 } = require('../../api/lib/friends.js')
 const { sendNudge, listNudges, markNudgesRead } = require('../../api/lib/friendNudges.js')
+const { setFriendNotificationMute } = require('../../api/lib/friendMutes.js')
 
 const router = Router()
 
@@ -121,6 +122,22 @@ router.post('/nudges/read', async (req, res) => {
     }
     console.error('Mark nudges read error:', err)
     res.status(500).json({ error: 'Failed to update nudges' })
+  }
+})
+
+router.put('/mute', async (req, res) => {
+  try {
+    const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+    const { friendId, muted } = req.body ?? {}
+    const result = await setFriendNotificationMute(userId, friendId, Boolean(muted))
+    res.json(result)
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Friend mute error:', err)
+    res.status(500).json({ error: 'Failed to update mute' })
   }
 })
 

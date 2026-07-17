@@ -1,8 +1,28 @@
 const { query, ensureDb } = require('./db.js')
 const { AuthError } = require('./auth.js')
 const { sendPushToUser } = require('./push.js')
+const { isNotificationMuted } = require('./friendMutes.js')
 
-const NUDGE_TYPES = ['wave', 'workout_reminder']
+const NUDGE_TYPES = ['wave', 'workout_reminder', 'cheer_streak', 'rest_day']
+
+const NUDGE_COPY = {
+  wave: {
+    title: (name) => `${name} waved at you`,
+    body: 'Wave back or check their progress.',
+  },
+  workout_reminder: {
+    title: (name) => `${name} wants to workout`,
+    body: 'Time to train together!',
+  },
+  cheer_streak: {
+    title: (name) => `${name} cheered you on`,
+    body: 'Nice streak — keep it going!',
+  },
+  rest_day: {
+    title: (name) => `${name} checked in`,
+    body: 'Hope you are resting well. Ready when you are!',
+  },
+}
 
 function friendshipPair(userId, friendId) {
   const low = Math.min(userId, friendId)
@@ -47,14 +67,16 @@ async function sendNudge(fromUserId, friendId, nudgeType) {
 
   const senderResult = await query('SELECT name FROM users WHERE id = $1', [fromUserId])
   const senderName = senderResult.rows[0]?.name || 'Your friend'
+  const copy = NUDGE_COPY[nudgeType]
 
-  const title =
-    nudgeType === 'wave' ? `${senderName} waved at you` : `${senderName} wants to workout`
-  const body =
-    nudgeType === 'wave' ? 'Wave back or check their progress.' : 'Time to train together!'
+  const title = copy.title(senderName)
+  const body = copy.body
 
   try {
-    await sendPushToUser(toUserId, { title, body, url: '/tracker' })
+    const muted = await isNotificationMuted(toUserId, fromUserId)
+    if (!muted) {
+      await sendPushToUser(toUserId, { title, body, url: '/tracker' })
+    }
   } catch (err) {
     console.error('Push notification failed:', err)
   }
