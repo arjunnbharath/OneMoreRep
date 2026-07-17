@@ -27,9 +27,22 @@ function parseBody(req) {
 }
 
 function getRoute(req) {
+  if (req.query.route) {
+    const route = req.query.route
+    return Array.isArray(route) ? route.join('/') : String(route)
+  }
+
   const path = req.query.path
-  if (!path) return ''
-  return Array.isArray(path) ? path.join('/') : String(path)
+  if (path) {
+    return Array.isArray(path) ? path.join('/') : String(path)
+  }
+
+  try {
+    const url = new URL(req.url || '/', 'http://localhost')
+    return url.pathname.replace(/^\/api\/?/, '')
+  } catch {
+    return ''
+  }
 }
 
 function getBearerToken(req) {
