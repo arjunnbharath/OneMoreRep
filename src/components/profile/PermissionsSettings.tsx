@@ -1,4 +1,4 @@
-import { ArrowLeft, Bell } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { SettingsCard, SettingsPageLayout, SettingsRow } from './SettingsUI'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 
