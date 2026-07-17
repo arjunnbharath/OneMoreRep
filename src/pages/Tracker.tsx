@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 import {
   BarChart3,
   Calendar,
+  ChevronRight,
   Clock,
   Copy,
   Dumbbell,
@@ -12,6 +13,7 @@ import {
   Plus,
   Trash2,
   Trophy,
+  Users,
   Weight,
   X,
 } from 'lucide-react'
@@ -50,12 +52,13 @@ import {
 import type { TrackedExercise, WorkoutSession } from '../types/tracker'
 import type { Weekday } from '../types/workoutPlan'
 
-type View = 'workout' | 'plan' | 'history' | 'progress'
+type View = 'workout' | 'plan' | 'progress' | 'friends'
 
 const TRACKER_VIEW_KEY = 'onemorerep-tracker-view'
+const WORKOUT_HISTORY_BG = '/images/gym_background/workout history.jpg'
 
 function isTrackerView(value: string): value is View {
-  return value === 'workout' || value === 'plan' || value === 'history' || value === 'progress'
+  return value === 'workout' || value === 'plan' || value === 'progress' || value === 'friends'
 }
 
 function formatDate(iso: string) {
@@ -146,6 +149,7 @@ export default function Tracker() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [showFinishSummary, setShowFinishSummary] = useState<WorkoutSession | null>(null)
   const [restSeconds, setRestSeconds] = useState<number | null>(null)
+  const [showWorkoutHistory, setShowWorkoutHistory] = useState(false)
   const [selectedHistoryDay, setSelectedHistoryDay] = useState<string | null>(null)
   const [selectedExercise, setSelectedExercise] = useState('')
   const [exerciseQuery, setExerciseQuery] = useState('')
@@ -154,6 +158,12 @@ export default function Tracker() {
   const [sets, setSets] = useState('3')
   const [reps, setReps] = useState('12')
   const [weight, setWeight] = useState('')
+
+  useEffect(() => {
+    if (view !== 'workout') {
+      setShowWorkoutHistory(false)
+    }
+  }, [view])
 
   useEffect(() => {
     if (view === 'plan') {
@@ -418,8 +428,8 @@ export default function Tracker() {
               [
                 { id: 'plan' as const, label: 'Plans', icon: Calendar },
                 { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
-                { id: 'history' as const, label: 'History', icon: History },
-                { id: 'progress' as const, label: 'Progress', icon: BarChart3 },
+                { id: 'progress' as const, label: 'Stats', icon: BarChart3 },
+                { id: 'friends' as const, label: 'Friends', icon: Users },
               ] as const
             ).map(({ id, label, icon: Icon }) => (
               <button
@@ -446,8 +456,8 @@ export default function Tracker() {
           [
             { id: 'plan' as const, label: 'Plans', icon: Calendar },
             { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
-            { id: 'history' as const, label: 'History', icon: History },
-            { id: 'progress' as const, label: 'Progress', icon: BarChart3 },
+            { id: 'progress' as const, label: 'Stats', icon: BarChart3 },
+            { id: 'friends' as const, label: 'Friends', icon: Users },
           ] as const
         ).map(({ id, label, icon: Icon }) => (
           <button
@@ -557,95 +567,106 @@ export default function Tracker() {
         </div>
       )}
 
-      {view === 'history' && (
-        <section className="px-5 pb-8 lg:px-10">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-6">
-            <div>
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
-                <Calendar size={18} />
-                Calendar
-              </h2>
-              <WorkoutCalendar
-                sessions={sessions}
-                onDaySelect={(key) => setSelectedHistoryDay(key)}
-              />
-            </div>
+      {view === 'workout' && !activeSession && !readyForNextMuscle && (
+        showWorkoutHistory ? (
+          <section className="px-5 pb-8 lg:px-10">
+            <div className="mx-auto max-w-lg lg:max-w-4xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowWorkoutHistory(false)
+                  setSelectedHistoryDay(null)
+                }}
+                className="mb-4 text-sm font-medium text-muted transition hover:text-foreground"
+              >
+                ← Back to workout
+              </button>
 
-            <div className="mt-6 lg:mt-0">
-              <h2 className="mb-4 text-lg font-bold">
-                {selectedHistoryDay
-                  ? new Date(selectedHistoryDay + 'T12:00:00').toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      month: 'long',
-                      day: 'numeric',
-                    })
-                  : 'All workouts'}
-              </h2>
-
-              {(selectedHistoryDay ? sessionsOnSelectedDay : sessions).length === 0 ? (
-                <div className="rounded-2xl bg-surface px-6 py-12 text-center ring-1 ring-border">
-                  <Dumbbell className="mx-auto mb-3 text-muted" size={32} />
-                  <p className="font-medium">No workouts logged</p>
-                  <p className="mt-1 text-sm text-muted">Finish a session to see it here.</p>
+              <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+                <div>
+                  <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
+                    <Calendar size={18} />
+                    Calendar
+                  </h2>
+                  <WorkoutCalendar
+                    sessions={sessions}
+                    onDaySelect={(key) => setSelectedHistoryDay(key)}
+                  />
                 </div>
-              ) : (
-                <ul className="space-y-3">
-                  {(selectedHistoryDay ? sessionsOnSelectedDay : sessions).map((session) => {
-                    const pastStats = getSessionStats(session)
-                    return (
-                      <li
-                        key={session.id}
-                        className="rounded-2xl bg-surface p-4 ring-1 ring-border"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-semibold">{session.name}</p>
-                            <p className="mt-0.5 text-sm text-muted">{formatDate(session.date)}</p>
-                            <p className="mt-2 text-xs text-muted">
-                              {session.exercises.length} exercises · {pastStats.totalSets} sets ·{' '}
-                              {pastStats.volume.toLocaleString()} kg volume ·{' '}
-                              {formatElapsed(pastStats.elapsed)}
-                            </p>
-                            {session.note && (
-                              <p className="mt-2 text-xs italic text-muted">{session.note}</p>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                duplicateSession(session.id)
-                                setView('workout')
-                              }}
-                              className="text-muted transition hover:text-foreground"
-                              aria-label="Duplicate workout"
-                            >
-                              <Copy size={16} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => deleteSession(session.id)}
-                              aria-label="Delete workout"
-                              className="text-muted transition hover:text-red-500"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
 
-      {view === 'progress' && (
-        <section className="space-y-8 px-5 pb-8 pt-4 lg:px-10 lg:pt-6">
-          {!activeSession && (
-            <div className="mx-auto max-w-lg">
+                <div className="mt-6 lg:mt-0">
+                  <h2 className="mb-4 text-lg font-bold">
+                    {selectedHistoryDay
+                      ? new Date(selectedHistoryDay + 'T12:00:00').toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      : 'All workouts'}
+                  </h2>
+
+                  {(selectedHistoryDay ? sessionsOnSelectedDay : sessions).length === 0 ? (
+                    <div className="rounded-2xl bg-surface px-6 py-12 text-center ring-1 ring-border">
+                      <Dumbbell className="mx-auto mb-3 text-muted" size={32} />
+                      <p className="font-medium">No workouts logged</p>
+                      <p className="mt-1 text-sm text-muted">Finish a session to see it here.</p>
+                    </div>
+                  ) : (
+                    <ul className="space-y-3">
+                      {(selectedHistoryDay ? sessionsOnSelectedDay : sessions).map((session) => {
+                        const pastStats = getSessionStats(session)
+                        return (
+                          <li
+                            key={session.id}
+                            className="rounded-2xl bg-surface p-4 ring-1 ring-border"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="font-semibold">{session.name}</p>
+                                <p className="mt-0.5 text-sm text-muted">{formatDate(session.date)}</p>
+                                <p className="mt-2 text-xs text-muted">
+                                  {session.exercises.length} exercises · {pastStats.totalSets} sets ·{' '}
+                                  {pastStats.volume.toLocaleString()} kg volume ·{' '}
+                                  {formatElapsed(pastStats.elapsed)}
+                                </p>
+                                {session.note && (
+                                  <p className="mt-2 text-xs italic text-muted">{session.note}</p>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    duplicateSession(session.id)
+                                    setShowWorkoutHistory(false)
+                                  }}
+                                  className="text-muted transition hover:text-foreground"
+                                  aria-label="Duplicate workout"
+                                >
+                                  <Copy size={16} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => deleteSession(session.id)}
+                                  aria-label="Delete workout"
+                                  className="text-muted transition hover:text-red-500"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : (
+          <section className="space-y-5 px-5 pb-8 lg:px-10">
+            <div className="mx-auto max-w-lg lg:max-w-2xl">
               <ReadyToTrainPanel
                 plan={plan}
                 lastSession={sessions[0] ?? null}
@@ -654,22 +675,68 @@ export default function Tracker() {
                 onEditPlan={() => setView('plan')}
                 onRepeatLast={
                   sessions[0]
-                    ? () => {
-                        duplicateSession(sessions[0].id)
-                        setView('workout')
-                      }
+                    ? () => duplicateSession(sessions[0].id)
                     : undefined
                 }
                 formatSessionDate={formatDate}
               />
             </div>
-          )}
 
+            <div className="mx-auto max-w-lg lg:max-w-2xl">
+              <button
+                type="button"
+                onClick={() => setShowWorkoutHistory(true)}
+                className="group relative w-full overflow-hidden rounded-2xl text-left ring-1 ring-border transition hover:ring-foreground/25"
+              >
+                <img
+                  src={WORKOUT_HISTORY_BG}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/40 to-black/45" />
+
+                <div className="relative flex items-center justify-between gap-3 px-4 py-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20 backdrop-blur-sm">
+                      <History size={17} className="text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white">Workout history</p>
+                      {sessions.length === 0 ? (
+                        <p className="text-xs text-white/70">No sessions yet</p>
+                      ) : (
+                        <>
+                          <p className="truncate text-xs text-white/80">
+                            Last · {formatDate(sessions[0].date)} · {sessions[0].name}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-white/60">
+                            {sessions.length} session{sessions.length === 1 ? '' : 's'} logged
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="shrink-0 text-white/80" />
+                </div>
+              </button>
+            </div>
+
+            <div className="mx-auto max-w-lg lg:max-w-2xl">
+              <h3 className="mb-1 text-base font-semibold">Workouts</h3>
+              <p className="mb-4 text-sm text-muted">Browse exercises by muscle group</p>
+              <MuscleExerciseList onBeforeNavigate={rememberTrackerView} />
+            </div>
+          </section>
+        )
+      )}
+
+      {view === 'progress' && (
+        <section className="space-y-8 px-5 pb-8 pt-4 lg:px-10 lg:pt-6">
           <div className="mx-auto max-w-lg">
             <ProgressVolumeChart weekly={weeklyProgress} monthly={monthlyProgress} />
           </div>
 
-          {activeSession ? (
+          {activeSession && (
             <div className="mx-auto max-w-lg">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h3 className="text-sm font-semibold text-muted">Workout session</h3>
@@ -746,12 +813,6 @@ export default function Tracker() {
                 </>
               )}
             </div>
-          ) : (
-            <div className="mx-auto max-w-lg">
-              <h3 className="mb-1 text-base font-semibold">Workouts</h3>
-              <p className="mb-4 text-sm text-muted">Browse exercises by muscle group</p>
-              <MuscleExerciseList onBeforeNavigate={rememberTrackerView} />
-            </div>
           )}
         </section>
       )}
@@ -772,28 +833,14 @@ export default function Tracker() {
         </section>
       )}
 
-      {view === 'workout' && !activeSession && !readyForNextMuscle && (
-        <section className="space-y-8 px-5 pb-8 lg:px-10">
-          <div className="mx-auto max-w-lg lg:max-w-2xl">
-            <ReadyToTrainPanel
-              plan={plan}
-              lastSession={sessions[0] ?? null}
-              onStartToday={() => handleStartDayPlan(getTodayWeekday())}
-              onStartEmpty={() => startSession("Today's Workout")}
-              onEditPlan={() => setView('plan')}
-              onRepeatLast={
-                sessions[0]
-                  ? () => duplicateSession(sessions[0].id)
-                  : undefined
-              }
-              formatSessionDate={formatDate}
-            />
-          </div>
-
-          <div className="mx-auto max-w-lg lg:max-w-2xl">
-            <h3 className="mb-1 text-base font-semibold">Workouts</h3>
-            <p className="mb-4 text-sm text-muted">Browse exercises by muscle group</p>
-            <MuscleExerciseList onBeforeNavigate={rememberTrackerView} />
+      {view === 'friends' && (
+        <section className="px-5 pb-8 lg:px-10">
+          <div className="mx-auto max-w-lg rounded-2xl bg-surface p-8 text-center ring-1 ring-border">
+            <Users size={28} className="mx-auto text-muted" />
+            <h2 className="mt-4 text-lg font-semibold">Friends</h2>
+            <p className="mt-2 text-sm text-muted">
+              Connect with training partners and share your progress.
+            </p>
           </div>
         </section>
       )}
