@@ -34,9 +34,9 @@ export default function HomeMobile({
         <div className="mt-5 overflow-x-hidden">
           <TodayPlanCard
             plan={plan}
-            onPlan={() => navigate('/tracker', { state: { view: 'plan' } })}
+            onPlan={() => navigate('/tracker/plan')}
             onStart={() =>
-              navigate('/tracker', { state: { startDay: getTodayWeekday() } })
+              navigate('/tracker/workout', { state: { startDay: getTodayWeekday() } })
             }
           />
         </div>

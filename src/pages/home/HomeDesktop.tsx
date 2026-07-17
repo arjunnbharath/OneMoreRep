@@ -54,8 +54,10 @@ export default function HomeDesktop({
         <div className="desktop-page mx-auto mt-6 max-w-3xl">
           <TodayPlanCard
             plan={plan}
-            onPlan={() => navigate('/tracker', { state: { view: 'plan' } })}
-            onStart={() => navigate('/tracker', { state: { startDay: getTodayWeekday() } })}
+            onPlan={() => navigate('/tracker/plan')}
+            onStart={() =>
+              navigate('/tracker/workout', { state: { startDay: getTodayWeekday() } })
+            }
           />
         </div>
       </header>

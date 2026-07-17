@@ -39,6 +39,7 @@ import {
   sessionVolume,
 } from '../../lib/workoutProgress'
 import { computeStreak, toDateKey } from '../../pages/home/homeUtils'
+import { TRACKER_PATHS } from '../../lib/trackerPaths'
 import type { FriendUser } from '../../lib/api'
 import type { WorkoutSession } from '../../types/tracker'
 
@@ -109,7 +110,7 @@ export default function FriendDetail({ friendId }: { friendId: number }) {
 
   useEffect(() => {
     if (!Number.isInteger(parsedFriendId) || parsedFriendId <= 0) {
-      navigate('/tracker', { state: { view: 'friends' }, replace: true })
+      navigate(TRACKER_PATHS.friends, { replace: true })
       return
     }
 
@@ -153,7 +154,7 @@ export default function FriendDetail({ friendId }: { friendId: number }) {
     setRemoving(true)
     try {
       await removeFriend(friend.id)
-      navigate('/tracker', { state: { view: 'friends' } })
+      navigate(TRACKER_PATHS.friends)
     } finally {
       setRemoving(false)
     }
@@ -176,7 +177,7 @@ export default function FriendDetail({ friendId }: { friendId: number }) {
   }
 
   function handleBack() {
-    navigate('/tracker', { state: { view: 'friends' } })
+    navigate(TRACKER_PATHS.friends)
   }
 
   const friendsSince = formatFriendsSince(friend?.friendsSince)

@@ -31,13 +31,13 @@ function markPlanSwipeHintShown() {
   localStorage.setItem(PLAN_SWIPE_HINT_STORAGE_KEY, String(next))
 }
 
-type Screen =
-  | { step: 'week' }
-  | { step: 'day'; day: Weekday }
-  | { step: 'muscle'; day: Weekday; group: ExerciseGroup }
-
 interface WeeklyPlanPanelProps {
   plan: WeeklyPlan
+  planDay?: Weekday
+  planMuscle?: ExerciseGroup
+  onNavigateWeek: () => void
+  onNavigateDay: (day: Weekday) => void
+  onNavigateMuscle: (day: Weekday, group: ExerciseGroup) => void
   onAddMuscle: (day: Weekday, group: ExerciseGroup) => void
   onRemoveMuscle: (day: Weekday, group: ExerciseGroup) => void
   onAddExercise: (
@@ -386,6 +386,11 @@ function MuscleScreen({
 
 export default function WeeklyPlanPanel({
   plan,
+  planDay,
+  planMuscle,
+  onNavigateWeek,
+  onNavigateDay,
+  onNavigateMuscle,
   onAddMuscle,
   onRemoveMuscle,
   onAddExercise,
@@ -393,11 +398,10 @@ export default function WeeklyPlanPanel({
   onStartDay,
   swipeHintKey = 0,
 }: WeeklyPlanPanelProps) {
-  const [screen, setScreen] = useState<Screen>({ step: 'week' })
   const [playSwipeHint, setPlaySwipeHint] = useState(false)
 
   useEffect(() => {
-    if (screen.step !== 'week' || !swipeHintKey) return
+    if (planDay || planMuscle || !swipeHintKey) return
     if (window.matchMedia('(min-width: 1024px)').matches) return
     if (getPlanSwipeHintCount() >= PLAN_SWIPE_HINT_MAX_SHOWS) return
 
@@ -410,31 +414,31 @@ export default function WeeklyPlanPanel({
       window.cancelAnimationFrame(frame)
       window.clearTimeout(reset)
     }
-  }, [screen.step, swipeHintKey])
+  }, [planDay, planMuscle, swipeHintKey])
 
-  if (screen.step === 'muscle') {
+  if (planDay && planMuscle) {
     return (
       <MuscleScreen
-        day={screen.day}
-        group={screen.group}
-        exercises={exercisesForMuscle(plan[screen.day], screen.group)}
-        onBack={() => setScreen({ step: 'day', day: screen.day })}
+        day={planDay}
+        group={planMuscle}
+        exercises={exercisesForMuscle(plan[planDay], planMuscle)}
+        onBack={() => onNavigateDay(planDay)}
         onAddExercise={onAddExercise}
         onRemoveExercise={onRemoveExercise}
       />
     )
   }
 
-  if (screen.step === 'day') {
+  if (planDay) {
     return (
       <DayScreen
-        day={screen.day}
-        dayPlan={plan[screen.day]}
-        onBack={() => setScreen({ step: 'week' })}
-        onSelectMuscle={(group) => setScreen({ step: 'muscle', day: screen.day, group })}
-        onAddMuscle={(group) => onAddMuscle(screen.day, group)}
-        onRemoveMuscle={(group) => onRemoveMuscle(screen.day, group)}
-        onStartDay={() => onStartDay(screen.day)}
+        day={planDay}
+        dayPlan={plan[planDay]}
+        onBack={onNavigateWeek}
+        onSelectMuscle={(group) => onNavigateMuscle(planDay, group)}
+        onAddMuscle={(group) => onAddMuscle(planDay, group)}
+        onRemoveMuscle={(group) => onRemoveMuscle(planDay, group)}
+        onStartDay={() => onStartDay(planDay)}
       />
     )
   }
@@ -444,7 +448,7 @@ export default function WeeklyPlanPanel({
       <h2 className="text-xl font-bold">Weekly plan</h2>
       <WeekGrid
         plan={plan}
-        onSelectDay={(day) => setScreen({ step: 'day', day })}
+        onSelectDay={onNavigateDay}
         onStartDay={onStartDay}
         playSwipeHint={playSwipeHint}
       />

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   BarChart3,
   Calendar,
@@ -52,15 +52,21 @@ import {
 } from '../lib/workoutProgress'
 import type { TrackedExercise, WorkoutSession } from '../types/tracker'
 import type { Weekday } from '../types/workoutPlan'
+import {
+  getTrackerView,
+  parseTrackerRoute,
+  TRACKER_PATHS,
+  trackerViewPath,
+  type TrackerView,
+} from '../lib/trackerPaths'
 
-type View = 'workout' | 'plan' | 'progress' | 'friends'
-
-const TRACKER_VIEW_KEY = 'onemorerep-tracker-view'
-const WORKOUT_HISTORY_BG = '/images/gym_background/workout history.jpg'
-
-function isTrackerView(value: string): value is View {
-  return value === 'workout' || value === 'plan' || value === 'progress' || value === 'friends'
+type DayWorkoutFlow = {
+  day: Weekday
+  queue: ExerciseGroup[]
+  remaining: ExerciseGroup[]
 }
+
+const WORKOUT_HISTORY_BG = '/images/gym_background/workout history.jpg'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -103,14 +109,15 @@ function toDateKey(iso: string) {
   return `${y}-${m}-${day}`
 }
 
-type DayWorkoutFlow = {
-  day: Weekday
-  queue: ExerciseGroup[]
-  remaining: ExerciseGroup[]
-}
-
 export default function Tracker() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const route = parseTrackerRoute(location.pathname)
+  const view = getTrackerView(route) ?? 'plan'
+  const showWorkoutHistory = route.kind === 'workout' && route.history
+  const planDay = route.kind === 'plan' ? route.day : undefined
+  const planMuscle = route.kind === 'plan' ? route.muscle : undefined
+
   const {
     sessions,
     activeSession,
@@ -138,7 +145,6 @@ export default function Tracker() {
     removeExercise: removePlanExercise,
   } = useWorkoutPlan()
 
-  const [view, setView] = useState<View>('plan')
   const [planSwipeHintKey, setPlanSwipeHintKey] = useState(0)
   const [dayWorkoutFlow, setDayWorkoutFlow] = useState<DayWorkoutFlow | null>(null)
   const [readyForNextMuscle, setReadyForNextMuscle] = useState<{
@@ -150,7 +156,6 @@ export default function Tracker() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [showFinishSummary, setShowFinishSummary] = useState<WorkoutSession | null>(null)
   const [restSeconds, setRestSeconds] = useState<number | null>(null)
-  const [showWorkoutHistory, setShowWorkoutHistory] = useState(false)
   const [selectedHistoryDay, setSelectedHistoryDay] = useState<string | null>(null)
   const [selectedExercise, setSelectedExercise] = useState('')
   const [exerciseQuery, setExerciseQuery] = useState('')
@@ -161,27 +166,19 @@ export default function Tracker() {
   const [weight, setWeight] = useState('')
 
   useEffect(() => {
-    if (view !== 'workout') {
-      setShowWorkoutHistory(false)
+    if (!showWorkoutHistory) {
+      setSelectedHistoryDay(null)
     }
-  }, [view])
+  }, [showWorkoutHistory])
 
   useEffect(() => {
-    if (view === 'plan') {
+    if (view === 'plan' && !planDay && !planMuscle) {
       setPlanSwipeHintKey((key) => key + 1)
     }
-  }, [view])
+  }, [view, planDay, planMuscle])
 
-  useEffect(() => {
-    const savedView = sessionStorage.getItem(TRACKER_VIEW_KEY)
-    if (savedView && isTrackerView(savedView)) {
-      setView(savedView)
-      sessionStorage.removeItem(TRACKER_VIEW_KEY)
-    }
-  }, [])
-
-  function rememberTrackerView() {
-    sessionStorage.setItem(TRACKER_VIEW_KEY, view)
+  function goToView(next: TrackerView) {
+    navigate(trackerViewPath(next))
   }
 
   useEffect(() => {
@@ -284,7 +281,7 @@ export default function Tracker() {
       }
     })
     startSessionWithExercises(`${WEEKDAY_LABELS[day]} · ${groupLabel(group)}`, items)
-    setView('workout')
+    navigate(TRACKER_PATHS.workout)
   }
 
   function handleStartDayPlan(day: Weekday) {
@@ -300,11 +297,10 @@ export default function Tracker() {
   handleStartDayPlanRef.current = handleStartDayPlan
 
   useEffect(() => {
-    const state = location.state as { view?: View; startDay?: Weekday } | null
-    if (!state?.view && !state?.startDay) return
+    const state = location.state as { startDay?: Weekday } | null
+    if (!state?.startDay) return
 
-    if (state.view && isTrackerView(state.view)) setView(state.view)
-    if (state.startDay) handleStartDayPlanRef.current(state.startDay)
+    handleStartDayPlanRef.current(state.startDay)
 
     window.history.replaceState(
       null,
@@ -376,7 +372,7 @@ export default function Tracker() {
               type="button"
               onClick={() => {
                 setSelectedExercise(exercise.name)
-                setView('progress')
+                goToView('progress')
               }}
               className="text-left text-base font-semibold leading-snug hover:underline"
             >
@@ -436,7 +432,7 @@ export default function Tracker() {
               <button
                 key={id}
                 type="button"
-                onClick={() => setView(id)}
+                onClick={() => goToView(id)}
                 className={[
                   'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition',
                   view === id
@@ -464,7 +460,7 @@ export default function Tracker() {
           <button
             key={id}
             type="button"
-            onClick={() => setView(id)}
+            onClick={() => goToView(id)}
             className={[
               'flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium transition',
               view === id
@@ -574,10 +570,7 @@ export default function Tracker() {
             <div className="mx-auto max-w-lg lg:max-w-4xl">
               <button
                 type="button"
-                onClick={() => {
-                  setShowWorkoutHistory(false)
-                  setSelectedHistoryDay(null)
-                }}
+                onClick={() => navigate(TRACKER_PATHS.workout)}
                 className="mb-4 text-sm font-medium text-muted transition hover:text-foreground"
               >
                 ← Back to workout
@@ -639,7 +632,7 @@ export default function Tracker() {
                                   type="button"
                                   onClick={() => {
                                     duplicateSession(session.id)
-                                    setShowWorkoutHistory(false)
+                                    navigate(TRACKER_PATHS.workout)
                                   }}
                                   className="text-muted transition hover:text-foreground"
                                   aria-label="Duplicate workout"
@@ -673,7 +666,7 @@ export default function Tracker() {
                 lastSession={sessions[0] ?? null}
                 onStartToday={() => handleStartDayPlan(getTodayWeekday())}
                 onStartEmpty={() => startSession("Today's Workout")}
-                onEditPlan={() => setView('plan')}
+                onEditPlan={() => goToView('plan')}
                 onRepeatLast={
                   sessions[0]
                     ? () => duplicateSession(sessions[0].id)
@@ -686,7 +679,7 @@ export default function Tracker() {
             <div className="desktop-page mx-auto max-w-lg lg:max-w-3xl">
               <button
                 type="button"
-                onClick={() => setShowWorkoutHistory(true)}
+                onClick={() => navigate(TRACKER_PATHS.workoutHistory)}
                 className="group relative w-full overflow-hidden rounded-2xl text-left ring-1 ring-border transition hover:ring-foreground/25"
               >
                 <img
@@ -725,7 +718,7 @@ export default function Tracker() {
             <div className="desktop-page mx-auto max-w-lg lg:max-w-3xl">
               <h3 className="mb-1 text-base font-semibold">Workouts</h3>
               <p className="mb-4 text-sm text-muted">Browse exercises by muscle group</p>
-              <MuscleExerciseList onBeforeNavigate={rememberTrackerView} />
+              <MuscleExerciseList />
             </div>
           </section>
         )
@@ -765,7 +758,7 @@ export default function Tracker() {
                     <h3 className="text-sm font-semibold">Active session</h3>
                     <button
                       type="button"
-                      onClick={() => setView('workout')}
+                      onClick={() => goToView('workout')}
                       className="text-xs font-medium text-foreground underline-offset-2 hover:underline"
                     >
                       Open
@@ -788,7 +781,7 @@ export default function Tracker() {
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setView('workout')}
+                    onClick={() => goToView('workout')}
                     className="text-xs font-medium text-foreground underline-offset-2 hover:underline"
                   >
                     Back to workout
@@ -866,14 +859,19 @@ export default function Tracker() {
         <section className="overflow-x-hidden px-5 pb-8 lg:desktop-page-body lg:px-10">
           <div className="desktop-page lg:max-w-5xl">
             <WeeklyPlanPanel
-            plan={plan}
-            onAddMuscle={addMuscleToDay}
-            onRemoveMuscle={removeMuscleFromDay}
-            onAddExercise={addPlanExercise}
-            onRemoveExercise={removePlanExercise}
-            onStartDay={handleStartDayPlan}
-            swipeHintKey={planSwipeHintKey}
-          />
+              plan={plan}
+              planDay={planDay}
+              planMuscle={planMuscle}
+              onNavigateWeek={() => navigate(TRACKER_PATHS.plan)}
+              onNavigateDay={(day) => navigate(TRACKER_PATHS.planDay(day))}
+              onNavigateMuscle={(day, group) => navigate(TRACKER_PATHS.planMuscle(day, group))}
+              onAddMuscle={addMuscleToDay}
+              onRemoveMuscle={removeMuscleFromDay}
+              onAddExercise={addPlanExercise}
+              onRemoveExercise={removePlanExercise}
+              onStartDay={handleStartDayPlan}
+              swipeHintKey={planSwipeHintKey}
+            />
           </div>
         </section>
       )}

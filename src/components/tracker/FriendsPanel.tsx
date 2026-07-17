@@ -2,21 +2,19 @@ import { useState, type FormEvent, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, BellOff, ChevronRight, Hand, UserPlus, Users, X } from 'lucide-react'
 import UserAvatar from '../UserAvatar'
-import FriendNotifications from './FriendNotifications'
 import { useFriends } from '../../hooks/useFriends'
 import { useFriendNudges } from '../../hooks/useFriendNudges'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
+import { TRACKER_PATHS } from '../../lib/trackerPaths'
 import type { FriendUser } from '../../lib/api'
 
 export default function FriendsPanel() {
   const navigate = useNavigate()
   const { friends, loading, error, addFriend } = useFriends()
-  const { nudges, unreadNudges, loading: nudgesLoading, error: nudgesError, sendNudge, markRead } =
-    useFriendNudges()
+  const { nudges, unreadNudges, sendNudge } = useFriendNudges()
   const { supported: pushSupported, available: pushAvailable, permission, enabling, enable } =
     usePushNotifications()
   const [showAddForm, setShowAddForm] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
   const [username, setUsername] = useState('')
   const [addError, setAddError] = useState('')
   const [adding, setAdding] = useState(false)
@@ -48,7 +46,7 @@ export default function FriendsPanel() {
       const friend = await addFriend(username)
       setUsername('')
       setShowAddForm(false)
-      navigate(`/tracker/friends/${friend.id}`)
+      navigate(TRACKER_PATHS.friend(friend.id))
     } catch (err) {
       setAddError(err instanceof Error ? err.message : 'Failed to add friend')
     } finally {
@@ -57,7 +55,7 @@ export default function FriendsPanel() {
   }
 
   function openFriend(friend: FriendUser) {
-    navigate(`/tracker/friends/${friend.id}`)
+    navigate(TRACKER_PATHS.friend(friend.id))
   }
 
   async function handleQuickWave(e: MouseEvent, friend: FriendUser) {
@@ -68,28 +66,6 @@ export default function FriendsPanel() {
     } finally {
       setWavingId(null)
     }
-  }
-
-  async function handleWaveBack(friend: FriendUser) {
-    try {
-      await sendNudge(friend.id, 'wave')
-    } catch {
-      // ignore
-    }
-  }
-
-  if (showNotifications) {
-    return (
-      <FriendNotifications
-        nudges={visibleNudges}
-        loading={nudgesLoading}
-        error={nudgesError}
-        onBack={() => setShowNotifications(false)}
-        onOpenFriend={openFriend}
-        onWaveBack={(friend) => void handleWaveBack(friend)}
-        onMarkRead={(ids) => void markRead(ids)}
-      />
-    )
   }
 
   return (
@@ -223,7 +199,7 @@ export default function FriendsPanel() {
 
       <button
         type="button"
-        onClick={() => setShowNotifications(true)}
+        onClick={() => navigate(TRACKER_PATHS.friendNotifications)}
         className="flex w-full items-center gap-3 rounded-2xl bg-surface px-4 py-3.5 text-left ring-1 ring-border transition hover:bg-surface-elevated/50"
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-background ring-1 ring-border">
