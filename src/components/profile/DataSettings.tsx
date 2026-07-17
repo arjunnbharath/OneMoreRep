@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Download, Eraser, FileSpreadsheet, FileText, Smartphone } from 'lucide-react'
+import { ArrowLeft, Download, Eraser, FileSpreadsheet, FileText } from 'lucide-react'
 import Button from '../Button'
 import { exportUserData } from '../../lib/exportUserData'
-import { usePwaInstall } from '../../hooks/usePwaInstall'
 import type { FoodLogEntry, UserNutritionProfile } from '../../types/nutrition'
 import type { WorkoutSession } from '../../types/tracker'
 import type { WeeklyPlan } from '../../types/workoutPlan'
@@ -37,15 +36,6 @@ export default function DataSettings({
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [clearError, setClearError] = useState('')
   const [clearing, setClearing] = useState(false)
-  const {
-    showInstallSection,
-    installed,
-    canInstall,
-    isIosBrowser,
-    canShowBrowserInstall,
-    installing,
-    install,
-  } = usePwaInstall()
 
   async function handleExport() {
     setExportError('')
@@ -106,72 +96,6 @@ export default function DataSettings({
       </header>
 
       <div className="mx-auto max-w-lg space-y-6 px-5 pb-8 lg:max-w-none lg:px-10 lg:pb-10">
-        {showInstallSection && (
-          <section>
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-              App
-            </h2>
-            <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
-              {installed ? (
-                <div className="flex items-center gap-3 px-4 py-3.5">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                    <Smartphone size={16} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium">App installed</span>
-                    <span className="block text-xs text-muted">
-                      OneMoreRep is installed on this device
-                    </span>
-                  </div>
-                </div>
-              ) : canInstall ? (
-                <button
-                  type="button"
-                  onClick={() => void install()}
-                  disabled={installing}
-                  className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-elevated/80 disabled:opacity-60"
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
-                    <Smartphone size={16} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium">
-                      {installing ? 'Installing…' : 'Install app'}
-                    </span>
-                    <span className="block text-xs text-muted">
-                      Add OneMoreRep to your home screen for quick access
-                    </span>
-                  </div>
-                </button>
-              ) : isIosBrowser ? (
-                <div className="flex items-start gap-3 px-4 py-3.5">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
-                    <Smartphone size={16} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium">Install app</span>
-                    <span className="mt-1 block text-xs text-muted">
-                      Tap the Share button in Safari, then choose &quot;Add to Home Screen&quot;.
-                    </span>
-                  </div>
-                </div>
-              ) : canShowBrowserInstall ? (
-                <div className="flex items-start gap-3 px-4 py-3.5">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
-                    <Smartphone size={16} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium">Install app</span>
-                    <span className="mt-1 block text-xs text-muted">
-                      Open your browser menu and choose Install app or Add to Home screen.
-                    </span>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </section>
-        )}
-
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
             Export

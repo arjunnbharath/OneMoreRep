@@ -13,6 +13,7 @@ import {
 import UserAvatar from '../components/UserAvatar'
 import AccountSettings from '../components/profile/AccountSettings'
 import DataSettings from '../components/profile/DataSettings'
+import InstallAppSettings from '../components/profile/InstallAppSettings'
 import { useAuth } from '../context/AuthContext'
 import { clearAllUserData as apiClearAllUserData } from '../lib/api'
 import { clearLocalUserData, clearUserDataCache } from '../lib/userDataSync'
@@ -410,6 +411,8 @@ export default function Profile() {
                 onClick={() => setShowData(true)}
               />
             </div>
+
+            <InstallAppSettings />
 
             <SettingsRow
               icon={<LogOut size={16} />}
