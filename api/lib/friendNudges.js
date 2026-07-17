@@ -3,7 +3,6 @@ const { AuthError } = require('./auth.js')
 const { sendPushToUser } = require('./push.js')
 
 const NUDGE_TYPES = ['wave', 'workout_reminder']
-const RATE_LIMIT_MINUTES = 15
 
 function friendshipPair(userId, friendId) {
   const low = Math.min(userId, friendId)
@@ -38,23 +37,6 @@ async function sendNudge(fromUserId, friendId, nudgeType) {
   }
 
   const toUserId = await verifyFriendship(fromUserId, friendId)
-
-  const recent = await query(
-    `SELECT created_at FROM friend_nudges
-     WHERE from_user_id = $1 AND to_user_id = $2 AND nudge_type = $3
-     ORDER BY created_at DESC
-     LIMIT 1`,
-    [fromUserId, toUserId, nudgeType],
-  )
-
-  if (recent.rows.length > 0) {
-    const lastAt = new Date(recent.rows[0].created_at).getTime()
-    const minsSince = (Date.now() - lastAt) / 60000
-    if (minsSince < RATE_LIMIT_MINUTES) {
-      const wait = Math.ceil(RATE_LIMIT_MINUTES - minsSince)
-      throw new AuthError(`Wait ${wait} min before sending another`, 429)
-    }
-  }
 
   const insert = await query(
     `INSERT INTO friend_nudges (from_user_id, to_user_id, nudge_type)
