@@ -1,4 +1,4 @@
-import { getVapidPublicKey, subscribePush } from './api'
+import { getVapidPublicKey, subscribePush, unsubscribePush } from './api'
 import { isNativeApp } from './pwaInstall'
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -79,4 +79,21 @@ export async function syncPushSubscription(token: string) {
   if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return
 
   await subscribePush(token, json)
+}
+
+export async function getPushSubscription() {
+  if (!isPushSupported()) return null
+  const registration = await navigator.serviceWorker.ready
+  return registration.pushManager.getSubscription()
+}
+
+export async function unsubscribeFromPushNotifications(token: string) {
+  if (!isPushSupported()) return
+
+  const subscription = await getPushSubscription()
+  if (!subscription) return
+
+  const endpoint = subscription.endpoint
+  await subscription.unsubscribe()
+  await unsubscribePush(token, endpoint)
 }

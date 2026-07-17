@@ -1,19 +1,15 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Activity,
   ChevronRight,
-  Database,
   Flame,
-  LogOut,
-  Moon,
-  Sun,
-  User,
 } from 'lucide-react'
 import UserAvatar from '../components/UserAvatar'
 import AccountSettings from '../components/profile/AccountSettings'
 import DataSettings from '../components/profile/DataSettings'
-import InstallAppSettings from '../components/profile/InstallAppSettings'
+import PermissionsSettings from '../components/profile/PermissionsSettings'
+import SettingsHub, { ProfileSettingsEntry } from '../components/profile/SettingsHub'
 import { useAuth } from '../context/AuthContext'
 import { clearAllUserData as apiClearAllUserData } from '../lib/api'
 import { clearLocalUserData, clearUserDataCache } from '../lib/userDataSync'
@@ -41,55 +37,6 @@ function getWeekKeys() {
   })
 }
 
-function SettingsRow({
-  icon,
-  label,
-  value,
-  onClick,
-  destructive,
-}: {
-  icon: ReactNode
-  label: string
-  value?: string
-  onClick?: () => void
-  destructive?: boolean
-}) {
-  const Tag = onClick ? 'button' : 'div'
-  return (
-    <Tag
-      type={onClick ? 'button' : undefined}
-      onClick={onClick}
-      className={[
-        'flex w-full items-center gap-3 px-4 py-3.5 text-left transition',
-        onClick ? 'hover:bg-surface-elevated/80 active:bg-surface-elevated' : '',
-      ].join(' ')}
-    >
-      <span
-        className={[
-          'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
-          destructive
-            ? 'bg-red-500/10 text-red-600 dark:text-red-400'
-            : 'bg-surface-elevated text-muted',
-        ].join(' ')}
-      >
-        {icon}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span
-          className={[
-            'block text-sm font-medium',
-            destructive ? 'text-red-600 dark:text-red-400' : '',
-          ].join(' ')}
-        >
-          {label}
-        </span>
-        {value && <span className="block truncate text-xs text-muted">{value}</span>}
-      </span>
-      {onClick && !destructive && <ChevronRight size={16} className="shrink-0 text-muted" />}
-    </Tag>
-  )
-}
-
 export default function Profile() {
   const navigate = useNavigate()
   const { user, token, logout, deleteAccount, changePassword } = useAuth()
@@ -97,8 +44,7 @@ export default function Profile() {
   const { sessions } = useWorkoutTracker()
   const { plan } = useWorkoutPlan()
   const { profile: nutritionProfile, logs, ready: nutritionReady } = useCalorieTracker()
-  const [showAccount, setShowAccount] = useState(false)
-  const [showData, setShowData] = useState(false)
+  const [view, setView] = useState<'main' | 'settings' | 'account' | 'data' | 'permissions'>('main')
 
   const firstName = user?.name?.split(' ')[0] ?? 'Athlete'
   const todayKey = toLocalDateKey()
@@ -128,7 +74,7 @@ export default function Profile() {
   const weekKeys = useMemo(() => getWeekKeys(), [])
   const recentSessions = sessions.slice(0, 3)
 
-  if (showData) {
+  if (view === 'data') {
     return (
       <DataSettings
         userName={user?.name}
@@ -136,7 +82,7 @@ export default function Profile() {
         plan={plan}
         nutritionProfile={nutritionProfile}
         foodLogs={logs}
-        onBack={() => setShowData(false)}
+        onBack={() => setView('settings')}
         onClearAllData={async () => {
           if (!token || !user?.id) throw new Error('Not signed in')
           clearUserDataCache()
@@ -148,14 +94,35 @@ export default function Profile() {
     )
   }
 
-  if (showAccount) {
+  if (view === 'account') {
     return (
       <AccountSettings
         user={user}
-        onBack={() => setShowAccount(false)}
+        onBack={() => setView('settings')}
         onChangePassword={changePassword}
         onDeleteAccount={async () => {
           await deleteAccount()
+          navigate('/login')
+        }}
+      />
+    )
+  }
+
+  if (view === 'permissions') {
+    return <PermissionsSettings onBack={() => setView('settings')} />
+  }
+
+  if (view === 'settings') {
+    return (
+      <SettingsHub
+        isDark={isDark}
+        setTheme={setTheme}
+        onBack={() => setView('main')}
+        onOpenAccount={() => setView('account')}
+        onOpenData={() => setView('data')}
+        onOpenPermissions={() => setView('permissions')}
+        onLogout={() => {
+          logout()
           navigate('/login')
         }}
       />
@@ -362,69 +329,7 @@ export default function Profile() {
           </button>
         )}
 
-        {/* Settings */}
-        <section>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-            Settings
-          </h2>
-          <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
-            <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
-              <div className="flex items-center gap-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-background">
-                  {isDark ? <Moon size={16} /> : <Sun size={16} />}
-                </span>
-                <span className="text-sm font-medium">Appearance</span>
-              </div>
-              <div className="flex rounded-xl bg-background p-0.5 ring-1 ring-border">
-                {(['light', 'dark'] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => setTheme(mode)}
-                    className={[
-                      'rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition',
-                      (mode === 'dark') === isDark
-                        ? 'bg-foreground text-background'
-                        : 'text-muted',
-                    ].join(' ')}
-                  >
-                    {mode}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="border-b border-border">
-              <SettingsRow
-                icon={<User size={16} />}
-                label="Account"
-                value="Details, password, delete"
-                onClick={() => setShowAccount(true)}
-              />
-            </div>
-
-            <div className="border-b border-border">
-              <SettingsRow
-                icon={<Database size={16} />}
-                label="Data"
-                value="Export or clear your data"
-                onClick={() => setShowData(true)}
-              />
-            </div>
-
-            <InstallAppSettings />
-
-            <SettingsRow
-              icon={<LogOut size={16} />}
-              label="Log out"
-              destructive
-              onClick={() => {
-                logout()
-                navigate('/login')
-              }}
-            />
-          </div>
-        </section>
+        <ProfileSettingsEntry onClick={() => setView('settings')} />
         </div>
       </div>
     </div>
