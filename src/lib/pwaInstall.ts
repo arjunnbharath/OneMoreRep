@@ -56,7 +56,9 @@ export function initPwaInstallListener() {
 
 export function subscribePwaInstall(listener: InstallListener) {
   listeners.add(listener)
-  return () => listeners.delete(listener)
+  return () => {
+    listeners.delete(listener)
+  }
 }
 
 export function hasInstallPrompt() {
