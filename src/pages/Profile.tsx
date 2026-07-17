@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Activity,
   ChevronRight,
@@ -20,6 +20,7 @@ import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { toLocalDateKey } from '../lib/nutritionMath'
 import { getSessionDurationSeconds, sessionVolume } from '../lib/workoutProgress'
 import { computeStreak, toDateKey } from './home/homeUtils'
+import { getProfileView, isProfileSubPath, PROFILE_PATHS } from '../lib/profilePaths'
 
 function formatShortDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -39,12 +40,19 @@ function getWeekKeys() {
 
 export default function Profile() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, token, logout, deleteAccount, changePassword } = useAuth()
   const { isDark, setTheme } = useTheme()
   const { sessions } = useWorkoutTracker()
   const { plan } = useWorkoutPlan()
   const { profile: nutritionProfile, logs, ready: nutritionReady } = useCalorieTracker()
-  const [view, setView] = useState<'main' | 'settings' | 'account' | 'data' | 'permissions'>('main')
+  const view = getProfileView(location.pathname)
+
+  useEffect(() => {
+    if (isProfileSubPath(location.pathname) && getProfileView(location.pathname) === 'main') {
+      navigate(PROFILE_PATHS.main, { replace: true })
+    }
+  }, [location.pathname, navigate])
 
   const firstName = user?.name?.split(' ')[0] ?? 'Athlete'
   const todayKey = toLocalDateKey()
@@ -82,7 +90,7 @@ export default function Profile() {
         plan={plan}
         nutritionProfile={nutritionProfile}
         foodLogs={logs}
-        onBack={() => setView('settings')}
+        onBack={() => navigate(PROFILE_PATHS.settings)}
         onClearAllData={async () => {
           if (!token || !user?.id) throw new Error('Not signed in')
           clearUserDataCache()
@@ -98,7 +106,7 @@ export default function Profile() {
     return (
       <AccountSettings
         user={user}
-        onBack={() => setView('settings')}
+        onBack={() => navigate(PROFILE_PATHS.settings)}
         onChangePassword={changePassword}
         onDeleteAccount={async () => {
           await deleteAccount()
@@ -109,7 +117,7 @@ export default function Profile() {
   }
 
   if (view === 'permissions') {
-    return <PermissionsSettings onBack={() => setView('settings')} />
+    return <PermissionsSettings onBack={() => navigate(PROFILE_PATHS.settings)} />
   }
 
   if (view === 'settings') {
@@ -117,10 +125,10 @@ export default function Profile() {
       <SettingsHub
         isDark={isDark}
         setTheme={setTheme}
-        onBack={() => setView('main')}
-        onOpenAccount={() => setView('account')}
-        onOpenData={() => setView('data')}
-        onOpenPermissions={() => setView('permissions')}
+        onBack={() => navigate(PROFILE_PATHS.main)}
+        onOpenAccount={() => navigate(PROFILE_PATHS.account)}
+        onOpenData={() => navigate(PROFILE_PATHS.data)}
+        onOpenPermissions={() => navigate(PROFILE_PATHS.permissions)}
         onLogout={() => {
           logout()
           navigate('/login')
@@ -329,7 +337,7 @@ export default function Profile() {
           </button>
         )}
 
-        <ProfileSettingsEntry onClick={() => setView('settings')} />
+        <ProfileSettingsEntry onClick={() => navigate(PROFILE_PATHS.settings)} />
         </div>
       </div>
     </div>

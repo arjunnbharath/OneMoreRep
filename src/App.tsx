@@ -33,7 +33,7 @@ export default function App() {
           <Route path="/workout/:id" element={<WorkoutDetail />} />
           <Route path="/tracker" element={<Tracker />} />
           <Route path="/calories" element={<CalorieTrackerPage />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/*" element={<Profile />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

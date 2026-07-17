@@ -76,20 +76,34 @@ export default function DataSettings({
     }
   }
 
+  function handleBack() {
+    if (showExport) {
+      setShowExport(false)
+      setExportError('')
+      return
+    }
+    if (showClearConfirm) {
+      setShowClearConfirm(false)
+      setClearError('')
+      return
+    }
+    onBack()
+  }
+
   return (
     <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-3xl">
       <header className="flex items-center gap-3 px-5 py-4 lg:border-b lg:border-border lg:px-10 lg:py-6">
         <button
           type="button"
-          onClick={onBack}
-          aria-label="Back to profile"
+          onClick={handleBack}
+          aria-label="Back"
           className="flex h-10 w-10 items-center justify-center rounded-xl text-muted transition hover:bg-surface hover:text-foreground"
         >
           <ArrowLeft size={20} />
         </button>
         <div>
           <p className="hidden text-[11px] font-semibold uppercase tracking-[0.16em] text-muted lg:block">
-            Profile
+            Settings
           </p>
           <h1 className="text-lg font-semibold lg:text-2xl lg:tracking-tight">Data</h1>
         </div>
