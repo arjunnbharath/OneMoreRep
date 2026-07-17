@@ -213,3 +213,79 @@ export async function getFriendProgress(
     headers: { Authorization: `Bearer ${token}` },
   })
 }
+
+export type NudgeType = 'wave' | 'workout_reminder'
+
+export interface FriendNudge {
+  id: number
+  type: NudgeType
+  readAt?: string | null
+  createdAt: string
+  fromUser: FriendUser
+}
+
+export async function sendFriendNudge(
+  token: string,
+  friendId: number,
+  type: NudgeType,
+): Promise<{ nudge: { id: number; type: NudgeType; createdAt: string } }> {
+  return request(apiUrl('/api/friends/nudge'), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ friendId, type }),
+  })
+}
+
+export async function getFriendNudges(token: string): Promise<{ nudges: FriendNudge[] }> {
+  return request<{ nudges: FriendNudge[] }>(apiUrl('/api/friends/nudges'), {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function markFriendNudgesRead(
+  token: string,
+  nudgeIds?: number[],
+): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>(apiUrl('/api/friends/nudges/read'), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ nudgeIds }),
+  })
+}
+
+export async function getVapidPublicKey(): Promise<{ publicKey: string | null }> {
+  return request<{ publicKey: string | null }>(apiUrl('/api/push/vapid-public-key'))
+}
+
+export async function subscribePush(
+  token: string,
+  subscription: PushSubscriptionJSON,
+): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>(apiUrl('/api/push/subscribe'), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ subscription }),
+  })
+}
+
+export async function unsubscribePush(
+  token: string,
+  endpoint: string,
+): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>(
+    apiUrl(`/api/push/subscribe?endpoint=${encodeURIComponent(endpoint)}`),
+    {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  )
+}

@@ -20,6 +20,12 @@ const {
   removeFriend,
   getFriendProgress,
 } = require('./friends.js')
+const { sendNudge, listNudges, markNudgesRead } = require('./friendNudges.js')
+const {
+  getVapidPublicKey,
+  saveSubscription,
+  deleteSubscription,
+} = require('./push.js')
 
 function parseBody(req) {
   if (!req.body) return {}
@@ -180,6 +186,46 @@ async function handleFriendsProgress(req, res) {
   return res.status(200).json(data)
 }
 
+async function handleFriendsNudge(req, res) {
+  const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+  const { friendId, type } = parseBody(req)
+  const nudge = await sendNudge(userId, friendId, type)
+  return res.status(201).json({ nudge })
+}
+
+async function handleFriendsNudges(req, res) {
+  const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+  const nudges = await listNudges(userId)
+  return res.status(200).json({ nudges })
+}
+
+async function handleFriendsNudgesRead(req, res) {
+  const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+  const { nudgeIds } = parseBody(req)
+  const result = await markNudgesRead(userId, nudgeIds)
+  return res.status(200).json(result)
+}
+
+async function handlePushVapidKey(_req, res) {
+  const publicKey = getVapidPublicKey()
+  return res.status(200).json({ publicKey })
+}
+
+async function handlePushSubscribe(req, res) {
+  const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+  const { subscription } = parseBody(req)
+  const result = await saveSubscription(userId, subscription)
+  return res.status(200).json(result)
+}
+
+async function handlePushUnsubscribe(req, res) {
+  const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+  const body = parseBody(req)
+  const endpoint = req.query?.endpoint ?? body?.endpoint
+  const result = await deleteSubscription(userId, endpoint)
+  return res.status(200).json(result)
+}
+
 const routes = [
   { route: 'health', method: 'GET', handler: handleHealth },
   { route: 'auth/login', method: 'POST', handler: handleAuthLogin },
@@ -195,6 +241,12 @@ const routes = [
   { route: 'friends', method: 'POST', handler: handleFriends },
   { route: 'friends', method: 'DELETE', handler: handleFriends },
   { route: 'friends/progress', method: 'GET', handler: handleFriendsProgress },
+  { route: 'friends/nudge', method: 'POST', handler: handleFriendsNudge },
+  { route: 'friends/nudges', method: 'GET', handler: handleFriendsNudges },
+  { route: 'friends/nudges/read', method: 'POST', handler: handleFriendsNudgesRead },
+  { route: 'push/vapid-public-key', method: 'GET', handler: handlePushVapidKey },
+  { route: 'push/subscribe', method: 'POST', handler: handlePushSubscribe },
+  { route: 'push/subscribe', method: 'DELETE', handler: handlePushUnsubscribe },
 ]
 
 async function handleRequest(req, res) {

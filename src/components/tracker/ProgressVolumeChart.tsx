@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { PeriodProgressPoint } from '../../lib/workoutProgress'
 
 type Range = 'week' | 'month'
@@ -13,8 +13,24 @@ function formatVolume(value: number) {
   return value.toLocaleString()
 }
 
+function useChartWidth() {
+  const [width, setWidth] = useState(320)
+
+  useEffect(() => {
+    function update() {
+      setWidth(window.innerWidth >= 1280 ? 720 : window.innerWidth >= 1024 ? 560 : 320)
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  return width
+}
+
 export default function ProgressVolumeChart({ weekly, monthly }: ProgressVolumeChartProps) {
   const [range, setRange] = useState<Range>('week')
+  const chartWidth = useChartWidth()
   const points = range === 'week' ? weekly : monthly
   const currentKey = points[points.length - 1]?.key
 
@@ -28,9 +44,9 @@ export default function ProgressVolumeChart({ weekly, monthly }: ProgressVolumeC
   )
 
   const chart = useMemo(() => {
-    const height = 200
+    const height = chartWidth >= 560 ? 240 : 200
     const padding = { top: 20, right: 4, bottom: 28, left: 4 }
-    const width = 320
+    const width = chartWidth
     const innerW = width - padding.left - padding.right
     const innerH = height - padding.top - padding.bottom
     const values = points.map((p) => p.volume)
@@ -50,7 +66,7 @@ export default function ProgressVolumeChart({ weekly, monthly }: ProgressVolumeC
     })
 
     return { width, height, bars, padding, innerH }
-  }, [points, range, currentKey])
+  }, [points, range, currentKey, chartWidth])
 
   const hasData = totals.volume > 0 || totals.sessions > 0
   const avgVolume = points.length > 0 ? Math.round(totals.volume / points.length) : 0

@@ -45,7 +45,8 @@ export default function MuscleGroupExercises() {
 
   return (
     <div className="min-h-full bg-background text-foreground">
-      <div className="relative h-56 overflow-hidden lg:h-64">
+      <div className="lg:desktop-page lg:mx-auto lg:grid lg:grid-cols-[minmax(320px,42%)_minmax(0,1fr)] lg:gap-0">
+      <div className="relative h-56 overflow-hidden lg:sticky lg:top-0 lg:h-dvh">
         <img src={group.image} alt="" className="h-full w-full object-cover" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/20" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/45 to-transparent" />
@@ -68,9 +69,9 @@ export default function MuscleGroupExercises() {
         </div>
       </div>
 
-      <section className="relative px-5 pb-6 pt-6 lg:px-10 lg:pb-8 dark:pt-2">
+      <section className="relative px-5 pb-6 pt-6 lg:px-10 lg:pb-10 lg:pt-10 dark:pt-2 lg:dark:pt-10">
         <p className="mb-4 text-sm font-medium text-muted">Choose an exercise</p>
-        <ul className="space-y-2">
+        <ul className="grid gap-3 sm:grid-cols-2">
           {exercises.map((exercise) => (
             <li key={exercise.id}>
               <button
@@ -98,6 +99,7 @@ export default function MuscleGroupExercises() {
           ))}
         </ul>
       </section>
+      </div>
     </div>
   )
 }

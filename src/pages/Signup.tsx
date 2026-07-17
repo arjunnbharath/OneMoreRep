@@ -47,17 +47,33 @@ export default function Signup() {
   }
 
   return (
-    <AuthPageShell className="relative">
-      <AuthVideoBackground variant="auth" />
+    <AuthPageShell className="lg:grid lg:grid-cols-2">
+      <div className="relative hidden min-h-dvh lg:block">
+        <AuthVideoBackground variant="auth" />
+        <div className="absolute bottom-16 left-12 right-12 z-10 text-white">
+          <div className="flex items-center gap-2">
+            <Dumbbell size={22} />
+            <span className="text-sm font-bold tracking-widest">ONEMOREREP</span>
+          </div>
+          <h2 className="mt-6 text-4xl font-bold leading-tight">
+            Start tracking.<br />
+            Start improving.
+          </h2>
+          <p className="mt-4 max-w-md text-lg text-white/70">
+            Pick a user ID, build your plan, and share progress with training partners.
+          </p>
+        </div>
+      </div>
 
-      <div className="relative z-10 flex min-h-dvh flex-col justify-center px-6 py-12">
-        <div className="mx-auto w-full max-w-sm">
-          <div className="mb-10 flex items-center gap-2">
+      <div className="relative flex min-h-dvh flex-col justify-center px-6 py-12 sm:px-10 lg:px-16">
+        <AuthVideoBackground variant="auth" className="lg:hidden" />
+        <div className="relative z-10 mx-auto w-full max-w-md">
+          <div className="mb-8 flex items-center gap-2 lg:hidden">
             <Dumbbell size={18} />
             <span className="text-xs font-semibold uppercase tracking-[0.2em]">OneMoreRep</span>
           </div>
 
-          <h1 className="text-2xl font-semibold tracking-tight">Create account</h1>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Create account</h1>
           <p className="mt-2 text-sm text-muted">Choose a user ID, name, email, and password.</p>
 
           {error && (

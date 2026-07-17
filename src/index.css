@@ -130,6 +130,47 @@ input:-webkit-autofill:focus {
   .mobile-nav-spacer {
     display: none;
   }
+
+  .desktop-page {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 80rem;
+  }
+
+  .desktop-page-header {
+    border-bottom: 1px solid var(--color-border);
+    padding: 1.75rem 2.5rem;
+  }
+
+  .desktop-page-body {
+    padding: 2rem 2.5rem 2.5rem;
+  }
+
+  .desktop-sidebar-rail {
+    width: 17.5rem;
+    flex-shrink: 0;
+  }
+
+  .desktop-detail-sidebar {
+    width: 22.5rem;
+    flex-shrink: 0;
+  }
+
+  .desktop-main-scroll {
+    background-image: linear-gradient(
+      180deg,
+      rgb(255 255 255 / 0.35) 0%,
+      transparent 12rem
+    );
+  }
+
+  .dark .desktop-main-scroll {
+    background-image: linear-gradient(
+      180deg,
+      rgb(255 255 255 / 0.03) 0%,
+      transparent 12rem
+    );
+  }
 }
 
 .pb-modal-mobile {

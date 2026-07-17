@@ -10,6 +10,7 @@ const {
   removeFriend,
   getFriendProgress,
 } = require('../../api/lib/friends.js')
+const { sendNudge, listNudges, markNudgesRead } = require('../../api/lib/friendNudges.js')
 
 const router = Router()
 
@@ -73,6 +74,53 @@ router.get('/progress', async (req, res) => {
     }
     console.error('Friend progress error:', err)
     res.status(500).json({ error: 'Failed to load friend progress' })
+  }
+})
+
+router.post('/nudge', async (req, res) => {
+  try {
+    const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+    const { friendId, type } = req.body ?? {}
+    const nudge = await sendNudge(userId, friendId, type)
+    res.status(201).json({ nudge })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Friend nudge error:', err)
+    res.status(500).json({ error: 'Failed to send nudge' })
+  }
+})
+
+router.get('/nudges', async (req, res) => {
+  try {
+    const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+    const nudges = await listNudges(userId)
+    res.json({ nudges })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Friend nudges error:', err)
+    res.status(500).json({ error: 'Failed to load nudges' })
+  }
+})
+
+router.post('/nudges/read', async (req, res) => {
+  try {
+    const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+    const { nudgeIds } = req.body ?? {}
+    const result = await markNudgesRead(userId, nudgeIds)
+    res.json(result)
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Mark nudges read error:', err)
+    res.status(500).json({ error: 'Failed to update nudges' })
   }
 })
 

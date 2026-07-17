@@ -666,8 +666,8 @@ export default function Tracker() {
             </div>
           </section>
         ) : (
-          <section className="space-y-5 px-5 pb-8 lg:px-10">
-            <div className="mx-auto max-w-lg lg:max-w-2xl">
+          <section className="space-y-5 px-5 pb-8 lg:desktop-page-body lg:px-10">
+            <div className="desktop-page mx-auto max-w-lg lg:max-w-3xl">
               <ReadyToTrainPanel
                 plan={plan}
                 lastSession={sessions[0] ?? null}
@@ -683,7 +683,7 @@ export default function Tracker() {
               />
             </div>
 
-            <div className="mx-auto max-w-lg lg:max-w-2xl">
+            <div className="desktop-page mx-auto max-w-lg lg:max-w-3xl">
               <button
                 type="button"
                 onClick={() => setShowWorkoutHistory(true)}
@@ -722,7 +722,7 @@ export default function Tracker() {
               </button>
             </div>
 
-            <div className="mx-auto max-w-lg lg:max-w-2xl">
+            <div className="desktop-page mx-auto max-w-lg lg:max-w-3xl">
               <h3 className="mb-1 text-base font-semibold">Workouts</h3>
               <p className="mb-4 text-sm text-muted">Browse exercises by muscle group</p>
               <MuscleExerciseList onBeforeNavigate={rememberTrackerView} />
@@ -732,13 +732,57 @@ export default function Tracker() {
       )}
 
       {view === 'progress' && (
-        <section className="space-y-8 px-5 pb-8 pt-4 lg:px-10 lg:pt-6">
-          <div className="mx-auto max-w-lg">
-            <ProgressVolumeChart weekly={weeklyProgress} monthly={monthlyProgress} />
+        <section className="space-y-8 px-5 pb-8 pt-4 lg:desktop-page-body lg:px-10 lg:pt-6">
+          <div className="desktop-page mx-auto lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-8">
+            <div className="min-w-0 space-y-8">
+              <ProgressVolumeChart weekly={weeklyProgress} monthly={monthlyProgress} />
+            </div>
+
+            <aside className="space-y-6 lg:sticky lg:top-8">
+              <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
+                <h3 className="text-sm font-semibold">Quick insights</h3>
+                <ul className="mt-4 space-y-3 text-sm text-muted">
+                  <li>
+                    <span className="font-medium text-foreground">{weeklyProgress.reduce((sum, p) => sum + p.sessions, 0)}</span>{' '}
+                    sessions this week
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">{monthlyProgress.reduce((sum, p) => sum + p.sessions, 0)}</span>{' '}
+                    sessions this month
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">
+                      {weeklyProgress.reduce((sum, p) => sum + p.volume, 0).toLocaleString()} kg
+                    </span>{' '}
+                    volume this week
+                  </li>
+                </ul>
+              </div>
+
+              {activeSession && (
+                <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold">Active session</h3>
+                    <button
+                      type="button"
+                      onClick={() => setView('workout')}
+                      className="text-xs font-medium text-foreground underline-offset-2 hover:underline"
+                    >
+                      Open
+                    </button>
+                  </div>
+                  <p className="text-sm font-medium">{activeSession.name}</p>
+                  <p className="mt-1 text-xs text-muted">
+                    {activeSession.exercises.length} exercise
+                    {activeSession.exercises.length === 1 ? '' : 's'} in progress
+                  </p>
+                </div>
+              )}
+            </aside>
           </div>
 
           {activeSession && (
-            <div className="mx-auto max-w-lg">
+            <div className="desktop-page mx-auto max-w-none lg:max-w-4xl">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h3 className="text-sm font-semibold text-muted">Workout session</h3>
                 <div className="flex items-center gap-3">
@@ -819,8 +863,8 @@ export default function Tracker() {
       )}
 
       {view === 'plan' && (
-        <section className="overflow-x-hidden px-5 pb-8 lg:px-10">
-          <div className="lg:max-w-4xl">
+        <section className="overflow-x-hidden px-5 pb-8 lg:desktop-page-body lg:px-10">
+          <div className="desktop-page lg:max-w-5xl">
             <WeeklyPlanPanel
             plan={plan}
             onAddMuscle={addMuscleToDay}
@@ -835,7 +879,7 @@ export default function Tracker() {
       )}
 
       {view === 'friends' && (
-        <section className="px-5 pb-8 lg:px-10">
+        <section className="px-5 pb-8 lg:desktop-page-body lg:px-10">
           <FriendsPanel />
         </section>
       )}

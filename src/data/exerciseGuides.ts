@@ -33,7 +33,7 @@ export const exerciseGroupLabels: Record<ExerciseGroup, string> = {
 const groupImages: Record<ExerciseGroup, string> = {
   chest: '/images/workout-pic/chest/chest.jpg',
   back: '/images/workout-pic/back/back.jpg',
-  shoulders: '/images/workout-pic/shoulders/shoulder.jpg',
+  shoulders: '/images/workout-pic/shoulders/shoulder.gif',
   biceps: '/images/workout-pic/biceps/biceps.jpg',
   triceps: '/images/workout-pic/triceps/triceps.jpg',
   abdominals: '/images/workout-pic/abdominals/abs.jpg',

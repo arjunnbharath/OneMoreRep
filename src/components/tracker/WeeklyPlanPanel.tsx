@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowLeft, ChevronRight, Plus } from 'lucide-react'
-import Button from '../Button'
+import { ArrowLeft, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import SwipeablePlanDayCard, { SWIPE_HINT_TOTAL_MS } from '../plan/SwipeablePlanDayCard'
 import {
   exerciseGroupLabels,
@@ -68,7 +67,7 @@ function WeekGrid({
   const today = getTodayWeekday()
 
   return (
-    <ul className="space-y-3 overflow-x-hidden">
+    <ul className="space-y-3 overflow-x-hidden lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-3">
       {WEEKDAYS.map((day) => {
         const dayPlan = plan[day]
         const muscles = dayPlan.muscles
@@ -174,9 +173,14 @@ function DayScreen({
 
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-bold">{WEEKDAY_LABELS[day]}</h2>
-        <Button className="px-4 py-2.5" onClick={onStartDay} disabled={!canStart}>
+        <button
+          type="button"
+          onClick={onStartDay}
+          disabled={!canStart}
+          className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+        >
           Start
-        </Button>
+        </button>
       </div>
 
       {dayPlan.muscles.length === 0 ? (
@@ -189,26 +193,29 @@ function DayScreen({
             const count = muscleExerciseCount(dayPlan, group)
             return (
               <li key={group}>
-                <button
-                  type="button"
-                  onClick={() => onSelectMuscle(group)}
-                  className="flex w-full items-center justify-between rounded-2xl bg-surface px-4 py-3.5 text-left ring-1 ring-border transition hover:ring-foreground/20"
-                >
-                  <div>
-                    <p className="font-medium">{exerciseGroupLabels[group]}</p>
-                    <p className="text-xs text-muted">
-                      {count === 0 ? 'Tap to add exercises' : `${count} exercise${count === 1 ? '' : 's'}`}
-                    </p>
-                  </div>
-                  <span className="text-muted">›</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onRemoveMuscle(group)}
-                  className="mt-1 text-xs text-muted hover:text-red-500"
-                >
-                  Remove {exerciseGroupLabels[group]}
-                </button>
+                <div className="flex items-center gap-1 rounded-2xl bg-surface ring-1 ring-border transition hover:ring-foreground/20">
+                  <button
+                    type="button"
+                    onClick={() => onSelectMuscle(group)}
+                    className="flex min-w-0 flex-1 items-center justify-between px-4 py-3.5 text-left"
+                  >
+                    <div>
+                      <p className="font-medium">{exerciseGroupLabels[group]}</p>
+                      <p className="text-xs text-muted">
+                        {count === 0 ? 'Tap to add exercises' : `${count} exercise${count === 1 ? '' : 's'}`}
+                      </p>
+                    </div>
+                    <ChevronRight size={16} className="shrink-0 text-muted" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveMuscle(group)}
+                    aria-label={`Remove ${exerciseGroupLabels[group]}`}
+                    className="mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-red-600 transition hover:bg-red-500/10 dark:text-red-400"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </li>
             )
           })}
@@ -299,7 +306,7 @@ function MuscleScreen({
               <button
                 type="button"
                 onClick={() => onRemoveExercise(day, group, exercise.id)}
-                className="text-xs text-muted hover:text-red-500"
+                className="text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
               >
                 Remove
               </button>

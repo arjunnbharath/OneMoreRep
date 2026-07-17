@@ -163,9 +163,9 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-6xl">
+    <div className="min-h-full bg-background text-foreground lg:desktop-page lg:mx-auto lg:max-w-6xl">
       {/* Hero */}
-      <section className="relative overflow-hidden px-5 pb-16 pt-10 text-white lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pb-12 lg:pt-12">
+      <section className="relative overflow-hidden px-5 pb-16 pt-10 text-white lg:desktop-page-header lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pb-12 lg:pt-12">
         <img
           src="/images/gym_background/gym-pic.jpg"
           alt=""
@@ -242,7 +242,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-lg space-y-6 px-5 pb-4 pt-8 lg:grid lg:max-w-none lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8 lg:px-10 lg:pb-10 lg:pt-10">
+      <div className="desktop-page-body desktop-page mx-auto max-w-lg space-y-6 px-5 pb-4 pt-8 lg:grid lg:max-w-none lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8 lg:px-10 lg:pb-10 lg:pt-10">
         <div className="space-y-6">
         {/* This week */}
         <section>

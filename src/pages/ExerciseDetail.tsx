@@ -24,10 +24,10 @@ export default function ExerciseDetail() {
   }
 
   return (
-    <div className="min-h-full bg-background text-foreground">
-      <div className="relative h-64 lg:h-80">
+    <div className="min-h-full bg-background text-foreground lg:desktop-page lg:mx-auto lg:grid lg:max-w-6xl lg:grid-cols-[minmax(320px,44%)_minmax(0,1fr)]">
+      <div className="relative h-64 lg:sticky lg:top-0 lg:h-dvh">
         <img src={exercise.image} alt="" className="h-full w-full object-cover" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30 lg:from-black/50 lg:via-black/10" />
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -37,7 +37,7 @@ export default function ExerciseDetail() {
         </button>
       </div>
 
-      <div className="px-5 pb-10 lg:px-10">
+      <div className="px-5 pb-10 lg:desktop-page-body lg:px-10">
         <span className="rounded-full bg-foreground/10 px-3 py-1 text-xs font-semibold">
           {exerciseGroupLabels[exercise.group]}
         </span>
@@ -46,7 +46,7 @@ export default function ExerciseDetail() {
           <Dumbbell size={14} />
           {exercise.equipment}
         </p>
-        <p className="mt-4 leading-relaxed text-muted">{exercise.description}</p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-muted">{exercise.description}</p>
 
         <section className="mt-8">
           <h2 className="flex items-center gap-2 text-lg font-bold">
@@ -73,7 +73,7 @@ export default function ExerciseDetail() {
             <Lightbulb size={18} />
             Tips
           </h2>
-          <ul className="mt-4 space-y-2">
+          <ul className="mt-4 grid gap-2 lg:grid-cols-2">
             {exercise.tips.map((tip) => (
               <li
                 key={tip}
@@ -85,7 +85,7 @@ export default function ExerciseDetail() {
           </ul>
         </section>
 
-        <Button fullWidth className="mt-8 py-3.5" onClick={() => navigate('/tracker')}>
+        <Button fullWidth className="mt-8 max-w-sm py-3.5 lg:w-auto lg:px-8" onClick={() => navigate('/tracker')}>
           Log this exercise
         </Button>
       </div>

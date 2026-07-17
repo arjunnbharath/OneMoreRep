@@ -91,6 +91,33 @@ async function ensureDb() {
       PRIMARY KEY (user_id, data_key)
     )
   `)
+  await getSql().query(`
+    CREATE TABLE IF NOT EXISTS friend_nudges (
+      id SERIAL PRIMARY KEY,
+      from_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      to_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      nudge_type VARCHAR(32) NOT NULL,
+      read_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `)
+  await getSql().query(`
+    CREATE INDEX IF NOT EXISTS friend_nudges_to_user_idx
+    ON friend_nudges (to_user_id, created_at DESC)
+  `)
+  await getSql().query(`
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      endpoint TEXT NOT NULL UNIQUE,
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `)
+  await getSql().query(`
+    CREATE INDEX IF NOT EXISTS push_subscriptions_user_idx ON push_subscriptions (user_id)
+  `)
   dbReady = true
 }
 

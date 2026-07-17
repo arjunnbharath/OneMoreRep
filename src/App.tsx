@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import ScrollToTop from './components/ScrollToTop'
+import PushNotificationSync from './components/PushNotificationSync'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Splash from './pages/Splash'
@@ -18,6 +19,7 @@ export default function App() {
   return (
     <>
       <ScrollToTop />
+      <PushNotificationSync />
       <Routes>
       <Route path="/" element={<Splash />} />
       <Route path="/login" element={<Login />} />

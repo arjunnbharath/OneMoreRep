@@ -5,6 +5,7 @@ import { initDb } from './db.js'
 import authRoutes from './routes/auth.js'
 import userDataRoutes from './routes/userData.js'
 import friendsRoutes from './routes/friends.js'
+import pushRoutes from './routes/push.js'
 
 const app = express()
 const PORT = process.env.PORT ?? 3001
@@ -19,6 +20,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/user-data', userDataRoutes)
 app.use('/api/friends', friendsRoutes)
+app.use('/api/push', pushRoutes)
 
 async function start() {
   try {
