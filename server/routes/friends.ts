@@ -10,7 +10,7 @@ const {
   removeFriend,
   getFriendProgress,
 } = require('../../api/lib/friends.js')
-const { sendNudge, listNudges, markNudgesRead } = require('../../api/lib/friendNudges.js')
+const { sendNudge, listNudges, markNudgesRead, clearNudges } = require('../../api/lib/friendNudges.js')
 const { setFriendNotificationMute } = require('../../api/lib/friendMutes.js')
 
 const router = Router()
@@ -122,6 +122,21 @@ router.post('/nudges/read', async (req, res) => {
     }
     console.error('Mark nudges read error:', err)
     res.status(500).json({ error: 'Failed to update nudges' })
+  }
+})
+
+router.delete('/nudges', async (req, res) => {
+  try {
+    const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+    const result = await clearNudges(userId)
+    res.json(result)
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Clear nudges error:', err)
+    res.status(500).json({ error: 'Failed to delete notifications' })
   }
 })
 

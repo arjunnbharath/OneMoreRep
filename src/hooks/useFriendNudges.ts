@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   getFriendNudges,
   markFriendNudgesRead,
+  clearFriendNudges,
   sendFriendNudge,
   type FriendNudge,
   type NudgeType,
@@ -65,6 +66,12 @@ export function useFriendNudges() {
     [token],
   )
 
+  const clearAll = useCallback(async () => {
+    if (!token) return
+    await clearFriendNudges(token)
+    setNudges([])
+  }, [token])
+
   const unreadNudges = nudges.filter((nudge) => !nudge.readAt)
 
   return {
@@ -75,5 +82,6 @@ export function useFriendNudges() {
     refresh,
     sendNudge,
     markRead,
+    clearAll,
   }
 }

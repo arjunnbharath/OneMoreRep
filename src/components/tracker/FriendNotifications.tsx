@@ -1,210 +1,171 @@
-import {
-  ArrowLeft,
-  Bell,
-  Dumbbell,
-  Hand,
-  Heart,
-  Moon,
-} from 'lucide-react'
+import { useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
 import UserAvatar from '../UserAvatar'
 import type { FriendNudge, FriendUser } from '../../lib/api'
 
-function nudgeMeta(type: FriendNudge['type']) {
+function nudgeText(type: FriendNudge['type']) {
   switch (type) {
     case 'wave':
-      return { label: 'Waved at you', icon: Hand }
+      return 'waved at you'
     case 'workout_reminder':
-      return { label: 'Wants to workout', icon: Dumbbell }
+      return 'wants to workout'
     case 'cheer_streak':
-      return { label: 'Cheered your streak', icon: Heart }
+      return 'cheered your streak'
     case 'rest_day':
-      return { label: 'Checked in on you', icon: Moon }
+      return 'checked in'
     default:
-      return { label: 'Sent a nudge', icon: Bell }
+      return 'sent a nudge'
   }
 }
 
 function formatWhen(iso: string) {
-  const date = new Date(iso)
-  const diffMs = Date.now() - date.getTime()
+  const diffMs = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diffMs / 60_000)
-  if (mins < 1) return 'Just now'
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 1) return 'now'
+  if (mins < 60) return `${mins}m`
   const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return `${hours}h`
   const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  if (days < 7) return `${days}d`
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 interface FriendNotificationsProps {
   nudges: FriendNudge[]
   loading: boolean
   error: string
+  clearing: boolean
   onBack: () => void
   onOpenFriend: (friend: FriendUser) => void
   onWaveBack: (friend: FriendUser) => void
   onMarkRead: (nudgeIds?: number[]) => void
+  onClearAll: () => void
 }
 
 export default function FriendNotifications({
   nudges,
   loading,
   error,
+  clearing,
   onBack,
   onOpenFriend,
   onWaveBack,
   onMarkRead,
+  onClearAll,
 }: FriendNotificationsProps) {
+  const [confirmClear, setConfirmClear] = useState(false)
   const unreadCount = nudges.filter((nudge) => !nudge.readAt).length
+
+  function handleClearAll() {
+    if (!confirmClear) {
+      setConfirmClear(true)
+      return
+    }
+    onClearAll()
+    setConfirmClear(false)
+  }
 
   return (
     <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-3xl">
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm lg:desktop-page-header lg:static lg:px-10 lg:py-6">
-        <div className="flex min-w-0 items-center gap-3">
+      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm lg:px-10 lg:py-5">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Back to friends"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted transition hover:bg-surface hover:text-foreground"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="text-lg font-semibold">Notifications</h1>
+        {!loading && !error && nudges.length > 0 && (
           <button
             type="button"
-            onClick={onBack}
-            aria-label="Back to friends"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted transition hover:bg-surface hover:text-foreground"
+            onClick={handleClearAll}
+            disabled={clearing}
+            className={[
+              'ml-auto shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium text-white transition disabled:opacity-50',
+              confirmClear
+                ? 'bg-red-700 hover:bg-red-800'
+                : 'bg-red-600 hover:bg-red-700',
+            ].join(' ')}
           >
-            <ArrowLeft size={20} />
-          </button>
-          <div className="min-w-0">
-            <p className="hidden text-[11px] font-semibold uppercase tracking-[0.16em] text-muted lg:block">
-              Friends
-            </p>
-            <h1 className="truncate text-lg font-semibold lg:text-2xl lg:tracking-tight">
-              Notifications
-            </h1>
-          </div>
-        </div>
-        {unreadCount > 0 && (
-          <button
-            type="button"
-            onClick={() => onMarkRead()}
-            className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted transition hover:bg-surface hover:text-foreground"
-          >
-            Mark all read
+            {clearing ? 'Deleting…' : confirmClear ? 'Tap again' : 'Delete all'}
           </button>
         )}
       </header>
 
-      <div className="desktop-page-body mx-auto max-w-lg space-y-4 px-5 py-6 lg:max-w-none lg:px-10 lg:pb-10">
-        {!loading && !error && nudges.length > 0 && (
-          <div className="flex items-center justify-between rounded-2xl bg-surface px-4 py-3 ring-1 ring-border">
-            <div>
-              <p className="text-sm font-medium">Last 7 days</p>
-              <p className="mt-0.5 text-xs text-muted">
-                {unreadCount > 0
-                  ? `${unreadCount} unread · ${nudges.length} total`
-                  : `${nudges.length} notification${nudges.length === 1 ? '' : 's'}`}
-              </p>
-            </div>
-            {unreadCount > 0 && (
-              <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-foreground px-2 text-xs font-semibold text-background">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </div>
-        )}
-
+      <div className="desktop-page-body mx-auto max-w-lg px-5 py-4 lg:max-w-none lg:px-10 lg:pb-10">
         {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 rounded-2xl bg-surface p-4 ring-1 ring-border"
-              >
-                <div className="h-11 w-11 animate-pulse rounded-full bg-background" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-28 animate-pulse rounded bg-background" />
-                  <div className="h-3 w-20 animate-pulse rounded bg-background" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <p className="py-8 text-center text-sm text-muted">Loading…</p>
         ) : error ? (
-          <div className="rounded-2xl bg-surface px-4 py-10 text-center text-sm text-red-600 ring-1 ring-border dark:text-red-400">
-            {error}
-          </div>
+          <p className="py-8 text-center text-sm text-red-600 dark:text-red-400">{error}</p>
         ) : nudges.length === 0 ? (
-          <div className="rounded-2xl bg-surface px-6 py-14 text-center ring-1 ring-border">
-            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-background ring-1 ring-border">
-              <Bell size={20} className="text-muted" />
-            </span>
-            <p className="mt-4 text-sm font-medium">No notifications yet</p>
-            <p className="mt-1 text-sm text-muted">
-              When friends wave or nudge you, they&apos;ll show up here.
-            </p>
-          </div>
+          <p className="py-12 text-center text-sm text-muted">No notifications</p>
         ) : (
-          <div className="space-y-2.5">
-            {nudges.map((nudge) => {
-              const unread = !nudge.readAt
-              const { label, icon: Icon } = nudgeMeta(nudge.type)
+          <>
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={() => onMarkRead()}
+                className="mb-3 text-xs text-muted transition hover:text-foreground"
+              >
+                Mark all read
+              </button>
+            )}
+            <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+              {nudges.map((nudge, index) => {
+                const unread = !nudge.readAt
+                const firstName = nudge.fromUser.name.split(' ')[0]
 
-              return (
-                <article
-                  key={nudge.id}
-                  className={[
-                    'overflow-hidden rounded-2xl bg-surface ring-1 ring-border transition',
-                    unread ? 'ring-foreground/15' : '',
-                  ].join(' ')}
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (unread) onMarkRead([nudge.id])
-                      onOpenFriend(nudge.fromUser)
-                    }}
-                    className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition hover:bg-surface-elevated/40"
+                return (
+                  <div
+                    key={nudge.id}
+                    className={[
+                      'flex items-center gap-3 px-3 py-3',
+                      index > 0 ? 'border-t border-border' : '',
+                    ].join(' ')}
                   >
-                    <div className="relative shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (unread) onMarkRead([nudge.id])
+                        onOpenFriend(nudge.fromUser)
+                      }}
+                      className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+                    >
                       <UserAvatar
                         name={nudge.fromUser.name}
                         avatarUrl={nudge.fromUser.avatarUrl}
-                        size="md"
+                        size="sm"
                       />
-                      <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-1 ring-border">
-                        <Icon size={10} className="text-muted" />
+                      <p className="min-w-0 flex-1 text-sm leading-snug">
+                        <span className="font-medium">{firstName}</span>{' '}
+                        <span className="text-muted">{nudgeText(nudge.type)}</span>
+                      </p>
+                      <span className="shrink-0 text-[11px] tabular-nums text-muted">
+                        {formatWhen(nudge.createdAt)}
                       </span>
-                    </div>
-
-                    <div className="min-w-0 flex-1 pt-0.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="truncate text-sm font-semibold">{nudge.fromUser.name}</p>
-                        <span className="shrink-0 text-[11px] text-muted">
-                          {formatWhen(nudge.createdAt)}
-                        </span>
-                      </div>
-                      <p className="mt-0.5 text-sm text-muted">{label}</p>
-                    </div>
-
-                    {unread && (
-                      <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-foreground" />
-                    )}
-                  </button>
-
-                  {nudge.type === 'wave' && (
-                    <div className="border-t border-border px-4 py-2.5">
+                      {unread && (
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                      )}
+                    </button>
+                    {nudge.type === 'wave' && (
                       <button
                         type="button"
                         onClick={() => {
                           if (unread) onMarkRead([nudge.id])
                           onWaveBack(nudge.fromUser)
                         }}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-background py-2 text-xs font-medium transition hover:ring-1 hover:ring-border"
+                        className="shrink-0 text-[11px] font-medium text-muted transition hover:text-foreground"
                       >
-                        <Hand size={14} />
-                        Wave back
+                        Wave
                       </button>
-                    </div>
-                  )}
-                </article>
-              )
-            })}
-          </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>

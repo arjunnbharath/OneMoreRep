@@ -150,8 +150,17 @@ async function markNudgesRead(userId, nudgeIds) {
   return { success: true }
 }
 
+async function clearNudges(userId) {
+  await ensureDb()
+
+  await query('DELETE FROM friend_nudges WHERE to_user_id = $1', [userId])
+
+  return { success: true }
+}
+
 module.exports = {
   sendNudge,
   listNudges,
   markNudgesRead,
+  clearNudges,
 }

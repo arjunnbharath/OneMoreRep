@@ -260,6 +260,13 @@ export async function markFriendNudgesRead(
   })
 }
 
+export async function clearFriendNudges(token: string): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>(apiUrl('/api/friends/nudges'), {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
 export async function setFriendNotificationMute(
   token: string,
   friendId: number,
