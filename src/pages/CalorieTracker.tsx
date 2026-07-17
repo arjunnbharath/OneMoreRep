@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Coffee,
   Cookie,
-  Flame,
   Moon,
   Plus,
   Search,
@@ -15,6 +14,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
+import NutritionOnboarding from '../components/calories/NutritionOnboarding'
 import Button from '../components/Button'
 import {
   DailyCalorieSummary,
@@ -23,10 +23,6 @@ import {
   WeeklyCalorieSection,
 } from '../components/calories/CalorieWidgets'
 import {
-  calculateBmr,
-  calculateCalorieTarget,
-  calculateMacroTargets,
-  calculateTdee,
   macrosForGrams,
   toLocalDateKey,
 } from '../lib/nutritionMath'
@@ -36,7 +32,6 @@ import type {
   FoodItem,
   GoalType,
   MealType,
-  Sex,
   UserNutritionProfile,
 } from '../types/nutrition'
 
@@ -82,239 +77,6 @@ function formatDisplayDate(key: string) {
     month: 'short',
     day: 'numeric',
   })
-}
-
-function OnboardingForm({ onComplete }: { onComplete: () => void }) {
-  const { setupProfile } = useCalorieTrackerContext()
-  const [step, setStep] = useState(0)
-  const [age, setAge] = useState('25')
-  const [sex, setSex] = useState<Sex>('male')
-  const [heightCm, setHeightCm] = useState('175')
-  const [weightKg, setWeightKg] = useState('75')
-  const [activity, setActivity] = useState<ActivityLevel>('moderately_active')
-  const [goal, setGoal] = useState<GoalType>('maintain')
-
-  const preview = useMemo(() => {
-    const a = Number(age)
-    const h = Number(heightCm)
-    const w = Number(weightKg)
-    if (!a || !h || !w) return null
-    const bmr = calculateBmr(sex, w, h, a)
-    const tdee = calculateTdee(bmr, activity)
-    const { target } = calculateCalorieTarget(tdee, goal, sex)
-    const macros = calculateMacroTargets(target, w)
-    return { bmr: Math.round(bmr), tdee: Math.round(tdee), target, macros }
-  }, [age, sex, heightCm, weightKg, activity, goal])
-
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setupProfile({
-      age: Number(age),
-      sex,
-      heightCm: Number(heightCm),
-      weightKg: Number(weightKg),
-      activityLevel: activity,
-      goalType: goal,
-    })
-    onComplete()
-  }
-
-  return (
-    <div className="min-h-full bg-background px-5 py-10 pb-4 lg:px-10 lg:pb-10">
-      <div className="mx-auto max-w-lg lg:max-w-2xl">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-foreground text-background">
-            <Flame size={20} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Nutrition setup</h1>
-            <p className="text-sm text-muted">Step {step + 1} of 3</p>
-          </div>
-        </div>
-
-        <div className="mt-6 flex gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className={[
-                'h-1 flex-1 rounded-full transition',
-                i <= step ? 'bg-foreground' : 'bg-surface',
-              ].join(' ')}
-            />
-          ))}
-        </div>
-
-        <form onSubmit={handleSubmit} className="mt-8">
-          {step === 0 && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted">Tell us about yourself for accurate calorie targets.</p>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block text-sm">
-                  <span className="text-muted">Age</span>
-                  <input
-                    type="number"
-                    min={14}
-                    max={100}
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    className="mt-1.5 w-full rounded-2xl bg-surface px-4 py-3 ring-1 ring-border outline-none focus:ring-foreground/30"
-                    required
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="text-muted">Sex</span>
-                  <div className="mt-1.5 flex gap-2">
-                    {(['male', 'female'] as const).map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setSex(s)}
-                        className={[
-                          'flex-1 rounded-2xl py-3 text-sm font-medium capitalize ring-1 transition',
-                          sex === s
-                            ? 'bg-foreground text-background ring-foreground'
-                            : 'bg-surface ring-border',
-                        ].join(' ')}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </label>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block text-sm">
-                  <span className="text-muted">Height (cm)</span>
-                  <input
-                    type="number"
-                    min={100}
-                    max={250}
-                    value={heightCm}
-                    onChange={(e) => setHeightCm(e.target.value)}
-                    className="mt-1.5 w-full rounded-2xl bg-surface px-4 py-3 ring-1 ring-border outline-none focus:ring-foreground/30"
-                    required
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="text-muted">Weight (kg)</span>
-                  <input
-                    type="number"
-                    min={30}
-                    max={300}
-                    value={weightKg}
-                    onChange={(e) => setWeightKg(e.target.value)}
-                    className="mt-1.5 w-full rounded-2xl bg-surface px-4 py-3 ring-1 ring-border outline-none focus:ring-foreground/30"
-                    required
-                  />
-                </label>
-              </div>
-            </div>
-          )}
-
-          {step === 1 && (
-            <div className="space-y-3">
-              <p className="text-sm text-muted">How active are you on a typical week?</p>
-              {ACTIVITY_OPTIONS.map((o) => (
-                <button
-                  key={o.id}
-                  type="button"
-                  onClick={() => setActivity(o.id)}
-                  className={[
-                    'flex w-full items-start gap-3 rounded-2xl p-4 text-left ring-1 transition',
-                    activity === o.id
-                      ? 'bg-foreground text-background ring-foreground'
-                      : 'bg-surface ring-border hover:ring-foreground/20',
-                  ].join(' ')}
-                >
-                  <div>
-                    <p className="font-medium">{o.label}</p>
-                    <p className={['mt-0.5 text-xs', activity === o.id ? 'text-background/70' : 'text-muted'].join(' ')}>
-                      {o.desc}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted">What&apos;s your primary goal?</p>
-              <div className="grid grid-cols-3 gap-2">
-                {GOAL_OPTIONS.map((g) => (
-                  <button
-                    key={g.id}
-                    type="button"
-                    onClick={() => setGoal(g.id)}
-                    className={[
-                      'rounded-2xl p-3 text-center ring-1 transition',
-                      goal === g.id
-                        ? 'bg-foreground text-background ring-foreground'
-                        : 'bg-surface ring-border',
-                    ].join(' ')}
-                  >
-                    <p className="text-sm font-semibold">{g.label}</p>
-                    <p className={['mt-1 text-[10px]', goal === g.id ? 'text-background/70' : 'text-muted'].join(' ')}>
-                      {g.desc.split(' · ')[0]}
-                    </p>
-                  </button>
-                ))}
-              </div>
-
-              {preview && (
-                <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-muted">
-                    Your targets
-                  </p>
-                  <p className="mt-2 text-3xl font-semibold tabular-nums">
-                    {preview.target} <span className="text-base font-normal text-muted">kcal/day</span>
-                  </p>
-                  <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                    <div className="rounded-xl bg-background p-2 ring-1 ring-border">
-                      <p className="text-sm font-semibold">{preview.macros.protein}g</p>
-                      <p className="text-[10px] text-muted">Protein</p>
-                    </div>
-                    <div className="rounded-xl bg-background p-2 ring-1 ring-border">
-                      <p className="text-sm font-semibold">{preview.macros.carbs}g</p>
-                      <p className="text-[10px] text-muted">Carbs</p>
-                    </div>
-                    <div className="rounded-xl bg-background p-2 ring-1 ring-border">
-                      <p className="text-sm font-semibold">{preview.macros.fat}g</p>
-                      <p className="text-[10px] text-muted">Fat</p>
-                    </div>
-                  </div>
-                  <p className="mt-3 text-xs text-muted">
-                    BMR {preview.bmr} · TDEE {preview.tdee} kcal (Mifflin-St Jeor)
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="mt-8 flex gap-2">
-            {step > 0 && (
-              <button
-                type="button"
-                onClick={() => setStep((s) => s - 1)}
-                className="flex-1 rounded-2xl py-3.5 text-sm font-medium ring-1 ring-border"
-              >
-                Back
-              </button>
-            )}
-            {step < 2 ? (
-              <Button type="button" className="flex-1 py-3.5" onClick={() => setStep((s) => s + 1)}>
-                Continue
-              </Button>
-            ) : (
-              <Button type="submit" className="flex-1 py-3.5">
-                Start tracking
-              </Button>
-            )}
-          </div>
-        </form>
-      </div>
-    </div>
-  )
 }
 
 function SettingsPanel({
@@ -939,7 +701,7 @@ export default function CalorieTracker() {
   }
 
   if (!profile?.onboarded) {
-    return <OnboardingForm onComplete={() => {}} />
+    return <NutritionOnboarding />
   }
 
   return <DailyLog />

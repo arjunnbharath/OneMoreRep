@@ -154,15 +154,17 @@ export function useCalorieTracker() {
       weightKg: number
       activityLevel: ActivityLevel
       goalType: GoalType
+      dailyCalorieTarget?: number
     }) => {
       const bmr = calculateBmr(input.sex, input.weightKg, input.heightCm, input.age)
       const tdee = calculateTdee(bmr, input.activityLevel)
-      const { target } = calculateCalorieTarget(tdee, input.goalType, input.sex)
+      const { target: calculated } = calculateCalorieTarget(tdee, input.goalType, input.sex)
+      const target = input.dailyCalorieTarget ?? calculated
       const macros = calculateMacroTargets(target, input.weightKg)
 
       const next: UserNutritionProfile = {
         ...input,
-        dailyCalorieTarget: target,
+        dailyCalorieTarget: Math.round(target),
         proteinTargetG: macros.protein,
         carbsTargetG: macros.carbs,
         fatTargetG: macros.fat,

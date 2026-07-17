@@ -133,6 +133,10 @@ export function useWorkoutPlan() {
     })
   }
 
+  function replacePlan(next: WeeklyPlan) {
+    setPlan(next)
+  }
+
   return {
     plan,
     ready,
@@ -140,5 +144,6 @@ export function useWorkoutPlan() {
     removeMuscleFromDay,
     addExercise,
     removeExercise,
+    replacePlan,
   }
 }

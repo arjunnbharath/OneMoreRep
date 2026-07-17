@@ -27,16 +27,19 @@ import ExerciseSetTable from '../components/tracker/ExerciseSetTable'
 import NextMuscleReady from '../components/tracker/NextMuscleReady'
 import ReadyToTrainPanel from '../components/tracker/ReadyToTrainPanel'
 import WeeklyPlanPanel from '../components/tracker/WeeklyPlanPanel'
+import PlanOnboarding from '../components/tracker/PlanOnboarding'
 import MuscleExerciseList from '../components/home/MuscleExerciseList'
 import { exerciseGuides, type ExerciseGroup } from '../data/exerciseGuides'
 import { heroImage } from '../data/mockData'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
+import { useWorkoutPreferences } from '../hooks/useWorkoutPreferences'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
 import {
   exercisesForMuscle,
   getTodayWeekday,
   groupLabel,
   muscleQueueForDay,
+  daysWithPlan,
   WEEKDAY_LABELS,
 } from '../lib/workoutPlan'
 import {
@@ -139,11 +142,28 @@ export default function Tracker() {
 
   const {
     plan,
+    ready: planReady,
     addMuscleToDay,
     removeMuscleFromDay,
     addExercise: addPlanExercise,
     removeExercise: removePlanExercise,
+    replacePlan,
   } = useWorkoutPlan()
+
+  const { preferences, ready: prefsReady, savePreferences, skipOnboarding } =
+    useWorkoutPreferences()
+
+  const needsPlanOnboarding =
+    planReady &&
+    prefsReady &&
+    daysWithPlan(plan).length === 0 &&
+    !preferences.onboarded
+
+  useEffect(() => {
+    if (needsPlanOnboarding && (planDay || planMuscle)) {
+      navigate(TRACKER_PATHS.plan, { replace: true })
+    }
+  }, [needsPlanOnboarding, planDay, planMuscle, navigate])
 
   const [planSwipeHintKey, setPlanSwipeHintKey] = useState(0)
   const [dayWorkoutFlow, setDayWorkoutFlow] = useState<DayWorkoutFlow | null>(null)
@@ -858,20 +878,36 @@ export default function Tracker() {
       {view === 'plan' && (
         <section className="overflow-x-hidden px-5 pb-8 lg:desktop-page-body lg:px-10">
           <div className="desktop-page lg:max-w-5xl">
-            <WeeklyPlanPanel
-              plan={plan}
-              planDay={planDay}
-              planMuscle={planMuscle}
-              onNavigateWeek={() => navigate(TRACKER_PATHS.plan)}
-              onNavigateDay={(day) => navigate(TRACKER_PATHS.planDay(day))}
-              onNavigateMuscle={(day, group) => navigate(TRACKER_PATHS.planMuscle(day, group))}
-              onAddMuscle={addMuscleToDay}
-              onRemoveMuscle={removeMuscleFromDay}
-              onAddExercise={addPlanExercise}
-              onRemoveExercise={removePlanExercise}
-              onStartDay={handleStartDayPlan}
-              swipeHintKey={planSwipeHintKey}
-            />
+            {needsPlanOnboarding ? (
+              <PlanOnboarding
+                onComplete={(generatedPlan, answers, splitType) => {
+                  replacePlan(generatedPlan)
+                  savePreferences({
+                    onboarded: true,
+                    daysPerWeek: answers.daysPerWeek,
+                    experience: answers.experience,
+                    goal: answers.goal,
+                    splitType,
+                  })
+                }}
+                onSkip={skipOnboarding}
+              />
+            ) : (
+              <WeeklyPlanPanel
+                plan={plan}
+                planDay={planDay}
+                planMuscle={planMuscle}
+                onNavigateWeek={() => navigate(TRACKER_PATHS.plan)}
+                onNavigateDay={(day) => navigate(TRACKER_PATHS.planDay(day))}
+                onNavigateMuscle={(day, group) => navigate(TRACKER_PATHS.planMuscle(day, group))}
+                onAddMuscle={addMuscleToDay}
+                onRemoveMuscle={removeMuscleFromDay}
+                onAddExercise={addPlanExercise}
+                onRemoveExercise={removePlanExercise}
+                onStartDay={handleStartDayPlan}
+                swipeHintKey={planSwipeHintKey}
+              />
+            )}
           </div>
         </section>
       )}
