@@ -1,11 +1,25 @@
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { Dumbbell } from 'lucide-react'
 import AuthPageShell from '../components/AuthPageShell'
 import AuthVideoBackground from '../components/AuthVideoBackground'
 import Button from '../components/Button'
+import { useAuth } from '../context/AuthContext'
 
 export default function Splash() {
   const navigate = useNavigate()
+  const { user, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-foreground" />
+      </div>
+    )
+  }
+
+  if (user) {
+    return <Navigate to="/home" replace />
+  }
 
   return (
     <AuthPageShell className="relative">

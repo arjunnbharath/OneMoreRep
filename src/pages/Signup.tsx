@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Dumbbell, Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
 import AuthPageShell from '../components/AuthPageShell'
 import AuthVideoBackground from '../components/AuthVideoBackground'
@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Signup() {
   const navigate = useNavigate()
-  const { register } = useAuth()
+  const { user, isLoading, register } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,6 +31,18 @@ export default function Signup() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-foreground" />
+      </div>
+    )
+  }
+
+  if (user) {
+    return <Navigate to="/home" replace />
   }
 
   return (
