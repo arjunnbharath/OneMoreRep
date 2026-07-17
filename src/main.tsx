@@ -9,9 +9,15 @@ import './index.css'
 import App from './App'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { initPwaInstallListener, registerServiceWorker } from './lib/pwaInstall'
 
 const isNative = Capacitor.isNativePlatform()
 const Router = isNative ? HashRouter : BrowserRouter
+
+if (!isNative) {
+  initPwaInstallListener()
+  registerServiceWorker()
+}
 
 function NativeShell({ children }: { children: ReactNode }) {
   useEffect(() => {
