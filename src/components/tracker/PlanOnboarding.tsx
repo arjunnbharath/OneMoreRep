@@ -76,12 +76,12 @@ function DayOptionButton({
     >
       {selected ? (
         <div className="onboarding-day-glow rounded-full p-[2.5px]">
-          <div className="flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full bg-background text-2xl font-bold tabular-nums text-foreground">
+          <div className="onboarding-day-selected-inner flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full bg-surface text-2xl font-bold tabular-nums text-foreground dark:bg-background">
             {display}
           </div>
         </div>
       ) : (
-        <div className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-surface text-2xl font-bold tabular-nums text-foreground ring-1 ring-border transition group-hover:ring-foreground/25">
+        <div className="onboarding-day-circle flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-surface text-2xl font-bold tabular-nums text-foreground ring-1 ring-border transition group-hover:ring-foreground/25">
           {display}
         </div>
       )}
@@ -115,7 +115,7 @@ function GoalOptionButton({
 }) {
   return (
     <GeminiSelectCard selected={selected} onClick={onClick} innerClassName="flex items-center gap-3 px-4 py-3.5">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface text-muted ring-1 ring-border">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface text-muted ring-1 ring-border dark:bg-surface">
         <Icon size={17} strokeWidth={2.25} />
       </div>
       <div className="min-w-0 flex-1">
@@ -124,7 +124,7 @@ function GoalOptionButton({
       </div>
       {selected ? (
         <div className="onboarding-day-glow shrink-0 rounded-full p-[2px]">
-          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-background">
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-surface dark:bg-background">
             <Check size={11} className="text-foreground" strokeWidth={3} />
           </div>
         </div>
@@ -181,14 +181,14 @@ export default function PlanOnboarding({ onComplete, onSkip }: PlanOnboardingPro
 
   return (
     <div className="mx-auto max-w-lg py-2 lg:max-w-xl">
-      <div className="overflow-hidden rounded-3xl bg-background ring-1 ring-border">
+      <div className="onboarding-card overflow-hidden rounded-3xl ring-1 ring-border">
         <div className="relative h-44 lg:h-52">
           <img
             src={ONBOARDING_BG}
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
           />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
+          <div className="onboarding-hero-overlay pointer-events-none absolute inset-0" />
           <div className="absolute inset-0 flex items-end p-5">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20 backdrop-blur-sm">
@@ -204,14 +204,14 @@ export default function PlanOnboarding({ onComplete, onSkip }: PlanOnboardingPro
           </div>
         </div>
 
-        <div className="px-5 pb-5 pt-4">
+        <div className="onboarding-body px-5 pb-5 pt-4">
           <div className="flex gap-1.5">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
                 className={[
                   'h-1 flex-1 rounded-full transition',
-                  i <= step ? 'bg-foreground' : 'bg-surface',
+                  i <= step ? 'bg-foreground' : 'bg-border',
                 ].join(' ')}
               />
             ))}
@@ -235,7 +235,7 @@ export default function PlanOnboarding({ onComplete, onSkip }: PlanOnboardingPro
 
                 <div className="flex flex-1 items-center justify-center px-3 py-6">
                   {daysPerWeek ? (
-                    <p className="max-w-[20rem] text-center text-sm leading-relaxed text-muted">
+                    <p className="onboarding-split-quote max-w-[20rem] text-center text-sm">
                       &ldquo;{DAY_QUOTES[daysPerWeek]}&rdquo;
                     </p>
                   ) : (
@@ -282,7 +282,7 @@ export default function PlanOnboarding({ onComplete, onSkip }: PlanOnboardingPro
                 </div>
 
                 {preview && (
-                  <div className="mt-4 rounded-2xl bg-surface px-4 py-3.5 ring-1 ring-border">
+                  <div className="onboarding-panel mt-4 rounded-2xl px-4 py-3.5 ring-1 ring-border">
                     <div className="flex items-start gap-2.5">
                       <Calendar size={16} className="mt-0.5 shrink-0 text-muted" />
                       <div>

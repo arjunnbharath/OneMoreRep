@@ -46,13 +46,11 @@ function SelectCard({
       <div
         className={[
           'rounded-2xl px-4 py-3.5 transition',
-          selected
-            ? 'bg-surface ring-2 ring-foreground'
-            : 'bg-surface ring-1 ring-border hover:ring-foreground/25',
+          selected ? 'nutrition-choice nutrition-choice-selected' : 'nutrition-choice',
         ].join(' ')}
       >
-        <span className="block text-sm font-medium text-foreground">{children}</span>
-        {hint && <span className="mt-0.5 block text-xs text-muted">{hint}</span>}
+        <span className="block text-sm font-medium">{children}</span>
+        {hint && <span className="nutrition-hint mt-0.5 block text-xs text-muted">{hint}</span>}
       </div>
     </button>
   )
@@ -76,25 +74,27 @@ function GoalCard({
       <div
         className={[
           'flex items-center gap-3 rounded-2xl px-4 py-3.5 transition',
-          selected
-            ? 'bg-surface ring-2 ring-foreground'
-            : 'bg-surface ring-1 ring-border hover:ring-foreground/25',
+          selected ? 'nutrition-choice nutrition-choice-selected' : 'nutrition-choice',
         ].join(' ')}
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-elevated text-muted ring-1 ring-border">
+        <div className="nutrition-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-elevated text-muted ring-1 ring-border">
           <Icon size={17} strokeWidth={2.25} />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium leading-snug">{label}</p>
-          <p className="mt-0.5 text-xs text-muted">{hint}</p>
+          <p className="nutrition-hint mt-0.5 text-xs text-muted">{hint}</p>
         </div>
         <div
           className={[
             'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2',
-            selected ? 'border-foreground bg-foreground' : 'border-border',
+            selected
+              ? 'border-white bg-white dark:border-foreground dark:bg-foreground'
+              : 'border-border dark:border-border',
           ].join(' ')}
         >
-          {selected && <Check size={11} className="text-background" strokeWidth={3} />}
+          {selected && (
+            <Check size={11} className="text-foreground dark:text-background" strokeWidth={3} />
+          )}
         </div>
       </div>
     </button>
@@ -175,14 +175,14 @@ export default function NutritionOnboarding() {
   return (
     <div className="px-5 pb-8 pt-14 lg:px-10 lg:pt-8">
       <div className="mx-auto max-w-lg py-2 lg:max-w-xl">
-        <div className="overflow-hidden rounded-3xl bg-background ring-1 ring-border">
+        <div className="onboarding-card overflow-hidden rounded-3xl ring-1 ring-border">
           <div className="relative h-44 lg:h-52">
             <img
               src={ONBOARDING_BG}
               alt=""
               className="absolute inset-0 h-full w-full object-cover"
             />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            <div className="onboarding-hero-overlay pointer-events-none absolute inset-0" />
             <div className="absolute inset-0 flex items-end p-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20 backdrop-blur-sm">
@@ -200,7 +200,7 @@ export default function NutritionOnboarding() {
             </div>
           </div>
 
-          <div className="px-5 pb-5 pt-4">
+          <div className="onboarding-body px-5 pb-5 pt-4">
             <div className="flex gap-1.5">
               {[0, 1, 2].map((i) => (
                 <div
@@ -242,7 +242,7 @@ export default function NutritionOnboarding() {
                           max={field.max}
                           value={field.value}
                           onChange={(e) => field.set(e.target.value)}
-                          className="mt-1 w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-medium tabular-nums ring-1 ring-border outline-none focus:ring-foreground/30"
+                          className="nutrition-field mt-1 w-full rounded-xl px-3 py-2.5 text-sm font-medium tabular-nums outline-none"
                         />
                       </label>
                     ))}
@@ -284,7 +284,7 @@ export default function NutritionOnboarding() {
                     ))}
                   </div>
 
-                  <div className="rounded-2xl bg-surface px-4 py-4 ring-1 ring-border">
+                  <div className="nutrition-panel rounded-2xl px-4 py-4">
                     <p className="text-xs font-medium text-muted">Daily calories</p>
                     <div className="mt-2 flex items-baseline gap-2">
                       <input

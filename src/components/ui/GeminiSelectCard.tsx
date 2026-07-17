@@ -21,11 +21,11 @@ export default function GeminiSelectCard({
     <button type="button" onClick={onClick} className="w-full text-left transition">
       {selected ? (
         <div className={`onboarding-day-glow p-[2px] ${rounded}`}>
-          <div className={`bg-background ${innerRadius} ${innerClassName}`}>{children}</div>
+          <div className={`bg-surface dark:bg-background ${innerRadius} ${innerClassName}`}>{children}</div>
         </div>
       ) : (
         <div
-          className={`bg-surface ring-1 ring-border transition hover:ring-foreground/20 ${rounded} ${innerClassName}`}
+          className={`onboarding-option bg-surface ring-1 ring-border transition hover:ring-foreground/20 dark:bg-surface dark:shadow-none ${rounded} ${innerClassName}`}
         >
           {children}
         </div>
