@@ -1,0 +1,79 @@
+import { Router } from 'express'
+import { createRequire } from 'node:module'
+import { AuthError } from '../auth-bridge.js'
+
+const require = createRequire(import.meta.url)
+const {
+  getUserIdFromAuthHeader,
+  listFriends,
+  addFriendByUsername,
+  removeFriend,
+  getFriendProgress,
+} = require('../../api/lib/friends.js')
+
+const router = Router()
+
+router.get('/', async (req, res) => {
+  try {
+    const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+    const friends = await listFriends(userId)
+    res.json({ friends })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Friends GET error:', err)
+    res.status(500).json({ error: 'Failed to load friends' })
+  }
+})
+
+router.post('/', async (req, res) => {
+  try {
+    const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+    const { username } = req.body ?? {}
+    const friend = await addFriendByUsername(userId, username ?? '')
+    res.status(201).json({ friend })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Friends POST error:', err)
+    res.status(500).json({ error: 'Failed to add friend' })
+  }
+})
+
+router.delete('/', async (req, res) => {
+  try {
+    const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+    const friendId = req.query.friendId ?? req.body?.friendId
+    await removeFriend(userId, friendId)
+    res.json({ success: true })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Friends DELETE error:', err)
+    res.status(500).json({ error: 'Failed to remove friend' })
+  }
+})
+
+router.get('/progress', async (req, res) => {
+  try {
+    const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+    const friendId = req.query.friendId
+    const data = await getFriendProgress(userId, friendId)
+    res.json(data)
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Friend progress error:', err)
+    res.status(500).json({ error: 'Failed to load friend progress' })
+  }
+})
+
+export default router

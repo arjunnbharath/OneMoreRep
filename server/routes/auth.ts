@@ -5,8 +5,8 @@ const router = Router()
 
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, avatar } = req.body
-    const data = await registerUser(name ?? '', email ?? '', password ?? '', avatar)
+    const { name, username, email, password, avatar } = req.body
+    const data = await registerUser(name ?? '', username ?? '', email ?? '', password ?? '', avatar)
     res.status(201).json(data)
   } catch (err) {
     if (err instanceof AuthError) {
@@ -20,8 +20,8 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body
-    const data = await loginUser(email ?? '', password ?? '')
+    const { identifier, email, password } = req.body
+    const data = await loginUser(identifier ?? email ?? '', password ?? '')
     res.json(data)
   } catch (err) {
     if (err instanceof AuthError) {

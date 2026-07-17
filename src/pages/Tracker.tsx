@@ -21,6 +21,7 @@ import Button from '../components/Button'
 import WorkoutCalendar from '../components/WorkoutCalendar'
 import ExerciseHistoryChart from '../components/tracker/ExerciseHistoryChart'
 import ProgressVolumeChart from '../components/tracker/ProgressVolumeChart'
+import FriendsPanel from '../components/tracker/FriendsPanel'
 import AddExerciseForm from '../components/tracker/AddExerciseForm'
 import ExerciseSetTable from '../components/tracker/ExerciseSetTable'
 import NextMuscleReady from '../components/tracker/NextMuscleReady'
@@ -835,13 +836,7 @@ export default function Tracker() {
 
       {view === 'friends' && (
         <section className="px-5 pb-8 lg:px-10">
-          <div className="mx-auto max-w-lg rounded-2xl bg-surface p-8 text-center ring-1 ring-border">
-            <Users size={28} className="mx-auto text-muted" />
-            <h2 className="mt-4 text-lg font-semibold">Friends</h2>
-            <p className="mt-2 text-sm text-muted">
-              Connect with training partners and share your progress.
-            </p>
-          </div>
+          <FriendsPanel />
         </section>
       )}
 

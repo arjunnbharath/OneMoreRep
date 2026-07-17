@@ -2,8 +2,22 @@ export interface User {
   id: number
   name: string
   email: string
+  username?: string | null
   avatarUrl?: string | null
   createdAt?: string
+}
+
+export interface FriendUser {
+  id: number
+  name: string
+  username: string | null
+  avatarUrl?: string | null
+  friendsSince?: string
+}
+
+export interface FriendProgressResponse {
+  friend: FriendUser
+  sessions: import('../types/tracker').WorkoutSession[]
 }
 
 export interface AuthResponse {
@@ -68,23 +82,24 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
-export async function login(email: string, password: string): Promise<AuthResponse> {
+export async function login(identifier: string, password: string): Promise<AuthResponse> {
   return request<AuthResponse>(apiUrl('/api/auth/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ identifier, password }),
   })
 }
 
 export async function register(
   name: string,
+  username: string,
   email: string,
   password: string,
 ): Promise<AuthResponse> {
   return request<AuthResponse>(apiUrl('/api/auth/register'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ name, username, email, password }),
   })
 }
 
@@ -156,6 +171,45 @@ export async function putUserData(
 export async function clearAllUserData(token: string): Promise<{ success: boolean }> {
   return request<{ success: boolean }>(apiUrl('/api/user-data'), {
     method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function getFriends(token: string): Promise<{ friends: FriendUser[] }> {
+  return request<{ friends: FriendUser[] }>(apiUrl('/api/friends'), {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function addFriend(
+  token: string,
+  username: string,
+): Promise<{ friend: FriendUser }> {
+  return request<{ friend: FriendUser }>(apiUrl('/api/friends'), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username }),
+  })
+}
+
+export async function removeFriend(
+  token: string,
+  friendId: number,
+): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>(apiUrl(`/api/friends?friendId=${friendId}`), {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function getFriendProgress(
+  token: string,
+  friendId: number,
+): Promise<FriendProgressResponse> {
+  return request<FriendProgressResponse>(apiUrl(`/api/friends/progress?friendId=${friendId}`), {
     headers: { Authorization: `Bearer ${token}` },
   })
 }

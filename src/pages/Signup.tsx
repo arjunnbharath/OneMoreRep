@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { Dumbbell, Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
+import { Dumbbell, Eye, EyeOff, AtSign, Lock, Mail, User } from 'lucide-react'
 import AuthPageShell from '../components/AuthPageShell'
 import AuthVideoBackground from '../components/AuthVideoBackground'
 import Button from '../components/Button'
@@ -12,6 +12,7 @@ export default function Signup() {
   const navigate = useNavigate()
   const { user, isLoading, register } = useAuth()
   const [name, setName] = useState('')
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -24,7 +25,7 @@ export default function Signup() {
     setLoading(true)
 
     try {
-      await register(name, email, password)
+      await register(name, username, email, password)
       navigate('/home')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed')
@@ -57,7 +58,7 @@ export default function Signup() {
           </div>
 
           <h1 className="text-2xl font-semibold tracking-tight">Create account</h1>
-          <p className="mt-2 text-sm text-muted">Name, email, and password. That&apos;s it.</p>
+          <p className="mt-2 text-sm text-muted">Choose a user ID, name, email, and password.</p>
 
           {error && (
             <div className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-200 dark:bg-red-950/50 dark:text-red-400 dark:ring-red-900/50">
@@ -75,6 +76,20 @@ export default function Signup() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               icon={<User size={18} />}
+            />
+            <Input
+              label="User ID"
+              type="text"
+              placeholder="e.g. arjun_lifts"
+              autoComplete="username"
+              required
+              minLength={3}
+              maxLength={20}
+              pattern="[A-Za-z0-9_]{3,20}"
+              title="3-20 characters: letters, numbers, or underscores"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              icon={<AtSign size={18} />}
             />
             <Input
               label="Email"

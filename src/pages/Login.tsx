@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { Dumbbell, Eye, EyeOff, Lock, Mail } from 'lucide-react'
+import { Dumbbell, Eye, EyeOff, AtSign, Lock } from 'lucide-react'
 import AuthPageShell from '../components/AuthPageShell'
 import AuthVideoBackground from '../components/AuthVideoBackground'
 import Button from '../components/Button'
@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext'
 export default function Login() {
   const navigate = useNavigate()
   const { user, isLoading, login } = useAuth()
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -23,7 +23,7 @@ export default function Login() {
     setLoading(true)
 
     try {
-      await login(email, password)
+      await login(identifier, password)
       navigate('/home')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
@@ -83,14 +83,14 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-4">
               <Input
-                label="Email"
-                type="email"
-                placeholder="you@example.com"
-                autoComplete="email"
+                label="User ID or email"
+                type="text"
+                placeholder="your_id or you@example.com"
+                autoComplete="username"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                icon={<Mail size={18} />}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                icon={<AtSign size={18} />}
               />
               <div>
                 <Input

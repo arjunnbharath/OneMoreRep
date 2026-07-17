@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const { query, ensureDb } = require('./db.js')
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret'
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/
 
 class AuthError extends Error {
   constructor(message, status) {
@@ -11,11 +12,36 @@ class AuthError extends Error {
   }
 }
 
-async function registerUser(name, email, password, avatar) {
+function normalizeUsername(username) {
+  return username.trim().toLowerCase()
+}
+
+function validateUsername(username) {
+  if (!username?.trim() || !USERNAME_RE.test(username.trim())) {
+    throw new AuthError(
+      'User ID must be 3-20 characters and use letters, numbers, or underscores',
+      400,
+    )
+  }
+  return normalizeUsername(username)
+}
+
+function formatUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    username: user.username ?? null,
+    avatarUrl: user.avatar_url ?? null,
+    createdAt: user.created_at,
+  }
+}
+
+async function registerUser(name, username, email, password, avatar) {
   await ensureDb()
 
-  if (!name?.trim() || !email?.trim() || !password) {
-    throw new AuthError('Name, email, and password are required', 400)
+  if (!name?.trim() || !username?.trim() || !email?.trim() || !password) {
+    throw new AuthError('Name, user ID, email, and password are required', 400)
   }
 
   if (avatar != null && avatar !== '') {
@@ -31,18 +57,26 @@ async function registerUser(name, email, password, avatar) {
     throw new AuthError('Password must be at least 6 characters', 400)
   }
 
+  const normalizedUsername = validateUsername(username)
   const normalizedEmail = email.trim().toLowerCase()
-  const existing = await query('SELECT id FROM users WHERE email = $1', [normalizedEmail])
 
-  if (existing.rows.length > 0) {
+  const existingEmail = await query('SELECT id FROM users WHERE email = $1', [normalizedEmail])
+  if (existingEmail.rows.length > 0) {
     throw new AuthError('An account with this email already exists', 409)
+  }
+
+  const existingUsername = await query('SELECT id FROM users WHERE LOWER(username) = $1', [
+    normalizedUsername,
+  ])
+  if (existingUsername.rows.length > 0) {
+    throw new AuthError('This user ID is already taken', 409)
   }
 
   const passwordHash = await bcrypt.hash(password, 10)
   const avatarUrl = avatar && typeof avatar === 'string' && avatar.length > 0 ? avatar : null
   const result = await query(
-    'INSERT INTO users (name, email, password_hash, avatar_url) VALUES ($1, $2, $3, $4) RETURNING id, name, email, avatar_url, created_at',
-    [name.trim(), normalizedEmail, passwordHash, avatarUrl],
+    'INSERT INTO users (name, username, email, password_hash, avatar_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, username, email, avatar_url, created_at',
+    [name.trim(), normalizedUsername, normalizedEmail, passwordHash, avatarUrl],
   )
 
   const user = result.rows[0]
@@ -50,49 +84,45 @@ async function registerUser(name, email, password, avatar) {
 
   return {
     token,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      avatarUrl: user.avatar_url ?? null,
-    },
+    user: formatUser(user),
   }
 }
 
-async function loginUser(email, password) {
+async function loginUser(identifier, password) {
   await ensureDb()
 
-  if (!email?.trim() || !password) {
-    throw new AuthError('Email and password are required', 400)
+  if (!identifier?.trim() || !password) {
+    throw new AuthError('User ID or email and password are required', 400)
   }
 
-  const normalizedEmail = email.trim().toLowerCase()
-  const result = await query(
-    'SELECT id, name, email, password_hash, avatar_url FROM users WHERE email = $1',
-    [normalizedEmail],
-  )
+  const trimmed = identifier.trim()
+  const isEmail = trimmed.includes('@')
+  const result = isEmail
+    ? await query(
+        'SELECT id, name, username, email, password_hash, avatar_url, created_at FROM users WHERE email = $1',
+        [trimmed.toLowerCase()],
+      )
+    : await query(
+        'SELECT id, name, username, email, password_hash, avatar_url, created_at FROM users WHERE LOWER(username) = $1',
+        [normalizeUsername(trimmed)],
+      )
 
   if (result.rows.length === 0) {
-    throw new AuthError('Invalid email or password', 401)
+    throw new AuthError('Invalid user ID, email, or password', 401)
   }
 
   const user = result.rows[0]
   const valid = await bcrypt.compare(password, user.password_hash)
 
   if (!valid) {
-    throw new AuthError('Invalid email or password', 401)
+    throw new AuthError('Invalid user ID, email, or password', 401)
   }
 
   const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
 
   return {
     token,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      avatarUrl: user.avatar_url ?? null,
-    },
+    user: formatUser(user),
   }
 }
 
@@ -100,22 +130,16 @@ async function getUserFromToken(token) {
   await ensureDb()
 
   const payload = jwt.verify(token, JWT_SECRET)
-  const result = await query('SELECT id, name, email, avatar_url, created_at FROM users WHERE id = $1', [
-    payload.userId,
-  ])
+  const result = await query(
+    'SELECT id, name, username, email, avatar_url, created_at FROM users WHERE id = $1',
+    [payload.userId],
+  )
 
   if (result.rows.length === 0) {
     throw new AuthError('User not found', 401)
   }
 
-  const user = result.rows[0]
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    avatarUrl: user.avatar_url ?? null,
-    createdAt: user.created_at,
-  }
+  return formatUser(result.rows[0])
 }
 
 async function changeUserPassword(token, currentPassword, newPassword) {
@@ -177,7 +201,7 @@ async function updateUserAvatar(token, avatar) {
   const avatarUrl = normalizeAvatar(avatar)
   const payload = jwt.verify(token, JWT_SECRET)
   const result = await query(
-    'UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING id, name, email, avatar_url, created_at',
+    'UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING id, name, username, email, avatar_url, created_at',
     [avatarUrl, payload.userId],
   )
 
@@ -185,14 +209,7 @@ async function updateUserAvatar(token, avatar) {
     throw new AuthError('User not found', 401)
   }
 
-  const user = result.rows[0]
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    avatarUrl: user.avatar_url ?? null,
-    createdAt: user.created_at,
-  }
+  return formatUser(result.rows[0])
 }
 
 module.exports = {

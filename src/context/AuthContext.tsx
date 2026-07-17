@@ -17,8 +17,8 @@ interface AuthContextValue {
   user: User | null
   token: string | null
   isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
-  register: (name: string, email: string, password: string) => Promise<void>
+  login: (identifier: string, password: string) => Promise<void>
+  register: (name: string, username: string, email: string, password: string) => Promise<void>
   logout: () => void
   deleteAccount: () => Promise<void>
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>
@@ -67,16 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token, logout])
 
   const login = useCallback(
-    async (email: string, password: string) => {
-      const data = await apiLogin(email, password)
+    async (identifier: string, password: string) => {
+      const data = await apiLogin(identifier, password)
       persist(data.token, data.user)
     },
     [persist],
   )
 
   const register = useCallback(
-    async (name: string, email: string, password: string) => {
-      const data = await apiRegister(name, email, password)
+    async (name: string, username: string, email: string, password: string) => {
+      const data = await apiRegister(name, username, email, password)
       persist(data.token, data.user)
     },
     [persist],

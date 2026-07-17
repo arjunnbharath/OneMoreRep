@@ -245,6 +245,7 @@ export default function AccountSettings({
             Details
           </h2>
           <div className="divide-y divide-border overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+            <DetailRow label="User ID" value={user?.username ? `@${user.username}` : '—'} />
             <DetailRow label="Name" value={user?.name ?? '—'} />
             <DetailRow label="Email" value={user?.email ?? '—'} />
             <DetailRow label="Member since" value={formatMemberSince(user?.createdAt)} />

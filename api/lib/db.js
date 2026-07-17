@@ -68,6 +68,21 @@ async function ensureDb() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT
   `)
   await getSql().query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(20)
+  `)
+  await getSql().query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx ON users (LOWER(username))
+  `)
+  await getSql().query(`
+    CREATE TABLE IF NOT EXISTS friendships (
+      user_low INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      user_high INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (user_low, user_high),
+      CHECK (user_low < user_high)
+    )
+  `)
+  await getSql().query(`
     CREATE TABLE IF NOT EXISTS user_data (
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       data_key VARCHAR(64) NOT NULL,

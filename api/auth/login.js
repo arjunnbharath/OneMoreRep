@@ -7,8 +7,8 @@ module.exports = async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-    const { email, password } = body || {}
-    const data = await loginUser(email || '', password || '')
+    const { identifier, email, password } = body || {}
+    const data = await loginUser(identifier || email || '', password || '')
     return res.status(200).json(data)
   } catch (err) {
     if (err instanceof AuthError) {
