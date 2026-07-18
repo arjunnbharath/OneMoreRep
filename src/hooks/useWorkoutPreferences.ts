@@ -11,6 +11,7 @@ function normalizePreferences(raw: unknown): WorkoutPreferences {
   const record = raw as Record<string, unknown>
   return {
     onboarded: record.onboarded === true,
+    uiTourCompleted: record.uiTourCompleted === true,
     daysPerWeek:
       record.daysPerWeek === 3 ||
       record.daysPerWeek === 4 ||
@@ -83,7 +84,11 @@ export function useWorkoutPreferences() {
   }
 
   function skipOnboarding() {
-    setPreferences({ onboarded: true })
+    setPreferences((current) => ({ ...current, onboarded: true }))
+  }
+
+  function completeUiTour() {
+    setPreferences((current) => ({ ...current, uiTourCompleted: true }))
   }
 
   return {
@@ -91,5 +96,6 @@ export function useWorkoutPreferences() {
     ready,
     savePreferences,
     skipOnboarding,
+    completeUiTour,
   }
 }

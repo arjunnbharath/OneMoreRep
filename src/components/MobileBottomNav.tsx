@@ -25,6 +25,7 @@ export default function MobileBottomNav() {
 
   return (
     <nav
+      data-tour="main-nav-mobile"
       className="fixed inset-x-0 bottom-0 z-50 overflow-hidden rounded-t-3xl bg-surface/90 shadow-[var(--shadow-nav)] backdrop-blur-xl lg:hidden dark:bg-surface/75"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       aria-label="Main navigation"

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   BarChart3,
+  BookOpen,
   Calendar,
   ChevronRight,
   Clock,
@@ -20,15 +21,15 @@ import {
 import Button from '../components/Button'
 import WorkoutCalendar from '../components/WorkoutCalendar'
 import ExerciseHistoryChart from '../components/tracker/ExerciseHistoryChart'
-import ProgressVolumeChart from '../components/tracker/ProgressVolumeChart'
+import StatsPanel from '../components/tracker/StatsPanel'
 import FriendsPanel from '../components/tracker/FriendsPanel'
 import AddExerciseForm from '../components/tracker/AddExerciseForm'
 import ExerciseSetTable from '../components/tracker/ExerciseSetTable'
 import NextMuscleReady from '../components/tracker/NextMuscleReady'
 import ReadyToTrainPanel from '../components/tracker/ReadyToTrainPanel'
+import ExerciseLibraryPanel from '../components/exercise-library/ExerciseLibraryPanel'
 import WeeklyPlanPanel from '../components/tracker/WeeklyPlanPanel'
 import PlanOnboarding from '../components/tracker/PlanOnboarding'
-import MuscleExerciseList from '../components/home/MuscleExerciseList'
 import { exerciseGuides, type ExerciseGroup } from '../data/exerciseGuides'
 import { heroImage } from '../data/mockData'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
@@ -48,9 +49,7 @@ import {
   formatLastPerformance,
   getExerciseHistory,
   getLoggedExerciseNames,
-  getMonthlyProgress,
   getSessionDurationSeconds,
-  getWeeklyProgress,
   sessionVolume,
 } from '../lib/workoutProgress'
 import type { TrackedExercise, WorkoutSession } from '../types/tracker'
@@ -70,6 +69,7 @@ type DayWorkoutFlow = {
 }
 
 const WORKOUT_HISTORY_BG = '/images/gym_background/workout history.jpg'
+const EXERCISE_LIBRARY_BG = '/images/gym_background/gym-pic.jpg'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -118,6 +118,7 @@ export default function Tracker() {
   const route = parseTrackerRoute(location.pathname)
   const view = getTrackerView(route) ?? 'plan'
   const showWorkoutHistory = route.kind === 'workout' && route.history
+  const showExerciseLibrary = route.kind === 'workout' && route.library === true
   const planDay = route.kind === 'plan' ? route.day : undefined
   const planMuscle = route.kind === 'plan' ? route.muscle : undefined
 
@@ -213,13 +214,20 @@ export default function Tracker() {
     }
   }, [activeSession?.id, activeSession?.exercises.length])
 
+  const isRestTimerRunning = restSeconds !== null && restSeconds > 0
+
   useEffect(() => {
-    if (restSeconds === null || restSeconds <= 0) return
+    if (!isRestTimerRunning) return
+
     const id = window.setInterval(() => {
-      setRestSeconds((s) => (s !== null && s > 0 ? s - 1 : 0))
+      setRestSeconds((current) => {
+        if (current === null || current <= 1) return null
+        return current - 1
+      })
     }, 1000)
+
     return () => window.clearInterval(id)
-  }, [restSeconds])
+  }, [isRestTimerRunning])
 
   const stats = useMemo(
     () => (activeSession ? getSessionStats(activeSession, true) : null),
@@ -227,9 +235,6 @@ export default function Tracker() {
   )
 
   const loggedExercises = useMemo(() => getLoggedExerciseNames(sessions), [sessions])
-
-  const weeklyProgress = useMemo(() => getWeeklyProgress(sessions), [sessions])
-  const monthlyProgress = useMemo(() => getMonthlyProgress(sessions), [sessions])
 
   const exerciseSuggestions = useMemo(() => {
     const q = exerciseQuery.trim().toLowerCase()
@@ -244,7 +249,11 @@ export default function Tracker() {
 
   function handleToggleSetComplete(exerciseId: string, setId: string, wasCompleted: boolean) {
     toggleSetComplete(exerciseId, setId)
-    if (!wasCompleted) setRestSeconds(90)
+    if (wasCompleted) {
+      setRestSeconds(null)
+    } else {
+      setRestSeconds(90)
+    }
   }
 
   function resetExerciseForm() {
@@ -430,8 +439,21 @@ export default function Tracker() {
   }
 
   return (
-    <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-7xl">
-      <header className="hidden border-b border-border lg:block lg:px-10 lg:py-6">
+    <div
+      className={[
+        'min-h-full bg-background text-foreground lg:mx-auto lg:max-w-7xl',
+        view === 'progress' ? 'overflow-x-hidden' : '',
+        showExerciseLibrary
+          ? 'flex min-h-0 flex-1 flex-col overflow-hidden lg:min-h-full lg:overflow-visible'
+          : '',
+      ].join(' ')}
+    >
+      <header
+        className={[
+          'hidden border-b border-border lg:block lg:px-10 lg:py-6',
+          showExerciseLibrary ? 'shrink-0' : '',
+        ].join(' ')}
+      >
         <div className="flex items-center justify-between gap-8">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
@@ -440,18 +462,23 @@ export default function Tracker() {
             <h1 className="text-2xl font-semibold tracking-tight">Progress</h1>
           </div>
 
-          <nav className="flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border">
+          <nav
+            data-tour="tracker-nav"
+            data-tour-nav="desktop"
+            className="flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border"
+          >
             {(
               [
-                { id: 'plan' as const, label: 'Plans', icon: Calendar },
-                { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
-                { id: 'progress' as const, label: 'Stats', icon: BarChart3 },
-                { id: 'friends' as const, label: 'Friends', icon: Users },
+                { id: 'plan' as const, label: 'Plans', icon: Calendar, tourId: 'tracker-tab-plans' },
+                { id: 'workout' as const, label: 'Workout', icon: Dumbbell, tourId: 'tracker-tab-workout' },
+                { id: 'progress' as const, label: 'Stats', icon: BarChart3, tourId: 'tracker-tab-stats' },
+                { id: 'friends' as const, label: 'Friends', icon: Users, tourId: 'tracker-tab-friends' },
               ] as const
-            ).map(({ id, label, icon: Icon }) => (
+            ).map(({ id, label, icon: Icon, tourId }) => (
               <button
                 key={id}
                 type="button"
+                data-tour={tourId}
                 onClick={() => goToView(id)}
                 className={[
                   'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition',
@@ -468,18 +495,28 @@ export default function Tracker() {
         </div>
       </header>
 
-      <nav className="mx-5 mb-4 mt-[max(2.5rem,env(safe-area-inset-top))] flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border lg:hidden">
+      <nav
+        data-tour="tracker-nav"
+        data-tour-nav="mobile"
+        className={[
+          'mx-5 flex shrink-0 gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border lg:hidden',
+          showExerciseLibrary
+            ? 'mb-3 mt-[max(1.5rem,env(safe-area-inset-top))]'
+            : 'mb-3 mt-[max(1.5rem,env(safe-area-inset-top))]',
+        ].join(' ')}
+      >
         {(
           [
-            { id: 'plan' as const, label: 'Plans', icon: Calendar },
-            { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
-            { id: 'progress' as const, label: 'Stats', icon: BarChart3 },
-            { id: 'friends' as const, label: 'Friends', icon: Users },
+            { id: 'plan' as const, label: 'Plans', icon: Calendar, tourId: 'tracker-tab-plans' },
+            { id: 'workout' as const, label: 'Workout', icon: Dumbbell, tourId: 'tracker-tab-workout' },
+            { id: 'progress' as const, label: 'Stats', icon: BarChart3, tourId: 'tracker-tab-stats' },
+            { id: 'friends' as const, label: 'Friends', icon: Users, tourId: 'tracker-tab-friends' },
           ] as const
-        ).map(({ id, label, icon: Icon }) => (
+        ).map(({ id, label, icon: Icon, tourId }) => (
           <button
             key={id}
             type="button"
+            data-tour={tourId}
             onClick={() => goToView(id)}
             className={[
               'flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium transition',
@@ -494,17 +531,26 @@ export default function Tracker() {
         ))}
       </nav>
 
-      {restSeconds !== null && restSeconds > 0 && (
+      {isRestTimerRunning && (
         <div className="mx-5 mb-4 flex items-center justify-between rounded-2xl bg-foreground/5 px-4 py-3 ring-1 ring-border lg:mx-10">
           <span className="text-sm font-medium">Rest timer</span>
-          <span className="text-lg font-bold tabular-nums">{formatElapsed(restSeconds)}</span>
-          <button
-            type="button"
-            onClick={() => setRestSeconds(null)}
-            className="text-xs text-muted hover:text-foreground"
-          >
-            Skip
-          </button>
+          <span className="text-lg font-bold tabular-nums">{formatElapsed(restSeconds ?? 0)}</span>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setRestSeconds(90)}
+              className="text-xs font-medium text-muted hover:text-foreground"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={() => setRestSeconds(null)}
+              className="text-xs font-medium text-muted hover:text-foreground"
+            >
+              Skip
+            </button>
+          </div>
         </div>
       )}
 
@@ -585,7 +631,14 @@ export default function Tracker() {
       )}
 
       {view === 'workout' && !activeSession && !readyForNextMuscle && (
-        showWorkoutHistory ? (
+        showExerciseLibrary ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <ExerciseLibraryPanel
+              embedded
+              onBack={() => navigate(TRACKER_PATHS.workout)}
+            />
+          </div>
+        ) : showWorkoutHistory ? (
           <section className="px-5 pb-8 lg:px-10">
             <div className="mx-auto max-w-lg lg:max-w-4xl">
               <button
@@ -736,147 +789,51 @@ export default function Tracker() {
             </div>
 
             <div className="desktop-page mx-auto max-w-lg lg:max-w-3xl">
-              <h3 className="mb-1 text-base font-semibold">Workouts</h3>
-              <p className="mb-4 text-sm text-muted">Browse exercises by muscle group</p>
-              <MuscleExerciseList />
+              <button
+                type="button"
+                onClick={() => navigate(TRACKER_PATHS.exerciseLibrary)}
+                className="group relative w-full overflow-hidden rounded-2xl text-left ring-1 ring-border transition hover:ring-foreground/25"
+              >
+                <img
+                  src={EXERCISE_LIBRARY_BG}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/40 to-black/45" />
+
+                <div className="relative flex items-center justify-between gap-3 px-4 py-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20 backdrop-blur-sm">
+                      <BookOpen size={17} className="text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white">Exercise library</p>
+                      <p className="text-xs text-white/80">
+                        Browse by muscle group with demos and form tips
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-white/60">
+                        {exerciseGuides.length}+ exercises
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="shrink-0 text-white/80" />
+                </div>
+              </button>
             </div>
           </section>
         )
       )}
 
       {view === 'progress' && (
-        <section className="space-y-8 px-5 pb-8 pt-4 lg:desktop-page-body lg:px-10 lg:pt-6">
-          <div className="desktop-page mx-auto lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-8">
-            <div className="min-w-0 space-y-8">
-              <ProgressVolumeChart weekly={weeklyProgress} monthly={monthlyProgress} />
-            </div>
-
-            <aside className="space-y-6 lg:sticky lg:top-8">
-              <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
-                <h3 className="text-sm font-semibold">Quick insights</h3>
-                <ul className="mt-4 space-y-3 text-sm text-muted">
-                  <li>
-                    <span className="font-medium text-foreground">{weeklyProgress.reduce((sum, p) => sum + p.sessions, 0)}</span>{' '}
-                    sessions this week
-                  </li>
-                  <li>
-                    <span className="font-medium text-foreground">{monthlyProgress.reduce((sum, p) => sum + p.sessions, 0)}</span>{' '}
-                    sessions this month
-                  </li>
-                  <li>
-                    <span className="font-medium text-foreground">
-                      {weeklyProgress.reduce((sum, p) => sum + p.volume, 0).toLocaleString()} kg
-                    </span>{' '}
-                    volume this week
-                  </li>
-                </ul>
-              </div>
-
-              {activeSession && (
-                <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold">Active session</h3>
-                    <button
-                      type="button"
-                      onClick={() => goToView('workout')}
-                      className="text-xs font-medium text-foreground underline-offset-2 hover:underline"
-                    >
-                      Open
-                    </button>
-                  </div>
-                  <p className="text-sm font-medium">{activeSession.name}</p>
-                  <p className="mt-1 text-xs text-muted">
-                    {activeSession.exercises.length} exercise
-                    {activeSession.exercises.length === 1 ? '' : 's'} in progress
-                  </p>
-                </div>
-              )}
-            </aside>
-          </div>
-
-          {activeSession && (
-            <div className="desktop-page mx-auto max-w-none lg:max-w-4xl">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold text-muted">Workout session</h3>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => goToView('workout')}
-                    className="text-xs font-medium text-foreground underline-offset-2 hover:underline"
-                  >
-                    Back to workout
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelSession}
-                    className="text-xs font-medium text-red-600 underline-offset-2 hover:underline dark:text-red-400"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-
-              {activeSession.exercises.length === 0 ? (
-                <p className="rounded-2xl bg-surface p-4 text-sm text-muted ring-1 ring-border">
-                  No exercises added yet. Go to Workout to add exercises or cancel the session.
-                </p>
-              ) : (
-                <>
-              <ul className="space-y-2">
-                {activeSession.exercises.map((exercise) => {
-                  const completedSets = exercise.sets.filter((s) => s.completed).length
-                  const totalSets = exercise.sets.length
-                  const isSelected = selectedExercise === exercise.name
-
-                  return (
-                    <li key={exercise.id}>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedExercise(exercise.name)}
-                        className={[
-                          'flex w-full items-center justify-between gap-3 rounded-2xl p-4 text-left ring-1 transition',
-                          isSelected
-                            ? 'bg-foreground/10 ring-foreground/30'
-                            : 'bg-surface ring-border hover:ring-foreground/20',
-                        ].join(' ')}
-                      >
-                        <div className="min-w-0">
-                          <p className="font-semibold">{exercise.name}</p>
-                          <p className="mt-0.5 text-xs text-muted">
-                            {completedSets}/{totalSets} sets complete
-                          </p>
-                        </div>
-                        <BarChart3
-                          size={16}
-                          className={isSelected ? 'text-foreground' : 'text-muted'}
-                        />
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-
-              {(selectedExercise || activeSession.exercises[0]?.name) && (
-                <div className="mt-6">
-                  <h3 className="mb-3 text-sm font-semibold text-muted">Exercise progress</h3>
-                  <ExerciseHistoryChart
-                    points={getExerciseHistory(
-                      sessions,
-                      selectedExercise || activeSession.exercises[0]?.name || '',
-                    )}
-                    height={260}
-                  />
-                </div>
-              )}
-                </>
-              )}
-            </div>
-          )}
-        </section>
+        <StatsPanel
+          sessions={sessions}
+          activeSession={activeSession}
+          onOpenWorkout={() => goToView('workout')}
+        />
       )}
 
       {view === 'plan' && (
-        <section className="overflow-x-hidden px-5 pb-8 lg:desktop-page-body lg:px-10">
+        <section className="overflow-x-hidden px-5 pb-8 pt-1 lg:desktop-page-body lg:px-10 lg:pt-8">
           <div className="desktop-page lg:max-w-5xl">
             {needsPlanOnboarding ? (
               <PlanOnboarding

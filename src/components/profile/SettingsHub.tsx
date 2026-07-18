@@ -1,4 +1,4 @@
-import { Bell, ChevronRight, Database, LogOut, Moon, Settings, Sun, User } from 'lucide-react'
+import { Bell, ChevronRight, Database, LogOut, Map, Moon, Settings, Sun, User } from 'lucide-react'
 import InstallAppSettings from './InstallAppSettings'
 import {
   SettingsCard,
@@ -15,6 +15,7 @@ interface SettingsHubProps {
   onOpenData: () => void
   onOpenPermissions: () => void
   onLogout: () => void
+  onReplayTour?: () => void
   setTheme: (mode: 'light' | 'dark') => void
 }
 
@@ -25,6 +26,7 @@ export default function SettingsHub({
   onOpenData,
   onOpenPermissions,
   onLogout,
+  onReplayTour,
   setTheme,
 }: SettingsHubProps) {
   const { supported, available, enabled } = usePushNotifications()
@@ -92,6 +94,15 @@ export default function SettingsHub({
 
       <SettingsSection title="App">
         <SettingsCard>
+          {onReplayTour && (
+            <SettingsRow
+              icon={<Map size={16} />}
+              label="Replay app tour"
+              value="Walk through plans, workouts, and stats"
+              onClick={onReplayTour}
+              trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
+            />
+          )}
           <InstallAppSettings embedded />
         </SettingsCard>
       </SettingsSection>

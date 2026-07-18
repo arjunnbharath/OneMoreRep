@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { ArrowLeft, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import SwipeablePlanDayCard, { SWIPE_HINT_TOTAL_MS } from '../plan/SwipeablePlanDayCard'
+import { useTour } from '../../context/TourContext'
 import {
   exerciseGroupLabels,
   exerciseGuides,
@@ -398,7 +399,18 @@ export default function WeeklyPlanPanel({
   onStartDay,
   swipeHintKey = 0,
 }: WeeklyPlanPanelProps) {
+  const { activeStepId } = useTour()
   const [playSwipeHint, setPlaySwipeHint] = useState(false)
+  const [tourSwipeHintReady, setTourSwipeHintReady] = useState(false)
+
+  useEffect(() => {
+    if (activeStepId !== 'swipe-start') {
+      setTourSwipeHintReady(false)
+      return
+    }
+    const timer = window.setTimeout(() => setTourSwipeHintReady(true), 900)
+    return () => window.clearTimeout(timer)
+  }, [activeStepId])
 
   useEffect(() => {
     if (planDay || planMuscle || !swipeHintKey) return
@@ -445,12 +457,12 @@ export default function WeeklyPlanPanel({
 
   return (
     <div className="space-y-3">
-      <h2 className="text-xl font-bold">Weekly plan</h2>
+      <h2 className="text-sm font-medium uppercase tracking-wider text-muted">Weekly plan</h2>
       <WeekGrid
         plan={plan}
         onSelectDay={onNavigateDay}
         onStartDay={onStartDay}
-        playSwipeHint={playSwipeHint}
+        playSwipeHint={playSwipeHint || tourSwipeHintReady}
       />
     </div>
   )

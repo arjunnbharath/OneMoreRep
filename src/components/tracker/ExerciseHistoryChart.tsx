@@ -13,7 +13,7 @@ export default function ExerciseHistoryChart({
   const chart = useMemo(() => {
     if (points.length === 0) return null
 
-    const padding = { top: 16, right: 12, bottom: 28, left: 36 }
+    const padding = { top: 20, right: 12, bottom: 32, left: 40 }
     const width = 320
     const innerW = width - padding.left - padding.right
     const innerH = height - padding.top - padding.bottom
@@ -32,6 +32,7 @@ export default function ExerciseHistoryChart({
     })
 
     const linePath = coords.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x} ${c.y}`).join(' ')
+    const areaPath = `${linePath} L ${coords[coords.length - 1].x} ${padding.top + innerH} L ${coords[0].x} ${padding.top + innerH} Z`
 
     const prIndices = new Set<number>()
     let runningMax = 0
@@ -42,36 +43,54 @@ export default function ExerciseHistoryChart({
       }
     })
 
-    return { width, coords, linePath, prIndices, minVal, maxVal, padding, innerH }
+    return { width, coords, linePath, areaPath, prIndices, minVal, maxVal, padding, innerH }
   }, [points, height])
 
   if (!chart) {
     return (
       <div
-        className="flex items-center justify-center rounded-2xl bg-surface ring-1 ring-border text-sm text-muted"
-        style={{ height }}
+        className="flex flex-col items-center justify-center rounded-2xl bg-background py-12 text-center ring-1 ring-border/60"
+        style={{ minHeight: height }}
       >
-        Log this exercise to see progress
+        <p className="text-sm font-medium text-muted">No data yet</p>
+        <p className="mt-1 text-xs text-muted">Complete sets to track progress</p>
       </div>
     )
   }
 
-  const { width, coords, linePath, prIndices, minVal, maxVal, padding, innerH } = chart
+  const { width, coords, linePath, areaPath, prIndices, minVal, maxVal, padding, innerH } = chart
+  const latest = coords[coords.length - 1]
 
   return (
-    <div className="rounded-2xl bg-surface p-4 ring-1 ring-border">
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-xs font-medium text-muted">Est. 1RM (kg)</p>
+    <div className="rounded-2xl bg-background p-3 ring-1 ring-border/60">
+      <div className="mb-3 flex items-end justify-between gap-3 px-1">
+        <div>
+          <p className="text-[10px] font-medium uppercase tracking-wide text-muted">
+            Est. 1RM
+          </p>
+          <p className="mt-0.5 text-xl font-semibold tabular-nums">
+            {latest.est1RM.toFixed(1)}
+            <span className="ml-1 text-sm font-medium text-muted">kg</span>
+          </p>
+        </div>
         <p className="text-xs text-muted">
-          {minVal.toFixed(0)} – {maxVal.toFixed(0)} kg
+          Range {minVal.toFixed(0)}–{maxVal.toFixed(0)} kg
         </p>
       </div>
+
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="w-full"
         role="img"
         aria-label="Estimated one-rep max over time"
       >
+        <defs>
+          <linearGradient id="exerciseAreaFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="currentColor" stopOpacity={0.12} />
+            <stop offset="100%" stopColor="currentColor" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+
         {[0, 0.5, 1].map((frac) => {
           const y = padding.top + innerH * (1 - frac)
           const val = minVal + (maxVal - minVal) * frac
@@ -83,10 +102,10 @@ export default function ExerciseHistoryChart({
                 x2={width - padding.right}
                 y2={y}
                 stroke="currentColor"
-                strokeOpacity={0.08}
+                strokeOpacity={0.06}
               />
               <text
-                x={padding.left - 6}
+                x={padding.left - 8}
                 y={y + 4}
                 textAnchor="end"
                 className="fill-muted text-[9px]"
@@ -97,11 +116,13 @@ export default function ExerciseHistoryChart({
           )
         })}
 
+        <path d={areaPath} fill="url(#exerciseAreaFill)" className="text-foreground" />
+
         <path
           d={linePath}
           fill="none"
           stroke="currentColor"
-          strokeWidth={2}
+          strokeWidth={2.5}
           strokeLinecap="round"
           strokeLinejoin="round"
           className="text-foreground"
@@ -109,16 +130,19 @@ export default function ExerciseHistoryChart({
 
         {coords.map((c, i) => (
           <g key={c.date}>
+            {prIndices.has(i) && (
+              <circle cx={c.x} cy={c.y} r={8} className="fill-red-500/15" />
+            )}
             <circle
               cx={c.x}
               cy={c.y}
-              r={prIndices.has(i) ? 5 : 3.5}
+              r={prIndices.has(i) ? 4.5 : 3.5}
               className={prIndices.has(i) ? 'fill-red-500' : 'fill-foreground'}
             />
             {prIndices.has(i) && (
               <text
                 x={c.x}
-                y={c.y - 10}
+                y={c.y - 12}
                 textAnchor="middle"
                 className="fill-red-500 text-[8px] font-bold"
               >
@@ -127,7 +151,7 @@ export default function ExerciseHistoryChart({
             )}
             <text
               x={c.x}
-              y={height - 6}
+              y={height - 8}
               textAnchor="middle"
               className="fill-muted text-[8px]"
             >

@@ -16,6 +16,7 @@ export type SplitType =
 
 export interface WorkoutPreferences {
   onboarded: boolean
+  uiTourCompleted?: boolean
   daysPerWeek?: TrainingDays
   experience?: TrainingExperience
   goal?: TrainingGoal

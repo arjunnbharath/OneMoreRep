@@ -9,6 +9,7 @@ export const TRACKER_PATHS = {
   root: '/tracker',
   workout: '/tracker/workout',
   workoutHistory: '/tracker/workout/history',
+  exerciseLibrary: '/tracker/workout/library',
   plan: '/tracker/plan',
   planDay: (day: Weekday) => `/tracker/plan/${day}`,
   planMuscle: (day: Weekday, muscle: ExerciseGroup) => `/tracker/plan/${day}/${muscle}`,
@@ -20,7 +21,7 @@ export const TRACKER_PATHS = {
 
 export type TrackerRoute =
   | { kind: 'redirect'; to: string }
-  | { kind: 'workout'; history: boolean }
+  | { kind: 'workout'; history: boolean; library?: boolean }
   | { kind: 'plan'; day?: Weekday; muscle?: ExerciseGroup }
   | { kind: 'progress' }
   | { kind: 'friends'; notifications?: boolean; friendId?: number }
@@ -50,6 +51,10 @@ export function parseTrackerRoute(pathname: string): TrackerRoute {
 
   if (path === TRACKER_PATHS.friends) {
     return { kind: 'friends' }
+  }
+
+  if (path === TRACKER_PATHS.exerciseLibrary) {
+    return { kind: 'workout', history: false, library: true }
   }
 
   if (path === TRACKER_PATHS.workoutHistory) {

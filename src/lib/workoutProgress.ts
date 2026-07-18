@@ -140,6 +140,13 @@ export function getSessionDurationSeconds(session: WorkoutSession) {
   return Math.max(0, Math.floor((end - start) / 1000))
 }
 
+export function getSessionMinutes(session: WorkoutSession) {
+  const tracked = Math.floor(getSessionDurationSeconds(session) / 60)
+  if (tracked >= 1) return tracked
+  if (session.exercises.length === 0) return 0
+  return Math.max(session.exercises.length * 8, 15)
+}
+
 export interface PeriodProgressPoint {
   key: string
   label: string

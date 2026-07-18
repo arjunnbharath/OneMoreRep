@@ -17,7 +17,7 @@ export default function HomeStatsStrip({ stats, todayCalories }: HomeStatsStripP
   ]
 
   return (
-    <div className="flex divide-x divide-border rounded-xl bg-surface py-2 ring-1 ring-border">
+    <div data-tour="home-stats" className="flex divide-x divide-border rounded-xl bg-surface py-2 ring-1 ring-border">
       {items.map(({ value, label }) => (
         <div key={label} className="flex flex-1 flex-col items-center gap-0.5 px-1">
           <span className="text-sm font-semibold leading-none tabular-nums">{value}</span>

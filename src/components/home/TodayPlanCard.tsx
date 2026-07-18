@@ -1,5 +1,6 @@
 import SwipeablePlanDayCard from '../plan/SwipeablePlanDayCard'
 import { exerciseGroupLabels } from '../../data/exerciseGuides'
+import { useTour } from '../../context/TourContext'
 import {
   getTodayWeekday,
   imageForDayPlan,
@@ -21,6 +22,7 @@ export default function TodayPlanCard({
   onStart,
   playSwipeHint = false,
 }: TodayPlanCardProps) {
+  const { activeStepId } = useTour()
   const today = getTodayWeekday()
   const dayPlan = plan[today]
   const muscles = dayPlan.muscles
@@ -32,11 +34,12 @@ export default function TodayPlanCard({
   )
 
   return (
+    <div data-tour="home-today-plan">
     <SwipeablePlanDayCard
       day={today}
       canStart={canStart}
       isToday
-      playHint={playSwipeHint}
+      playHint={playSwipeHint || activeStepId === 'home-today-plan'}
       onSelect={onPlan}
       onStart={onStart}
       className="overflow-x-hidden"
@@ -81,5 +84,6 @@ export default function TodayPlanCard({
         </div>
       </div>
     </SwipeablePlanDayCard>
+    </div>
   )
 }

@@ -43,7 +43,10 @@ export default function ReadyToTrainPanel({
   const background = hasTodayPlan ? imageForDayPlan(today, todayPlan) : FALLBACK_BG
 
   return (
-    <div className="relative min-h-[220px] overflow-hidden rounded-3xl ring-1 ring-border">
+    <div
+      data-tour="workout-ready"
+      className="relative min-h-[220px] overflow-hidden rounded-3xl ring-1 ring-border"
+    >
       <img src={background} alt="" className="absolute inset-0 h-full w-full object-cover" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-black/70 via-black/55 to-black/85" />
 

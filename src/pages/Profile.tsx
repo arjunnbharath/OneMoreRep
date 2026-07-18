@@ -14,6 +14,7 @@ import { useAuth } from '../context/AuthContext'
 import { clearAllUserData as apiClearAllUserData } from '../lib/api'
 import { clearLocalUserData, clearUserDataCache } from '../lib/userDataSync'
 import { useTheme } from '../context/ThemeContext'
+import { useTour } from '../context/TourContext'
 import { useCalorieTracker } from '../hooks/useCalorieTracker'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
@@ -43,6 +44,7 @@ export default function Profile() {
   const location = useLocation()
   const { user, token, logout, deleteAccount, changePassword } = useAuth()
   const { isDark, setTheme } = useTheme()
+  const { replayTour } = useTour()
   const { sessions } = useWorkoutTracker()
   const { plan } = useWorkoutPlan()
   const { profile: nutritionProfile, logs, ready: nutritionReady } = useCalorieTracker()
@@ -129,6 +131,7 @@ export default function Profile() {
         onOpenAccount={() => navigate(PROFILE_PATHS.account)}
         onOpenData={() => navigate(PROFILE_PATHS.data)}
         onOpenPermissions={() => navigate(PROFILE_PATHS.permissions)}
+        onReplayTour={replayTour}
         onLogout={() => {
           logout()
           navigate('/login')

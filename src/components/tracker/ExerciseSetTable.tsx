@@ -77,6 +77,7 @@ function SetRow({
       <button
         type="button"
         onClick={() => onToggleComplete(done)}
+        data-tour={setIndex === 0 ? 'set-complete-btn' : undefined}
         aria-label={done ? 'Undo set' : 'Complete set'}
         className={[
           'mx-auto flex h-9 w-9 items-center justify-center rounded-full transition active:scale-95',

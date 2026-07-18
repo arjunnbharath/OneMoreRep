@@ -504,7 +504,7 @@ function DailyLog() {
             </button>
           )}
 
-          <div className="mt-6 lg:hidden">
+          <div className="mt-6 lg:hidden" data-tour="calorie-summary">
             <DailyCalorieSummary
               consumed={dayTotals.calories}
               target={profile.dailyCalorieTarget}
@@ -633,6 +633,7 @@ function DailyLog() {
 
         <aside className="hidden lg:block">
           <div className="sticky top-8 space-y-6">
+            <div data-tour="calorie-summary">
             <DailyCalorieSummary
               consumed={dayTotals.calories}
               target={profile.dailyCalorieTarget}
@@ -643,6 +644,7 @@ function DailyLog() {
               fat={dayTotals.fat}
               fatTarget={profile.fatTargetG}
             />
+            </div>
 
             <WeeklyCalorieSection
               caloriesByDay={caloriesByDay}

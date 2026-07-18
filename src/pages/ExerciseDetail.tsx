@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Dumbbell, Lightbulb, ListOrdered } from 'lucide-react'
 import Button from '../components/Button'
 import { exerciseGroupLabels, getExerciseById } from '../data/exerciseGuides'
+import { TRACKER_PATHS } from '../lib/trackerPaths'
 
 export default function ExerciseDetail() {
   const { id } = useParams()
@@ -14,7 +15,7 @@ export default function ExerciseDetail() {
         <p className="font-semibold">Exercise not found</p>
         <button
           type="button"
-          onClick={() => navigate('/exercises')}
+          onClick={() => navigate(TRACKER_PATHS.exerciseLibrary)}
           className="mt-4 text-sm text-foreground underline-offset-2 hover:underline"
         >
           Back to guides
@@ -31,13 +32,13 @@ export default function ExerciseDetail() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="absolute left-5 top-6 flex h-10 w-10 items-center justify-center rounded-xl bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
+          className="absolute left-5 top-[max(1.5rem,env(safe-area-inset-top))] flex h-10 w-10 items-center justify-center rounded-xl bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
         >
           <ArrowLeft size={20} />
         </button>
       </div>
 
-      <div className="px-5 pb-10 lg:desktop-page-body lg:px-10">
+      <div className="px-5 pb-[calc(var(--mobile-nav-height)+2.5rem)] lg:desktop-page-body lg:px-10 lg:pb-10">
         <span className="rounded-full bg-foreground/10 px-3 py-1 text-xs font-semibold">
           {exerciseGroupLabels[exercise.group]}
         </span>

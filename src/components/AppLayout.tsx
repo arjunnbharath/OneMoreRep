@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Activity, BookOpen, Dumbbell, Flame, Home, User } from 'lucide-react'
 import MobileBottomNav from './MobileBottomNav'
 import UserAvatar from './UserAvatar'
+import { TourProvider } from '../context/TourContext'
 import { useAuth } from '../context/AuthContext'
 
 const navItems = [
@@ -16,6 +17,9 @@ export default function AppLayout() {
   const location = useLocation()
   const { user } = useAuth()
   const isWorkoutDetail = location.pathname.startsWith('/workout/')
+  const hideMobileNavSpacer =
+    location.pathname === '/tracker/workout/library' ||
+    location.pathname.startsWith('/tracker/workout/library/')
 
   function isNavActive(to: string, exact?: boolean) {
     if (isWorkoutDetail && to.startsWith('/tracker')) return true
@@ -36,7 +40,7 @@ export default function AppLayout() {
           </div>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-1">
+        <nav data-tour="main-nav-desktop" className="flex flex-1 flex-col gap-1">
           <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
             Menu
           </p>
@@ -73,12 +77,29 @@ export default function AppLayout() {
         )}
       </aside>
 
-      <div className="flex min-h-dvh min-w-0 flex-1 flex-col overflow-x-hidden">
-        <main className="desktop-main-scroll flex-1 overflow-x-hidden lg:pb-10">
-          <Outlet />
-        </main>
-        <div className="mobile-nav-spacer lg:hidden" aria-hidden="true" />
-        <MobileBottomNav />
+      <div
+        className={[
+          'flex min-w-0 flex-1 flex-col overflow-x-hidden',
+          hideMobileNavSpacer ? 'h-dvh overflow-hidden lg:h-auto lg:overflow-visible' : 'min-h-dvh',
+        ].join(' ')}
+      >
+        <TourProvider>
+          <main
+            className={[
+              'desktop-main-scroll flex-1 overflow-x-hidden lg:pb-10',
+              hideMobileNavSpacer
+                ? 'flex h-[calc(100dvh-var(--mobile-nav-height))] min-h-0 flex-col overflow-hidden lg:h-auto lg:overflow-visible'
+                : '',
+            ].join(' ')}
+          >
+            <Outlet />
+          </main>
+          <div
+            className={hideMobileNavSpacer ? 'hidden' : 'mobile-nav-spacer lg:hidden'}
+            aria-hidden="true"
+          />
+          <MobileBottomNav />
+        </TourProvider>
       </div>
     </div>
   )
