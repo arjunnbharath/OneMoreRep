@@ -43,13 +43,6 @@ export default function ExerciseLibraryWidget({
               alt=""
               className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/5" />
-            <span className="absolute right-1 top-1 rounded-md bg-black/45 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-white/90 backdrop-blur-sm">
-              {group.count}
-            </span>
-            <p className="absolute inset-x-0 bottom-0 px-1.5 pb-1.5 text-center text-[10px] font-semibold leading-tight text-white drop-shadow-sm">
-              {group.label}
-            </p>
           </div>
         ))}
       </div>

@@ -72,19 +72,21 @@ function DayOptionButton({
     <button
       type="button"
       onClick={onClick}
-      className="group flex flex-1 flex-col items-center gap-2.5 py-1 transition"
+      className="group flex w-full flex-col items-center gap-2.5 py-1 transition"
     >
-      {selected ? (
-        <div className="onboarding-day-glow rounded-full p-[2.5px]">
-          <div className="onboarding-day-selected-inner flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full bg-surface text-2xl font-bold tabular-nums text-foreground dark:bg-background">
+      <div className="flex h-[4.75rem] w-full items-center justify-center">
+        {selected ? (
+          <div className="onboarding-day-glow rounded-full p-[2.5px]">
+            <div className="onboarding-day-selected-inner flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full bg-surface text-2xl font-bold tabular-nums leading-none text-foreground dark:bg-background">
+              {display}
+            </div>
+          </div>
+        ) : (
+          <div className="onboarding-day-circle flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full bg-surface text-2xl font-bold tabular-nums leading-none text-foreground ring-1 ring-border transition group-hover:ring-foreground/25">
             {display}
           </div>
-        </div>
-      ) : (
-        <div className="onboarding-day-circle flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-surface text-2xl font-bold tabular-nums text-foreground ring-1 ring-border transition group-hover:ring-foreground/25">
-          {display}
-        </div>
-      )}
+        )}
+      </div>
       <div className="text-center">
         <p
           className={[
@@ -221,7 +223,7 @@ export default function PlanOnboarding({ onComplete, onSkip }: PlanOnboardingPro
             {step === 0 && (
               <div className="flex flex-1 flex-col">
                 <p className="text-sm text-muted">How many days a week can you train?</p>
-                <div className="mt-5 flex justify-between gap-2 px-1">
+                <div className="mt-5 grid grid-cols-4 gap-2">
                   {DAY_OPTIONS.map((option) => (
                     <DayOptionButton
                       key={option.value}
@@ -235,9 +237,11 @@ export default function PlanOnboarding({ onComplete, onSkip }: PlanOnboardingPro
 
                 <div className="flex flex-1 items-center justify-center px-3 py-6">
                   {daysPerWeek ? (
-                    <p className="onboarding-split-quote max-w-[20rem] text-center text-sm">
-                      &ldquo;{DAY_QUOTES[daysPerWeek]}&rdquo;
-                    </p>
+                    <div className="w-full max-w-[20rem] rounded-2xl bg-foreground/90 px-4 py-4 dark:bg-black/50">
+                      <p className="onboarding-split-quote text-center text-xs text-white">
+                        &ldquo;{DAY_QUOTES[daysPerWeek]}&rdquo;
+                      </p>
+                    </div>
                   ) : (
                     <p className="text-center text-xs text-muted/60">Pick a number to continue</p>
                   )}

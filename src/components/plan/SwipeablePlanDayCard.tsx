@@ -206,10 +206,7 @@ export default function SwipeablePlanDayCard({
 
   return (
     <Tag className={`overflow-hidden rounded-2xl ${className}`.trim()}>
-      <div
-        className="relative min-h-[5.5rem] overflow-hidden rounded-2xl bg-black"
-        data-tour-plan-day={day}
-      >
+      <div className="relative min-h-[5.5rem] overflow-hidden rounded-2xl bg-black">
         {displayOffset > 0 && (
           <div
             className="absolute inset-y-0 left-0 z-0 flex h-full items-stretch rounded-2xl bg-foreground"

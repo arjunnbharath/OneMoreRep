@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronRight, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles, X } from 'lucide-react'
 import type { TourPlacement, TourStep } from '../../lib/tourTypes'
 
 interface Rect {
@@ -14,12 +14,79 @@ interface Rect {
 interface AppTourProps {
   open: boolean
   steps: TourStep[]
-  onStepChange?: (stepId: string | null) => void
+  stepIndex: number
+  onStepIndexChange: (index: number | ((current: number) => number)) => void
   onComplete: () => void
   onSkip: () => void
 }
 
 const SPOTLIGHT_PADDING = 10
+
+function getTourBottomInset() {
+  const mobileNav = document.querySelector('[data-tour="main-nav-mobile"]')
+  if (mobileNav) {
+    const rect = mobileNav.getBoundingClientRect()
+    if (rect.height > 0 && rect.top < window.innerHeight) {
+      return window.innerHeight - rect.top + 12
+    }
+  }
+
+  const mobileNavHeight = getComputedStyle(document.documentElement)
+    .getPropertyValue('--mobile-nav-height')
+    .trim()
+  const parsed = Number.parseFloat(mobileNavHeight)
+  if (!Number.isNaN(parsed) && parsed > 0) {
+    return parsed + 12
+  }
+
+  return 88
+}
+
+function scrollTargetIntoView(element: Element) {
+  const topMargin = 16
+  const bottomLimit = window.innerHeight - getTourBottomInset()
+  const rect = element.getBoundingClientRect()
+
+  if (rect.bottom > bottomLimit) {
+    scrollByDelta(element, rect.bottom - bottomLimit)
+  } else if (rect.top < topMargin) {
+    scrollByDelta(element, rect.top - topMargin)
+  }
+}
+
+function scrollByDelta(element: Element, delta: number) {
+  if (Math.abs(delta) < 1) return
+
+  let node: Element | null = element
+  while (node) {
+    const parent: HTMLElement | null = node.parentElement
+    if (!parent) break
+
+    const style = getComputedStyle(parent)
+    const canScroll = parent.scrollHeight > parent.clientHeight + 1
+    if (
+      canScroll &&
+      (style.overflowY === 'auto' ||
+        style.overflowY === 'scroll' ||
+        style.overflow === 'auto' ||
+        style.overflow === 'scroll')
+    ) {
+      parent.scrollTop += delta
+      return
+    }
+    node = parent
+  }
+
+  window.scrollBy({ top: delta, behavior: 'auto' })
+}
+
+function waitForNextFrame() {
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve())
+    })
+  })
+}
 
 function measureTarget(selector: string): Rect | null {
   const element = document.querySelector(selector)
@@ -39,17 +106,28 @@ function measureTarget(selector: string): Rect | null {
   }
 }
 
+function isInViewport(rect: Rect) {
+  const margin = 16
+  const bottomLimit = window.innerHeight - getTourBottomInset()
+  return (
+    rect.top >= margin &&
+    rect.left >= margin &&
+    rect.top + rect.height <= bottomLimit
+  )
+}
+
 function getTooltipPosition(
   rect: Rect | null,
   placement: TourPlacement,
   gap = 24,
 ): { top: number; left: number; width: number } {
   const margin = 16
-  const tooltipWidth = Math.min(320, window.innerWidth - margin * 2)
+  const tooltipWidth = Math.min(340, window.innerWidth - margin * 2)
+  const bottomLimit = window.innerHeight - getTourBottomInset()
 
   if (!rect || placement === 'center') {
     return {
-      top: Math.max(margin, window.innerHeight / 2 - 120),
+      top: Math.max(margin, window.innerHeight / 2 - 130),
       left: (window.innerWidth - tooltipWidth) / 2,
       width: tooltipWidth,
     }
@@ -62,7 +140,7 @@ function getTooltipPosition(
 
   if (placement === 'bottom') {
     return {
-      top: Math.min(rect.top + rect.height + gap, window.innerHeight - 200),
+      top: Math.min(rect.top + rect.height + gap, bottomLimit - 200),
       left: centeredLeft,
       width: tooltipWidth,
     }
@@ -70,7 +148,7 @@ function getTooltipPosition(
 
   if (placement === 'top') {
     return {
-      top: Math.max(margin, rect.top - 190 - gap),
+      top: Math.max(margin, rect.top - 200 - gap),
       left: centeredLeft,
       width: tooltipWidth,
     }
@@ -83,90 +161,170 @@ function getTooltipPosition(
   }
 }
 
-export default function AppTour({ open, steps, onStepChange, onComplete, onSkip }: AppTourProps) {
-  const [stepIndex, setStepIndex] = useState(0)
+export default function AppTour({
+  open,
+  steps,
+  stepIndex,
+  onStepIndexChange,
+  onComplete,
+  onSkip,
+}: AppTourProps) {
   const [rect, setRect] = useState<Rect | null>(null)
   const [ready, setReady] = useState(false)
+  const measuringRef = useRef(false)
+  const activeSelectorRef = useRef<string | null>(null)
+  const resolveSelectorRef = useRef<(() => string | undefined) | null>(null)
 
   const step = steps[stepIndex]
+  const isFirst = stepIndex === 0
   const isLast = stepIndex >= steps.length - 1
   const placement = step?.placement ?? (step?.target ? 'bottom' : 'center')
   const tooltipGap = step?.tooltipGap ?? 24
+  const progress = ((stepIndex + 1) / steps.length) * 100
 
   const updateRect = useCallback(async () => {
     if (!open || !step) return
 
+    measuringRef.current = true
     setReady(false)
-    onStepChange?.(step.id)
+    setRect(null)
     if (step.onEnter) await step.onEnter()
 
-    const selector = step.getTarget?.() ?? step.target
+    resolveSelectorRef.current = () => step.getTarget?.() ?? step.target
 
-    if (selector) {
-      let element: Element | null = null
-      for (let attempt = 0; attempt < 12; attempt++) {
-        element = document.querySelector(selector)
-        if (element) break
+    await new Promise((resolve) => window.setTimeout(resolve, 150))
+
+    let selector: string | undefined
+    let element: Element | null = null
+
+    for (let attempt = 0; attempt < 20; attempt++) {
+      selector = resolveSelectorRef.current()
+      activeSelectorRef.current = selector ?? null
+      if (!selector) break
+
+      element = document.querySelector(selector)
+      const measured = measureTarget(selector)
+      if (element && measured) break
+
+      await new Promise((resolve) => window.setTimeout(resolve, 100))
+    }
+
+    if (selector && element) {
+      const initial = measureTarget(selector)
+      if (initial && !isInViewport(initial)) {
+        element.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' })
         await new Promise((resolve) => window.setTimeout(resolve, 80))
+        scrollTargetIntoView(element)
+        await waitForNextFrame()
+      } else {
+        scrollTargetIntoView(element)
+        await waitForNextFrame()
       }
 
-      element?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
-      await new Promise((resolve) => window.setTimeout(resolve, 450))
       setRect(measureTarget(selector))
     } else {
+      activeSelectorRef.current = null
       setRect(null)
     }
 
     setReady(true)
-  }, [open, step, onStepChange])
+    measuringRef.current = false
+  }, [open, step])
 
   useEffect(() => {
     if (!open) {
-      setStepIndex(0)
       setRect(null)
       setReady(false)
-      onStepChange?.(null)
+      activeSelectorRef.current = null
       return
     }
     void updateRect()
-  }, [open, stepIndex, updateRect, onStepChange])
+  }, [open, stepIndex, updateRect])
 
   useLayoutEffect(() => {
-    if (!open || !step) return
-    const selector = step.getTarget?.() ?? step.target
-    if (!selector) return
+    if (!open) return
 
-    const sel = selector
+    let frame = 0
 
-    function handleLayoutChange() {
-      setRect(measureTarget(sel))
+    function remeasureTarget() {
+      if (measuringRef.current) return
+      const selector = resolveSelectorRef.current?.() ?? activeSelectorRef.current
+      if (!selector) return
+
+      activeSelectorRef.current = selector
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        if (measuringRef.current) return
+        setRect(measureTarget(selector))
+      })
     }
 
-    window.addEventListener('resize', handleLayoutChange)
-    window.addEventListener('scroll', handleLayoutChange, true)
+    window.addEventListener('resize', remeasureTarget)
+    window.addEventListener('scroll', remeasureTarget, true)
+
+    const selector = resolveSelectorRef.current?.() ?? activeSelectorRef.current
+    const element = selector ? document.querySelector(selector) : null
+    let observer: ResizeObserver | null = null
+    if (element && typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(() => remeasureTarget())
+      observer.observe(element)
+    }
+
     return () => {
-      window.removeEventListener('resize', handleLayoutChange)
-      window.removeEventListener('scroll', handleLayoutChange, true)
+      cancelAnimationFrame(frame)
+      window.removeEventListener('resize', remeasureTarget)
+      window.removeEventListener('scroll', remeasureTarget, true)
+      observer?.disconnect()
     }
-  }, [open, step])
+  }, [open, stepIndex, ready])
+
+  useEffect(() => {
+    if (!open) return
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        onSkip()
+        return
+      }
+      if (event.key === 'ArrowRight' && !isLast) {
+        onStepIndexChange((index) => index + 1)
+      }
+      if (event.key === 'ArrowLeft' && !isFirst) {
+        onStepIndexChange((index) => index - 1)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [open, isFirst, isLast, onSkip, onStepIndexChange])
 
   if (!open || !step) return null
 
   const tooltip = getTooltipPosition(rect, placement, tooltipGap)
+  const isCenter = placement === 'center' || !rect
 
   function handleNext() {
     if (isLast) {
       onComplete()
       return
     }
-    setStepIndex((index) => index + 1)
+    onStepIndexChange((index) => index + 1)
+  }
+
+  function handleBack() {
+    if (!isFirst) onStepIndexChange((index) => index - 1)
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[200] pointer-events-auto" role="dialog" aria-modal="true" aria-label="App tour">
+    <div
+      className="fixed inset-0 z-[200] pointer-events-auto touch-none"
+      role="dialog"
+      aria-modal="true"
+      aria-label="App tour"
+    >
       {rect ? (
         <div
-          className="pointer-events-none fixed transition-all duration-300 ease-out"
+          className="pointer-events-auto fixed transition-all duration-300 ease-out"
           style={{
             top: rect.top,
             left: rect.left,
@@ -182,8 +340,8 @@ export default function AppTour({ open, steps, onStepChange, onComplete, onSkip 
 
       <div
         className={[
-          'fixed z-[201] rounded-2xl bg-surface p-5 shadow-2xl ring-1 ring-border transition-opacity duration-200 pointer-events-auto',
-          ready ? 'opacity-100' : 'opacity-0',
+          'fixed z-[201] touch-auto overflow-hidden rounded-2xl bg-surface shadow-2xl ring-1 ring-border transition-all duration-300 pointer-events-auto',
+          ready ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
         ].join(' ')}
         style={{
           top: tooltip.top,
@@ -191,41 +349,70 @@ export default function AppTour({ open, steps, onStepChange, onComplete, onSkip 
           width: tooltip.width,
         }}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-              Step {stepIndex + 1} of {steps.length}
-            </p>
-            <h3 className="mt-1 text-base font-semibold tracking-tight">{step.title}</h3>
-          </div>
-          <button
-            type="button"
-            onClick={onSkip}
-            className="shrink-0 rounded-lg p-1 text-muted transition hover:bg-background hover:text-foreground"
-            aria-label="Skip tour"
-          >
-            <X size={16} />
-          </button>
+        <div className="h-1 bg-border/50">
+          <div
+            className="h-full bg-foreground/80 transition-all duration-300 ease-out"
+            style={{ width: `${progress}%` }}
+          />
         </div>
 
-        <p className="mt-3 text-sm leading-relaxed text-muted">{step.body}</p>
+        <div className="p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                {isCenter && step.id === 'welcome' && (
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground/10 text-foreground">
+                    <Sparkles size={14} />
+                  </span>
+                )}
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                  {stepIndex + 1} / {steps.length}
+                </p>
+              </div>
+              <h3 className="mt-1.5 text-lg font-bold tracking-tight">{step.title}</h3>
+            </div>
+            <button
+              type="button"
+              onClick={onSkip}
+              className="shrink-0 rounded-lg p-1.5 text-muted transition hover:bg-background hover:text-foreground"
+              aria-label="Skip tour"
+            >
+              <X size={16} />
+            </button>
+          </div>
 
-        <div className="mt-5 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={onSkip}
-            className="text-sm font-medium text-muted transition hover:text-foreground"
-          >
-            Skip tour
-          </button>
-          <button
-            type="button"
-            onClick={handleNext}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition hover:opacity-90"
-          >
-            {isLast ? 'Done' : 'Next'}
-            {!isLast && <ChevronRight size={15} />}
-          </button>
+          <p className="mt-3 text-sm leading-relaxed text-muted">{step.body}</p>
+
+          <div className="mt-5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {!isFirst ? (
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="inline-flex items-center gap-1 rounded-xl px-3 py-2.5 text-sm font-medium text-muted ring-1 ring-border transition hover:bg-background hover:text-foreground"
+                >
+                  <ChevronLeft size={15} />
+                  Back
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onSkip}
+                  className="text-sm font-medium text-muted transition hover:text-foreground"
+                >
+                  Skip
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleNext}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition hover:opacity-90"
+            >
+              {isLast ? 'Get started' : 'Next'}
+              {!isLast && <ChevronRight size={15} />}
+            </button>
+          </div>
         </div>
       </div>
     </div>,

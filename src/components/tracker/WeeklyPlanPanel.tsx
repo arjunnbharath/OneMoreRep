@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronRight, Plus, Search, Trash2 } from 'lucide-react'
 import SwipeablePlanDayCard, { SWIPE_HINT_TOTAL_MS } from '../plan/SwipeablePlanDayCard'
-import { useTour } from '../../context/TourContext'
 import { useAppInstalled } from '../../hooks/useAppInstalled'
 import {
   exerciseGroupLabels,
@@ -76,7 +75,10 @@ function WeekGrid({
   const today = getTodayWeekday()
 
   return (
-    <ul className="space-y-3 overflow-x-hidden lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-3">
+    <ul
+      data-tour="plan-week-grid"
+      className="space-y-3 overflow-x-hidden lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-3"
+    >
       {WEEKDAYS.map((day) => {
         const dayPlan = plan[day]
         const muscles = dayPlan.muscles
@@ -184,8 +186,10 @@ function DayScreen({
         </button>
       )}
 
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-xl font-bold">{WEEKDAY_LABELS[day]}</h2>
+      <div className="flex items-center justify-between gap-3" data-tour="plan-day-header">
+        <h2 className="plan-muscle-label text-lg font-bold uppercase leading-none tracking-[0.16em]">
+          {WEEKDAY_LABELS[day]}
+        </h2>
         <button
           type="button"
           onClick={onStartDay}
@@ -290,6 +294,7 @@ function MuscleScreen({
   const navigate = useNavigate()
   const appInstalled = useAppInstalled()
   const [addedExpanded, setAddedExpanded] = useState(false)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     if (exercises.length < ADDED_COMPRESS_THRESHOLD) {
@@ -306,6 +311,15 @@ function MuscleScreen({
     () => library.filter((e) => !plannedNames.has(e.name.toLowerCase())),
     [library, plannedNames],
   )
+  const filteredAvailable = useMemo(() => {
+    if (!search.trim()) return availableLibrary
+    const q = search.toLowerCase()
+    return availableLibrary.filter(
+      (exercise) =>
+        exercise.name.toLowerCase().includes(q) ||
+        exercise.equipment.toLowerCase().includes(q),
+    )
+  }, [availableLibrary, search])
 
   function addFromLibrary(name: string) {
     onAddExercise(day, group, name, 3, 12)
@@ -320,8 +334,8 @@ function MuscleScreen({
     .join(', ')
 
   return (
-    <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="relative z-30 shrink-0 bg-background/95 pb-4 backdrop-blur-sm">
+    <section className="flex h-full min-h-0 flex-1 flex-col gap-3">
+      <div className="shrink-0 pb-1" data-tour="plan-muscle-header">
         <div className="flex w-full items-center py-0.5">
           {appInstalled ? (
             <span className="min-w-0 text-sm leading-snug text-muted">{WEEKDAY_LABELS[day]}</span>
@@ -342,48 +356,47 @@ function MuscleScreen({
       </div>
 
       {exercises.length > 0 && (
-        <div className="shrink-0 bg-background pb-4">
+        <div className="shrink-0">
           {shouldCompressAdded ? (
             <button
               type="button"
               onClick={() => setAddedExpanded(true)}
-              className="flex w-full items-center justify-between gap-3 rounded-2xl bg-surface px-4 py-3 text-left ring-1 ring-border transition hover:bg-surface/80"
+              className="flex w-full items-center justify-between gap-3 rounded-2xl bg-surface px-4 py-3 text-left shadow-[var(--shadow-card)] ring-1 ring-border transition hover:bg-surface-elevated"
             >
               <div className="min-w-0">
-                <p className="text-sm font-medium">
-                  {exercises.length} exercises added
-                </p>
+                <p className="text-sm font-semibold">Your workout</p>
                 <p className="mt-0.5 truncate text-xs text-muted">
-                  {addedSummary}
+                  {exercises.length} exercises · {addedSummary}
                   {exercises.length > 2 ? ` +${exercises.length - 2} more` : ''}
                 </p>
               </div>
               <ChevronDown size={16} className="shrink-0 text-muted" strokeWidth={2} />
             </button>
           ) : (
-            <div className="overflow-hidden rounded-xl bg-surface/50 ring-1 ring-border/50">
-              {exercises.length >= ADDED_COMPRESS_THRESHOLD && (
-                <div className="flex items-center justify-between gap-2 border-b border-border/50 px-3 py-1.5">
-                  <p className="text-[11px] font-medium text-muted">
-                    {exercises.length} exercises added
-                  </p>
+            <div className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)] ring-1 ring-border">
+              <div className="flex items-center justify-between gap-2 border-b border-border/70 px-4 py-2.5">
+                <p className="text-sm font-semibold">Your workout</p>
+                {exercises.length >= ADDED_COMPRESS_THRESHOLD && (
                   <button
                     type="button"
                     onClick={() => setAddedExpanded(false)}
-                    className="flex h-5 shrink-0 items-center gap-0.5 rounded-full bg-foreground/5 px-2 text-[10px] font-medium text-muted/80 ring-1 ring-border/50 transition hover:bg-foreground/10 hover:text-muted dark:bg-white/5 dark:ring-white/10"
+                    className="flex h-6 shrink-0 items-center gap-0.5 rounded-full bg-foreground/5 px-2.5 text-[10px] font-medium text-muted ring-1 ring-border/60 backdrop-blur-sm transition hover:bg-foreground/10 hover:text-foreground dark:bg-white/5 dark:ring-white/10"
                   >
                     Collapse
                     <ChevronDown size={10} className="rotate-180" strokeWidth={2} />
                   </button>
-                </div>
-              )}
-              <ul className="max-h-[min(40vh,16rem)] divide-y divide-border overflow-y-auto overscroll-contain">
-                {exercises.map((exercise) => (
+                )}
+              </div>
+              <ul className="scrollbar-hide max-h-[min(36vh,14rem)] divide-y divide-border/70 overflow-y-auto overscroll-contain">
+                {exercises.map((exercise, index) => (
                   <li
                     key={exercise.id}
-                    className="flex items-center justify-between gap-3 px-4 py-2.5"
+                    className="flex items-center gap-3 px-4 py-2.5"
                   >
-                    <p className="min-w-0 truncate text-sm font-medium">{exercise.name}</p>
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-[11px] font-semibold text-muted ring-1 ring-border/60 dark:bg-white/5">
+                      {index + 1}
+                    </span>
+                    <p className="min-w-0 flex-1 truncate text-sm font-medium">{exercise.name}</p>
                     <button
                       type="button"
                       onClick={() => onRemoveExercise(day, group, exercise.id)}
@@ -400,59 +413,90 @@ function MuscleScreen({
         </div>
       )}
 
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="relative flex min-h-0 flex-1 flex-col">
         {availableLibrary.length > 0 ? (
           <>
-            <div className="shrink-0 bg-background pb-2">
-              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-                Available exercises
-              </p>
+            <div className="shrink-0 space-y-2.5 pb-2">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+                  Add exercises
+                </p>
+                <span className="text-[11px] text-muted">{filteredAvailable.length} left</span>
+              </div>
+              {availableLibrary.length > 3 && (
+                <div className="relative">
+                  <Search
+                    size={12}
+                    className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted/70"
+                  />
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search"
+                    className="w-full rounded-lg bg-foreground/5 py-2 pl-8 pr-3 text-xs outline-none ring-1 ring-border/40 placeholder:text-muted/70 focus:bg-surface focus:ring-border/70 dark:bg-white/5"
+                  />
+                </div>
+              )}
             </div>
-            <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pb-[calc(var(--mobile-nav-height)+0.75rem)] lg:pb-6">
-              <ul className="divide-y divide-border">
-                {availableLibrary.map((exercise) => (
-                  <li key={exercise.id} className="flex items-center gap-3 py-2.5">
-                    <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg ring-1 ring-border/60">
-                      <img
-                        src={exercise.image}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium leading-snug">{exercise.name}</p>
-                      <p className="mt-0.5 truncate text-xs text-muted">{exercise.equipment}</p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          navigate(`/exercises/${exercise.id}`, {
-                            state: { fromPlan: true, planDay: day, planMuscle: group },
-                          })
-                        }
-                        className="flex h-6 items-center gap-0.5 rounded-full bg-foreground/5 px-2.5 text-[11px] font-medium text-muted ring-1 ring-border/60 backdrop-blur-sm transition hover:bg-foreground/10 hover:text-foreground dark:bg-white/5 dark:ring-white/10 dark:hover:bg-white/10"
-                      >
-                        Explore
-                        <ChevronRight size={11} strokeWidth={2} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => addFromLibrary(exercise.name)}
-                        aria-label={`Add ${exercise.name}`}
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500/20 text-green-600 ring-1 ring-green-500/30 backdrop-blur-sm transition hover:bg-green-500/30 dark:bg-green-500/15 dark:text-green-400 dark:ring-green-400/25 dark:hover:bg-green-500/25"
-                      >
-                        <Plus size={12} strokeWidth={2.5} />
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain px-px pb-[calc(var(--mobile-nav-height)+0.75rem)] lg:pb-6">
+              {filteredAvailable.length > 0 ? (
+                <ul className="space-y-2">
+                  {filteredAvailable.map((exercise) => (
+                    <li
+                      key={exercise.id}
+                      className="flex min-w-0 items-center gap-2.5 rounded-2xl bg-surface p-2.5 ring-1 ring-border"
+                    >
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl ring-1 ring-border/60">
+                        <img
+                          src={exercise.image}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium leading-snug">{exercise.name}</p>
+                        <p className="mt-0.5 truncate text-xs text-muted">{exercise.equipment}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate(`/exercises/${exercise.id}`, {
+                              state: { fromPlan: true, planDay: day, planMuscle: group },
+                            })
+                          }
+                          className="flex h-7 items-center gap-0.5 rounded-full bg-foreground/5 px-2.5 text-[10px] font-medium text-muted ring-1 ring-border/60 backdrop-blur-sm transition hover:bg-foreground/10 hover:text-foreground dark:bg-white/5 dark:ring-white/10"
+                        >
+                          Explore
+                          <ChevronRight size={10} strokeWidth={2} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => addFromLibrary(exercise.name)}
+                          aria-label={`Add ${exercise.name}`}
+                          className="flex h-7 w-7 items-center justify-center rounded-full bg-green-500/20 text-green-600 ring-1 ring-green-500/30 backdrop-blur-sm transition hover:bg-green-500/30 dark:bg-green-500/15 dark:text-green-400 dark:ring-green-400/25"
+                        >
+                          <Plus size={13} strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="rounded-2xl bg-surface px-4 py-8 text-center ring-1 ring-border">
+                  <p className="text-sm font-medium">No matches</p>
+                  <p className="mt-1 text-xs text-muted">Try a different search term.</p>
+                </div>
+              )}
             </div>
           </>
         ) : exercises.length > 0 ? (
-          <div className="flex-1 overflow-y-auto pb-[calc(var(--mobile-nav-height)+0.75rem)] lg:pb-6">
-            <p className="py-2 text-center text-sm text-muted">All exercises added for this muscle.</p>
+          <div className="flex flex-1 items-center justify-center rounded-2xl bg-surface px-6 py-10 text-center ring-1 ring-border">
+            <div>
+              <p className="text-sm font-semibold">All set</p>
+              <p className="mt-1 text-xs text-muted">Every {groupLabel(group).toLowerCase()} exercise is in your plan.</p>
+            </div>
           </div>
         ) : null}
       </div>
@@ -474,18 +518,7 @@ export default function WeeklyPlanPanel({
   onStartDay,
   swipeHintKey = 0,
 }: WeeklyPlanPanelProps) {
-  const { activeStepId } = useTour()
   const [playSwipeHint, setPlaySwipeHint] = useState(false)
-  const [tourSwipeHintReady, setTourSwipeHintReady] = useState(false)
-
-  useEffect(() => {
-    if (activeStepId !== 'swipe-start') {
-      setTourSwipeHintReady(false)
-      return
-    }
-    const timer = window.setTimeout(() => setTourSwipeHintReady(true), 900)
-    return () => window.clearTimeout(timer)
-  }, [activeStepId])
 
   useEffect(() => {
     if (planDay || planMuscle || !swipeHintKey) return
@@ -505,7 +538,7 @@ export default function WeeklyPlanPanel({
 
   if (planDay && planMuscle) {
     return (
-      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex h-full min-h-0 flex-1 flex-col">
         <MuscleScreen
           day={planDay}
           group={planMuscle}
@@ -541,7 +574,7 @@ export default function WeeklyPlanPanel({
         plan={plan}
         onSelectDay={onNavigateDay}
         onStartDay={onStartDay}
-        playSwipeHint={playSwipeHint || tourSwipeHintReady}
+        playSwipeHint={playSwipeHint}
       />
     </div>
   )

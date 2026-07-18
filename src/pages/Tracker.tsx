@@ -777,7 +777,7 @@ export default function Tracker() {
           className={[
             'px-5 lg:desktop-page-body lg:px-10',
             isPlanMuscleView
-              ? 'flex min-h-0 flex-1 flex-col overflow-hidden pb-0'
+              ? 'flex min-h-0 flex-1 flex-col pb-0'
               : 'overflow-x-clip pb-8',
           ].join(' ')}
         >

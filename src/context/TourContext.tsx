@@ -28,26 +28,32 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const { plan, ready: planReady } = useWorkoutPlan()
   const { preferences, ready: prefsReady, completeUiTour } = useWorkoutPreferences()
   const [isOpen, setIsOpen] = useState(false)
-  const [activeStepId, setActiveStepId] = useState<string | null>(null)
+  const [stepIndex, setStepIndex] = useState(0)
+  const [tourSession, setTourSession] = useState(0)
+
+  const steps = useMemo(() => createAppTourSteps({ navigate }), [navigate])
+  const activeStepId = isOpen ? (steps[stepIndex]?.id ?? null) : null
 
   const needsPlanOnboarding =
     planReady && prefsReady && daysWithPlan(plan).length === 0 && !preferences.onboarded
 
-  const steps = useMemo(() => createAppTourSteps({ navigate }), [navigate])
-
   const startTour = useCallback(() => {
+    setTourSession((session) => session + 1)
+    setStepIndex(0)
     setIsOpen(true)
     navigate('/home')
   }, [navigate])
 
   const replayTour = useCallback(() => {
+    setTourSession((session) => session + 1)
+    setStepIndex(0)
     setIsOpen(true)
     navigate('/home')
   }, [navigate])
 
   const finishTour = useCallback(() => {
     setIsOpen(false)
-    setActiveStepId(null)
+    setStepIndex(0)
     completeUiTour()
   }, [completeUiTour])
 
@@ -80,9 +86,11 @@ export function TourProvider({ children }: { children: ReactNode }) {
     <TourContext.Provider value={value}>
       {children}
       <AppTour
+        key={tourSession}
         open={isOpen}
         steps={steps}
-        onStepChange={setActiveStepId}
+        stepIndex={stepIndex}
+        onStepIndexChange={setStepIndex}
         onComplete={finishTour}
         onSkip={finishTour}
       />

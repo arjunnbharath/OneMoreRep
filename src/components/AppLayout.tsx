@@ -49,6 +49,7 @@ export default function AppLayout() {
               <NavLink
                 key={label}
                 to={to}
+                data-tour={to === '/exercises' ? 'main-nav-exercises' : undefined}
                 className={[
                   'relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
                   active

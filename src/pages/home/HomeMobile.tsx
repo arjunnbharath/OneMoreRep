@@ -45,10 +45,19 @@ export default function HomeMobile({
       <div className="space-y-8 px-5 pb-4 lg:pb-8">
         <WorkoutCalendar sessions={sessions} />
 
-        <section id="workouts" ref={workoutsRef}>
-          <div>
-            <h2 className="text-base font-semibold">Workouts</h2>
-            <p className="mt-0.5 text-xs text-muted">Tap a muscle to see exercises</p>
+        <section id="workouts" ref={workoutsRef} data-tour="home-exercise-library">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold">Exercise library</h2>
+              <p className="mt-0.5 text-xs text-muted">Tap a muscle to browse workouts</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/exercises')}
+              className="shrink-0 text-xs font-medium text-foreground underline-offset-2 hover:underline"
+            >
+              All exercises
+            </button>
           </div>
 
           <div className="mt-4">

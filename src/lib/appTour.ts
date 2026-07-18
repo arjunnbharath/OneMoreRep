@@ -7,6 +7,17 @@ interface AppTourActions {
   navigate: NavigateFunction
 }
 
+function getVisibleTrackerNavSelector(): string {
+  const mobileNav = document.querySelector('[data-tour-nav="mobile"]')
+  if (mobileNav) {
+    const rect = mobileNav.getBoundingClientRect()
+    if (rect.width > 0 && rect.height > 0) {
+      return '[data-tour-nav="mobile"]'
+    }
+  }
+  return '[data-tour-nav="desktop"]'
+}
+
 function getVisibleTrackerTabSelector(tabTourId: string): string {
   const mobileNav = document.querySelector('[data-tour-nav="mobile"]')
   if (mobileNav) {
@@ -18,6 +29,30 @@ function getVisibleTrackerTabSelector(tabTourId: string): string {
   return `[data-tour-nav="desktop"] [data-tour="${tabTourId}"]`
 }
 
+function getVisibleExerciseLibrarySelector(): string | undefined {
+  const desktopLink = document.querySelector('[data-tour="main-nav-exercises"]')
+  if (desktopLink) {
+    const rect = desktopLink.getBoundingClientRect()
+    if (rect.width > 0 && rect.height > 0) {
+      return '[data-tour="main-nav-exercises"]'
+    }
+  }
+
+  const homeLibrary = document.querySelector('[data-tour="home-exercise-library"]')
+  if (homeLibrary) {
+    const rect = homeLibrary.getBoundingClientRect()
+    if (rect.width > 0 && rect.height > 0) {
+      return '[data-tour="home-exercise-library"]'
+    }
+  }
+
+  if (document.querySelector('[data-tour="exercise-muscle-groups"]')) {
+    return '[data-tour="exercise-muscle-groups"]'
+  }
+
+  return '[data-tour="exercise-library"]'
+}
+
 export function createAppTourSteps({ navigate }: AppTourActions): TourStep[] {
   const today = getTodayWeekday()
   const todayLabel = WEEKDAY_LABELS[today]
@@ -26,14 +61,14 @@ export function createAppTourSteps({ navigate }: AppTourActions): TourStep[] {
     {
       id: 'welcome',
       title: 'Welcome to OneMoreRep',
-      body: 'A quick tour of how to plan workouts, log sets, and track nutrition.',
+      body: 'Plan workouts, log sets, and track calories — all in one place. This quick tour takes under a minute.',
       placement: 'center',
       onEnter: () => navigate('/home'),
     },
     {
       id: 'home-stats',
-      title: 'Your dashboard',
-      body: 'See your streak, training time, sessions, and calorie intake at a glance.',
+      title: 'Your stats at a glance',
+      body: 'Streak, training time, sessions, and calories — updated as you train.',
       target: '[data-tour="home-stats"]',
       placement: 'bottom',
       onEnter: () => navigate('/home'),
@@ -41,15 +76,15 @@ export function createAppTourSteps({ navigate }: AppTourActions): TourStep[] {
     {
       id: 'home-today-plan',
       title: "Today's workout",
-      body: `Your plan for ${todayLabel} lives here. Swipe right on the card to start instantly.`,
+      body: `See what's planned for ${todayLabel}. Swipe the card right to start instantly.`,
       target: '[data-tour="home-today-plan"]',
       placement: 'bottom',
       onEnter: () => navigate('/home'),
     },
     {
       id: 'main-nav',
-      title: 'Navigate the app',
-      body: 'Use the menu to jump between Home, Calories, Progress, Exercises, and Profile.',
+      title: 'Get around fast',
+      body: 'Jump between Home, Calories, Progress, Exercises, and Profile from here.',
       getTarget: () =>
         document.querySelector('[data-tour="main-nav-mobile"]')
           ? '[data-tour="main-nav-mobile"]'
@@ -58,60 +93,67 @@ export function createAppTourSteps({ navigate }: AppTourActions): TourStep[] {
     },
     {
       id: 'tracker-tabs',
-      title: 'Progress hub',
-      body: 'Inside Progress, switch between Plans, Workout, Stats, and Friends.',
-      target: '[data-tour="tracker-nav"]',
+      title: 'Your training hub',
+      body: 'Plans, Workout, Stats, and Friends live under Progress.',
+      getTarget: () => getVisibleTrackerNavSelector(),
       placement: 'bottom',
-      onEnter: () => navigate(TRACKER_PATHS.plan),
-    },
-    {
-      id: 'swipe-start',
-      title: 'Slide to start',
-      body: `Swipe the ${todayLabel} card to the right to launch that day's workout.`,
-      target: `[data-tour-plan-day="${today}"]`,
-      placement: today === 'saturday' || today === 'sunday' ? 'top' : 'bottom',
-      tooltipGap: 20,
       onEnter: () => navigate(TRACKER_PATHS.plan),
     },
     {
       id: 'workout-ready',
-      title: 'Start a workout',
-      body: "Open the Workout tab to start today's plan, repeat a session, or log a custom workout.",
-      getTarget: () => getVisibleTrackerTabSelector('tracker-tab-workout'),
+      title: 'Workout & sets',
+      body: 'Start a session from here. During a workout, enter weight and reps, then tap the checkmark on each set.',
+      getTarget: () => {
+        if (document.querySelector('[data-tour="set-complete-btn"]')) {
+          return '[data-tour="set-complete-btn"]'
+        }
+        if (document.querySelector('[data-tour="workout-ready"]')) {
+          return '[data-tour="workout-ready"]'
+        }
+        return getVisibleTrackerTabSelector('tracker-tab-workout')
+      },
       placement: 'bottom',
-      tooltipGap: 28,
-      onEnter: () => navigate(TRACKER_PATHS.workout),
-    },
-    {
-      id: 'log-sets',
-      title: 'Log your sets',
-      body: 'Enter weight and reps, then tap the checkmark when you finish each set. A rest timer starts automatically.',
-      getTarget: () =>
-        document.querySelector('[data-tour="set-complete-btn"]')
-          ? '[data-tour="set-complete-btn"]'
-          : undefined,
-      placement: 'top',
+      tooltipGap: 20,
       onEnter: () => navigate(TRACKER_PATHS.workout),
     },
     {
       id: 'stats',
-      title: 'Track progress',
-      body: 'Open the Stats tab to see lifetime volume, training time, PRs, and exercise trends.',
-      getTarget: () => getVisibleTrackerTabSelector('tracker-tab-stats'),
+      title: 'Watch your progress',
+      body: 'Volume, PRs, training time, and exercise trends — all in Stats.',
+      getTarget: () =>
+        document.querySelector('[data-tour="stats-overview"]')
+          ? '[data-tour="stats-overview"]'
+          : getVisibleTrackerTabSelector('tracker-tab-stats'),
       placement: 'bottom',
-      tooltipGap: 28,
+      tooltipGap: 20,
       onEnter: () => navigate(TRACKER_PATHS.progress),
     },
     {
+      id: 'exercise-library',
+      title: 'Exercise library',
+      body: 'Select Exercises to browse the full workout library — every exercise with demos, form tips, and muscle-group filters.',
+      getTarget: () => getVisibleExerciseLibrarySelector(),
+      placement: 'bottom',
+      tooltipGap: 16,
+      onEnter: () => navigate('/home'),
+    },
+    {
       id: 'calories',
-      title: 'Calorie tracking',
-      body: 'Log meals and monitor daily calories, protein, carbs, and fat against your targets.',
+      title: 'Track nutrition',
+      body: 'Log meals and stay on top of calories, protein, carbs, and fat.',
       getTarget: () =>
         document.querySelector('[data-tour="calorie-summary"]')
           ? '[data-tour="calorie-summary"]'
           : undefined,
       placement: 'bottom',
       onEnter: () => navigate('/calories'),
+    },
+    {
+      id: 'finish',
+      title: "You're all set",
+      body: 'Build your plan, log your sets, and track your progress. Replay this tour anytime from Settings.',
+      placement: 'center',
+      onEnter: () => navigate('/home'),
     },
   ]
 }
