@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronRight, Search } from 'lucide-react'
+import { useAppInstalled } from '../../hooks/useAppInstalled'
 import {
   exerciseGroups,
   exerciseGuides,
@@ -54,6 +55,7 @@ function ExerciseRow({
 
 export default function ExerciseGuidesV2({ embedded = false, onBack }: ExerciseGuidesV2Props) {
   const navigate = useNavigate()
+  const appInstalled = useAppInstalled()
   const [activeGroup, setActiveGroup] = useState<ExerciseGroup | 'all'>('all')
   const [search, setSearch] = useState('')
 
@@ -85,7 +87,7 @@ export default function ExerciseGuidesV2({ embedded = false, onBack }: ExerciseG
   const controls = (
     <>
       <div className="mb-4 flex items-center gap-2.5">
-        {embedded && (
+        {embedded && !appInstalled && (
           <button
             type="button"
             onClick={goBack}
@@ -95,11 +97,11 @@ export default function ExerciseGuidesV2({ embedded = false, onBack }: ExerciseG
             Workout
           </button>
         )}
-        {embedded && <span className="text-border">·</span>}
+        {embedded && !appInstalled && <span className="text-border">·</span>}
         <span
           className={[
             'text-sm text-muted',
-            embedded ? 'ml-auto' : '',
+            embedded && !appInstalled ? 'ml-auto' : '',
           ].join(' ')}
         >
           Exercise library
@@ -182,7 +184,7 @@ export default function ExerciseGuidesV2({ embedded = false, onBack }: ExerciseG
       <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
         <div className="shrink-0 bg-background px-5">{controls}</div>
         <div
-          className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(var(--mobile-nav-height)+0.75rem)] lg:pb-6"
+          className="scrollbar-hide mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(var(--mobile-nav-height)+0.75rem)] lg:pb-6"
           data-tour="exercise-library"
         >
           {list}

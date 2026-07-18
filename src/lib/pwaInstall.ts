@@ -18,6 +18,10 @@ export function isNativeApp() {
   return Capacitor.isNativePlatform()
 }
 
+export function isAppInstalled() {
+  return isNativeApp() || isPwaInstalled()
+}
+
 export function isPwaInstalled() {
   if (typeof window === 'undefined') return false
 

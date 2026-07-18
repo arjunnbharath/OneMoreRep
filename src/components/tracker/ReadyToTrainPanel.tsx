@@ -41,6 +41,9 @@ export default function ReadyToTrainPanel({
     0,
   )
   const background = hasTodayPlan ? imageForDayPlan(today, todayPlan) : FALLBACK_BG
+  const muscleSummary = todayPlan.muscles
+    .map((group) => exerciseGroupLabels[group])
+    .join(' · ')
 
   return (
     <div
@@ -50,49 +53,39 @@ export default function ReadyToTrainPanel({
       <img src={background} alt="" className="absolute inset-0 h-full w-full object-cover" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-black/70 via-black/55 to-black/85" />
 
-      <div className="relative flex min-h-[220px] flex-col justify-between p-5 text-white lg:p-6">
+      <div className="relative flex min-h-[220px] flex-col gap-5 p-5 text-white lg:gap-6 lg:p-6">
         <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/60">
               Ready to train
             </p>
-            <h2 className="mt-2 text-xl font-bold tracking-tight lg:text-2xl">
+            <h2 className="mt-1 text-xl font-bold leading-tight tracking-tight lg:text-2xl">
               {hasTodayPlan ? `${WEEKDAY_LABELS[today]} workout` : 'Start your session'}
             </h2>
             {hasTodayPlan ? (
-              <>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {todayPlan.muscles.map((group) => (
-                    <span
-                      key={group}
-                      className="rounded-md bg-white/15 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm"
-                    >
-                      {exerciseGroupLabels[group]}
-                    </span>
-                  ))}
-                </div>
-                <p className="mt-2 text-sm text-white/70">
-                  {exerciseTotal} exercise{exerciseTotal === 1 ? '' : 's'} planned for today
-                </p>
-              </>
+              <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/65">
+                {muscleSummary}
+                <span className="text-white/40"> · </span>
+                {exerciseTotal} exercise{exerciseTotal === 1 ? '' : 's'}
+              </p>
             ) : (
-              <p className="mt-2 text-sm text-white/70">No plan for today.</p>
+              <p className="mt-2 text-sm text-white/65">No plan for today.</p>
             )}
           </div>
 
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/12 ring-1 ring-white/15 backdrop-blur-sm">
-            <Dumbbell size={20} className="text-white/90" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/12 ring-1 ring-white/15 backdrop-blur-sm">
+            <Dumbbell size={18} className="text-white/90" />
           </div>
         </div>
 
-        <div className="mt-5 space-y-2">
+        <div className="mt-auto space-y-2.5">
           {hasTodayPlan && (
             <button
               type="button"
               onClick={onStartToday}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/30 bg-gradient-to-b from-black/35 to-black/15 px-4 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:from-black/45 hover:to-black/25"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/25 bg-gradient-to-b from-black/35 to-black/15 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:from-black/45 hover:to-black/25"
             >
-              <Play size={16} className="fill-current" />
+              <Play size={15} className="fill-current" />
               Start today&apos;s workout
             </button>
           )}
@@ -101,39 +94,38 @@ export default function ReadyToTrainPanel({
             <button
               type="button"
               onClick={onStartEmpty}
-              className="rounded-2xl bg-white/12 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/15 backdrop-blur-sm transition hover:bg-white/18"
+              className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/12 backdrop-blur-sm transition hover:bg-white/16"
             >
               Start empty
             </button>
             <button
               type="button"
               onClick={onEditPlan}
-              className="flex items-center justify-center gap-1.5 rounded-2xl bg-white/12 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/15 backdrop-blur-sm transition hover:bg-white/18"
+              className="flex items-center justify-center gap-1 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/12 backdrop-blur-sm transition hover:bg-white/16"
             >
-              <Calendar size={14} />
+              <Calendar size={13} />
               Edit plan
             </button>
           </div>
-        </div>
 
-        {lastSession && onRepeatLast && (
-          <button
-            type="button"
-            onClick={onRepeatLast}
-            className="mt-3 flex w-full items-center justify-between gap-3 rounded-2xl bg-white/10 px-4 py-3 text-left ring-1 ring-white/12 backdrop-blur-sm transition hover:bg-white/15"
-          >
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/60">
-                Repeat last
+          {lastSession && onRepeatLast && (
+            <button
+              type="button"
+              onClick={onRepeatLast}
+              className="flex w-full items-center gap-2.5 rounded-xl bg-white/8 px-3 py-2 text-left ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-white/14"
+            >
+              <Copy size={14} className="shrink-0 text-white/60" />
+              <p className="min-w-0 flex-1 truncate text-xs">
+                <span className="text-white/55">Repeat</span>
+                <span className="font-medium text-white"> {lastSession.name}</span>
+                <span className="text-white/50">
+                  {' '}
+                  · {formatSessionDate(lastSession.date)}
+                </span>
               </p>
-              <p className="mt-0.5 truncate font-semibold text-white">{lastSession.name}</p>
-              <p className="text-xs text-white/65">
-                {formatSessionDate(lastSession.date)} · {lastSession.exercises.length} exercises
-              </p>
-            </div>
-            <Copy size={16} className="shrink-0 text-white/70" />
-          </button>
-        )}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

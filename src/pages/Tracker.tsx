@@ -3,14 +3,11 @@ import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   BarChart3,
-  BookOpen,
   Calendar,
-  ChevronRight,
   Clock,
   Copy,
   Dumbbell,
   Flame,
-  History,
   Plus,
   Trash2,
   Trophy,
@@ -27,6 +24,8 @@ import AddExerciseForm from '../components/tracker/AddExerciseForm'
 import ExerciseSetTable from '../components/tracker/ExerciseSetTable'
 import NextMuscleReady from '../components/tracker/NextMuscleReady'
 import ReadyToTrainPanel from '../components/tracker/ReadyToTrainPanel'
+import WorkoutHistoryWidget from '../components/tracker/WorkoutHistoryWidget'
+import ExerciseLibraryWidget from '../components/tracker/ExerciseLibraryWidget'
 import ExerciseLibraryPanel from '../components/exercise-library/ExerciseLibraryPanel'
 import WeeklyPlanPanel from '../components/tracker/WeeklyPlanPanel'
 import PlanOnboarding from '../components/tracker/PlanOnboarding'
@@ -35,6 +34,7 @@ import { heroImage } from '../data/mockData'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { useWorkoutPreferences } from '../hooks/useWorkoutPreferences'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
+import { useAppInstalled } from '../hooks/useAppInstalled'
 import {
   exercisesForMuscle,
   getTodayWeekday,
@@ -67,9 +67,6 @@ type DayWorkoutFlow = {
   queue: ExerciseGroup[]
   remaining: ExerciseGroup[]
 }
-
-const WORKOUT_HISTORY_BG = '/images/gym_background/workout history.jpg'
-const EXERCISE_LIBRARY_BG = '/images/gym_background/gym-pic.jpg'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -121,6 +118,8 @@ export default function Tracker() {
   const showExerciseLibrary = route.kind === 'workout' && route.library === true
   const planDay = route.kind === 'plan' ? route.day : undefined
   const planMuscle = route.kind === 'plan' ? route.muscle : undefined
+  const isPlanMuscleView = view === 'plan' && Boolean(planMuscle)
+  const appInstalled = useAppInstalled()
 
   const {
     sessions,
@@ -441,19 +440,11 @@ export default function Tracker() {
   return (
     <div
       className={[
-        'min-h-full bg-background text-foreground lg:mx-auto lg:max-w-7xl',
-        view === 'progress' ? 'overflow-x-hidden' : '',
-        showExerciseLibrary
-          ? 'flex min-h-0 flex-1 flex-col overflow-hidden lg:min-h-full lg:overflow-visible'
-          : '',
+        'flex min-h-0 flex-1 flex-col overflow-hidden bg-background text-foreground lg:mx-auto lg:max-w-7xl lg:min-h-full lg:overflow-visible',
       ].join(' ')}
     >
-      <header
-        className={[
-          'hidden border-b border-border lg:block lg:px-10 lg:py-6',
-          showExerciseLibrary ? 'shrink-0' : '',
-        ].join(' ')}
-      >
+      <div className="shrink-0 bg-background/95 backdrop-blur-xl lg:sticky lg:top-0 lg:z-40">
+      <header className="hidden border-b border-border lg:block lg:px-10 lg:py-6">
         <div className="flex items-center justify-between gap-8">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
@@ -495,15 +486,11 @@ export default function Tracker() {
         </div>
       </header>
 
+      <div className="px-5 pb-3 pt-[max(1.5rem,env(safe-area-inset-top))] lg:hidden">
       <nav
         data-tour="tracker-nav"
         data-tour-nav="mobile"
-        className={[
-          'mx-5 flex shrink-0 gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border lg:hidden',
-          showExerciseLibrary
-            ? 'mb-3 mt-[max(1.5rem,env(safe-area-inset-top))]'
-            : 'mb-3 mt-[max(1.5rem,env(safe-area-inset-top))]',
-        ].join(' ')}
+        className="flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border"
       >
         {(
           [
@@ -530,6 +517,18 @@ export default function Tracker() {
           </button>
         ))}
       </nav>
+      </div>
+      </div>
+
+      <div
+        className={[
+          'min-h-0 flex-1',
+          showExerciseLibrary || isPlanMuscleView
+            ? 'flex flex-col overflow-hidden'
+            : 'overflow-y-auto overscroll-contain pb-[calc(var(--mobile-nav-height)+0.5rem)] lg:overflow-visible lg:pb-0',
+          view === 'progress' ? 'overflow-x-hidden' : '',
+        ].join(' ')}
+      >
 
       {isRestTimerRunning && (
         <div className="mx-5 mb-4 flex items-center justify-between rounded-2xl bg-foreground/5 px-4 py-3 ring-1 ring-border lg:mx-10">
@@ -635,19 +634,21 @@ export default function Tracker() {
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <ExerciseLibraryPanel
               embedded
-              onBack={() => navigate(TRACKER_PATHS.workout)}
+              onBack={appInstalled ? undefined : () => navigate(TRACKER_PATHS.workout)}
             />
           </div>
         ) : showWorkoutHistory ? (
-          <section className="px-5 pb-8 lg:px-10">
+          <section className="px-5 pb-8 pt-4 lg:px-10">
             <div className="mx-auto max-w-lg lg:max-w-4xl">
-              <button
-                type="button"
-                onClick={() => navigate(TRACKER_PATHS.workout)}
-                className="mb-4 text-sm font-medium text-muted transition hover:text-foreground"
-              >
-                ← Back to workout
-              </button>
+              {!appInstalled && (
+                <button
+                  type="button"
+                  onClick={() => navigate(TRACKER_PATHS.workout)}
+                  className="mb-4 text-sm font-medium text-muted transition hover:text-foreground"
+                >
+                  ← Back to workout
+                </button>
+              )}
 
               <div className="lg:grid lg:grid-cols-2 lg:gap-6">
                 <div>
@@ -732,7 +733,7 @@ export default function Tracker() {
             </div>
           </section>
         ) : (
-          <section className="space-y-5 px-5 pb-8 lg:desktop-page-body lg:px-10">
+          <section className="space-y-5 px-5 pb-8 pt-4 lg:desktop-page-body lg:px-10">
             <div className="desktop-page mx-auto max-w-lg lg:max-w-3xl">
               <ReadyToTrainPanel
                 plan={plan}
@@ -749,76 +750,15 @@ export default function Tracker() {
               />
             </div>
 
-            <div className="desktop-page mx-auto max-w-lg lg:max-w-3xl">
-              <button
-                type="button"
-                onClick={() => navigate(TRACKER_PATHS.workoutHistory)}
-                className="group relative w-full overflow-hidden rounded-2xl text-left ring-1 ring-border transition hover:ring-foreground/25"
-              >
-                <img
-                  src={WORKOUT_HISTORY_BG}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/40 to-black/45" />
-
-                <div className="relative flex items-center justify-between gap-3 px-4 py-4">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20 backdrop-blur-sm">
-                      <History size={17} className="text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white">Workout history</p>
-                      {sessions.length === 0 ? (
-                        <p className="text-xs text-white/70">No sessions yet</p>
-                      ) : (
-                        <>
-                          <p className="truncate text-xs text-white/80">
-                            Last · {formatDate(sessions[0].date)} · {sessions[0].name}
-                          </p>
-                          <p className="mt-0.5 text-[11px] text-white/60">
-                            {sessions.length} session{sessions.length === 1 ? '' : 's'} logged
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <ChevronRight size={16} className="shrink-0 text-white/80" />
-                </div>
-              </button>
-            </div>
-
-            <div className="desktop-page mx-auto max-w-lg lg:max-w-3xl">
-              <button
-                type="button"
-                onClick={() => navigate(TRACKER_PATHS.exerciseLibrary)}
-                className="group relative w-full overflow-hidden rounded-2xl text-left ring-1 ring-border transition hover:ring-foreground/25"
-              >
-                <img
-                  src={EXERCISE_LIBRARY_BG}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/40 to-black/45" />
-
-                <div className="relative flex items-center justify-between gap-3 px-4 py-4">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20 backdrop-blur-sm">
-                      <BookOpen size={17} className="text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white">Exercise library</p>
-                      <p className="text-xs text-white/80">
-                        Browse by muscle group with demos and form tips
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-white/60">
-                        {exerciseGuides.length}+ exercises
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronRight size={16} className="shrink-0 text-white/80" />
-                </div>
-              </button>
+            <div className="desktop-page mx-auto max-w-lg space-y-4 lg:max-w-3xl">
+              <ExerciseLibraryWidget
+                onOpen={() => navigate(TRACKER_PATHS.exerciseLibrary)}
+              />
+              <WorkoutHistoryWidget
+                sessions={sessions}
+                formatDate={formatDate}
+                onOpen={() => navigate(TRACKER_PATHS.workoutHistory)}
+              />
             </div>
           </section>
         )
@@ -833,8 +773,20 @@ export default function Tracker() {
       )}
 
       {view === 'plan' && (
-        <section className="overflow-x-hidden px-5 pb-8 pt-1 lg:desktop-page-body lg:px-10 lg:pt-8">
-          <div className="desktop-page lg:max-w-5xl">
+        <section
+          className={[
+            'px-5 lg:desktop-page-body lg:px-10',
+            isPlanMuscleView
+              ? 'flex min-h-0 flex-1 flex-col overflow-hidden pb-0'
+              : 'overflow-x-clip pb-8',
+          ].join(' ')}
+        >
+          <div
+            className={[
+              'desktop-page lg:max-w-5xl',
+              isPlanMuscleView ? 'flex min-h-0 flex-1 flex-col' : '',
+            ].join(' ')}
+          >
             {needsPlanOnboarding ? (
               <PlanOnboarding
                 onComplete={(generatedPlan, answers, splitType) => {
@@ -876,6 +828,7 @@ export default function Tracker() {
       )}
 
       {view === 'workout' && !activeSession && readyForNextMuscle && (
+        <div className="pt-4">
         <NextMuscleReady
           day={readyForNextMuscle.day}
           muscle={readyForNextMuscle.muscle}
@@ -884,10 +837,11 @@ export default function Tracker() {
           onContinue={handleContinueNextMuscle}
           onDone={handleEndDayWorkout}
         />
+        </div>
       )}
 
       {view === 'workout' && activeSession && (
-        <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:px-10">
+        <div className="pt-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:px-10">
           <div>
             <section className="relative mx-5 overflow-hidden rounded-3xl lg:mx-0">
               <img src={heroImage} alt="" className="h-44 w-full object-cover lg:h-52" />
@@ -1076,6 +1030,7 @@ export default function Tracker() {
           </aside>
         </div>
       )}
+      </div>
     </div>
   )
 }

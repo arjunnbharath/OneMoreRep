@@ -273,6 +273,43 @@ input:-webkit-autofill:focus {
   animation: plan-gym-pulse 1.1s ease-in-out infinite;
 }
 
+@keyframes muscle-label-shimmer {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.plan-muscle-label {
+  background-image: linear-gradient(
+    90deg,
+    #7c3aed 0%,
+    #a855f7 30%,
+    #d946ef 55%,
+    #a855f7 80%,
+    #7c3aed 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: muscle-label-shimmer 5s ease-in-out infinite;
+}
+
+.dark .plan-muscle-label {
+  background-image: linear-gradient(
+    90deg,
+    #c4b5fd 0%,
+    #e879f9 45%,
+    #f0abfc 55%,
+    #e879f9 80%,
+    #c4b5fd 100%
+  );
+}
+
 @keyframes onboarding-quote-shimmer {
   0%,
   100% {

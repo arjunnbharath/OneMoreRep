@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, BookOpen, ChevronRight, Search } from 'lucide-react'
+import { useAppInstalled } from '../../hooks/useAppInstalled'
 import {
   exerciseGroupLabels,
   exerciseGroups,
@@ -20,6 +21,7 @@ interface ExerciseGuidesV1Props {
 
 export default function ExerciseGuidesV1({ embedded = false, onBack }: ExerciseGuidesV1Props) {
   const navigate = useNavigate()
+  const appInstalled = useAppInstalled()
   const [activeGroup, setActiveGroup] = useState<ExerciseGroup | 'all'>('all')
   const [search, setSearch] = useState('')
 
@@ -72,14 +74,16 @@ export default function ExerciseGuidesV1({ embedded = false, onBack }: ExerciseG
           ].join(' ')}
         >
           <div className="lg:desktop-page lg:mx-auto">
-            <button
-              type="button"
-              onClick={goBack}
-              className="mb-3 flex items-center gap-2 text-sm font-medium text-muted transition hover:text-foreground lg:hidden"
-            >
-              <ArrowLeft size={16} />
-              {embedded ? 'Back to workout' : 'Back'}
-            </button>
+            {!appInstalled && (
+              <button
+                type="button"
+                onClick={goBack}
+                className="mb-3 flex items-center gap-2 text-sm font-medium text-muted transition hover:text-foreground lg:hidden"
+              >
+                <ArrowLeft size={16} />
+                {embedded ? 'Back to workout' : 'Back'}
+              </button>
+            )}
 
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-5">
               <div className="flex items-center gap-3">

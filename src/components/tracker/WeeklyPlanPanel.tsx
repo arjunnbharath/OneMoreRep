@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowLeft, ChevronRight, Plus, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ArrowLeft, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import SwipeablePlanDayCard, { SWIPE_HINT_TOTAL_MS } from '../plan/SwipeablePlanDayCard'
 import { useTour } from '../../context/TourContext'
+import { useAppInstalled } from '../../hooks/useAppInstalled'
 import {
   exerciseGroupLabels,
+  exerciseGroups,
   exerciseGuides,
   type ExerciseGroup,
 } from '../../data/exerciseGuides'
@@ -20,6 +23,11 @@ import { WEEKDAYS, type PlanExercise, type Weekday, type WeeklyPlan } from '../.
 
 const PLAN_SWIPE_HINT_STORAGE_KEY = 'onemorerep-plan-swipe-hint-count'
 const PLAN_SWIPE_HINT_MAX_SHOWS = 2
+const ADDED_COMPRESS_THRESHOLD = 4
+
+function muscleGroupImage(group: ExerciseGroup) {
+  return exerciseGroups.find((item) => item.id === group)?.image ?? ''
+}
 
 function getPlanSwipeHintCount() {
   const raw = localStorage.getItem(PLAN_SWIPE_HINT_STORAGE_KEY)
@@ -158,19 +166,23 @@ function DayScreen({
   onRemoveMuscle: (group: ExerciseGroup) => void
   onStartDay: () => void
 }) {
+  const appInstalled = useAppInstalled()
   const available = PLAN_GROUPS.filter((g) => !dayPlan.muscles.includes(g))
   const canStart = dayPlan.muscles.some((g) => muscleExerciseCount(dayPlan, g) > 0)
+  const availableGroups = exerciseGroups.filter((g) => available.includes(g.id))
 
   return (
     <div className="space-y-4">
-      <button
-        type="button"
-        onClick={onBack}
-        className="flex items-center gap-1 text-sm text-muted hover:text-foreground"
-      >
-        <ArrowLeft size={16} />
-        Week
-      </button>
+      {!appInstalled && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1 text-sm text-muted hover:text-foreground"
+        >
+          <ArrowLeft size={16} />
+          Week
+        </button>
+      )}
 
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-bold">{WEEKDAY_LABELS[day]}</h2>
@@ -184,11 +196,7 @@ function DayScreen({
         </button>
       </div>
 
-      {dayPlan.muscles.length === 0 ? (
-        <p className="rounded-2xl bg-surface px-4 py-8 text-center text-sm text-muted ring-1 ring-border">
-          Add a muscle group below to build this day.
-        </p>
-      ) : (
+      {dayPlan.muscles.length > 0 && (
         <ul className="space-y-2">
           {dayPlan.muscles.map((group) => {
             const count = muscleExerciseCount(dayPlan, group)
@@ -198,9 +206,16 @@ function DayScreen({
                   <button
                     type="button"
                     onClick={() => onSelectMuscle(group)}
-                    className="flex min-w-0 flex-1 items-center justify-between px-4 py-3.5 text-left"
+                    className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3 text-left"
                   >
-                    <div>
+                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl ring-1 ring-border/60">
+                      <img
+                        src={muscleGroupImage(group)}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
                       <p className="font-medium">{exerciseGroupLabels[group]}</p>
                       <p className="text-xs text-muted">
                         {count === 0 ? 'Tap to add exercises' : `${count} exercise${count === 1 ? '' : 's'}`}
@@ -223,18 +238,31 @@ function DayScreen({
         </ul>
       )}
 
-      {available.length > 0 && (
+      {availableGroups.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Add muscle group</p>
-          <div className="flex flex-wrap gap-2">
-            {available.map((group) => (
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+            {dayPlan.muscles.length === 0 ? 'Choose muscle groups' : 'Add muscle group'}
+          </p>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {availableGroups.map((group) => (
               <button
-                key={group}
+                key={group.id}
                 type="button"
-                onClick={() => onAddMuscle(group)}
-                className="rounded-full bg-surface px-3 py-1.5 text-xs font-medium ring-1 ring-border hover:bg-foreground hover:text-background"
+                onClick={() => onAddMuscle(group.id)}
+                className="muscle-add-tile group/tile relative aspect-[4/5] overflow-hidden rounded-xl ring-1 ring-border transition hover:ring-foreground/25"
               >
-                + {exerciseGroupLabels[group]}
+                <img
+                  src={group.image}
+                  alt=""
+                  className="h-full w-full object-cover transition duration-300 group-hover/tile:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/5" />
+                <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-foreground/10 text-white ring-1 ring-white/20 backdrop-blur-sm dark:bg-white/10 dark:ring-white/15">
+                  <Plus size={12} strokeWidth={2.5} />
+                </span>
+                <p className="absolute inset-x-0 bottom-0 px-1.5 pb-2 text-center text-[10px] font-semibold leading-tight text-white">
+                  {group.label}
+                </p>
               </button>
             ))}
           </div>
@@ -259,129 +287,176 @@ function MuscleScreen({
   onAddExercise: WeeklyPlanPanelProps['onAddExercise']
   onRemoveExercise: WeeklyPlanPanelProps['onRemoveExercise']
 }) {
-  const [sets, setSets] = useState('3')
-  const [reps, setReps] = useState('12')
-  const [customName, setCustomName] = useState('')
+  const navigate = useNavigate()
+  const appInstalled = useAppInstalled()
+  const [addedExpanded, setAddedExpanded] = useState(false)
+
+  useEffect(() => {
+    if (exercises.length < ADDED_COMPRESS_THRESHOLD) {
+      setAddedExpanded(false)
+    }
+  }, [exercises.length])
 
   const library = useMemo(() => exerciseGuides.filter((e) => e.group === group), [group])
   const plannedNames = useMemo(
     () => new Set(exercises.map((e) => e.name.toLowerCase())),
     [exercises],
   )
+  const availableLibrary = useMemo(
+    () => library.filter((e) => !plannedNames.has(e.name.toLowerCase())),
+    [library, plannedNames],
+  )
 
   function addFromLibrary(name: string) {
-    onAddExercise(day, group, name, parseInt(sets, 10) || 3, parseInt(reps, 10) || 12)
+    onAddExercise(day, group, name, 3, 12)
   }
 
-  function handleCustomAdd(e: FormEvent) {
-    e.preventDefault()
-    if (!customName.trim()) return
-    onAddExercise(day, group, customName, parseInt(sets, 10) || 3, parseInt(reps, 10) || 12)
-    setCustomName('')
-  }
+  const shouldCompressAdded =
+    exercises.length >= ADDED_COMPRESS_THRESHOLD && !addedExpanded
+
+  const addedSummary = exercises
+    .slice(0, 2)
+    .map((exercise) => exercise.name)
+    .join(', ')
 
   return (
-    <div className="space-y-4">
-      <button
-        type="button"
-        onClick={onBack}
-        className="flex items-center gap-1 text-sm text-muted hover:text-foreground"
-      >
-        <ArrowLeft size={16} />
-        {WEEKDAY_LABELS[day]}
-      </button>
-
-      <h2 className="text-xl font-bold">{groupLabel(group)}</h2>
-
-      {exercises.length > 0 && (
-        <ul className="divide-y divide-border rounded-2xl bg-surface ring-1 ring-border">
-          {exercises.map((exercise, index) => (
-            <li key={exercise.id} className="flex items-center gap-3 px-4 py-3">
-              <span className="w-4 text-sm text-muted">{index + 1}</span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">{exercise.name}</p>
-                <p className="text-xs text-muted">
-                  {exercise.sets} × {exercise.reps}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => onRemoveExercise(day, group, exercise.id)}
-                className="text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-              >
-                Remove
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div>
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-sm font-medium">Pick exercises</p>
-          <div className="flex gap-2 text-xs text-muted">
-            <label className="flex items-center gap-1">
-              Sets
-              <input
-                type="number"
-                min={1}
-                value={sets}
-                onChange={(e) => setSets(e.target.value)}
-                className="no-spinner w-10 rounded-md bg-surface px-1 py-1 text-center outline-none ring-1 ring-border"
-              />
-            </label>
-            <label className="flex items-center gap-1">
-              Reps
-              <input
-                type="number"
-                min={1}
-                value={reps}
-                onChange={(e) => setReps(e.target.value)}
-                className="no-spinner w-10 rounded-md bg-surface px-1 py-1 text-center outline-none ring-1 ring-border"
-              />
-            </label>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {library.map((exercise) => {
-            const added = plannedNames.has(exercise.name.toLowerCase())
-            return (
-              <button
-                key={exercise.id}
-                type="button"
-                disabled={added}
-                onClick={() => addFromLibrary(exercise.name)}
-                className={[
-                  'rounded-full px-3 py-1.5 text-xs font-medium transition',
-                  added
-                    ? 'bg-foreground/10 text-muted line-through'
-                    : 'bg-surface ring-1 ring-border hover:bg-foreground hover:text-background',
-                ].join(' ')}
-              >
-                {exercise.name}
-              </button>
-            )
-          })}
+    <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="relative z-30 shrink-0 bg-background/95 pb-4 backdrop-blur-sm">
+        <div className="flex w-full items-center py-0.5">
+          {appInstalled ? (
+            <span className="min-w-0 text-sm leading-snug text-muted">{WEEKDAY_LABELS[day]}</span>
+          ) : (
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex min-w-0 items-center gap-1.5 text-sm leading-snug text-muted transition hover:text-foreground"
+            >
+              <ArrowLeft size={15} className="shrink-0" strokeWidth={2} />
+              <span>{WEEKDAY_LABELS[day]}</span>
+            </button>
+          )}
+          <span className="plan-muscle-label ml-auto shrink-0 pl-4 text-[11px] font-medium uppercase leading-none tracking-[0.14em]">
+            {groupLabel(group)}
+          </span>
         </div>
       </div>
 
-      <form onSubmit={handleCustomAdd} className="flex gap-2">
-        <input
-          type="text"
-          value={customName}
-          onChange={(e) => setCustomName(e.target.value)}
-          placeholder="Custom exercise"
-          className="min-w-0 flex-1 rounded-xl bg-surface px-3 py-2.5 text-sm outline-none ring-1 ring-border"
-        />
-        <button
-          type="submit"
-          className="flex h-10 w-10 items-center justify-center rounded-xl bg-foreground text-background"
-          aria-label="Add exercise"
-        >
-          <Plus size={18} />
-        </button>
-      </form>
-    </div>
+      {exercises.length > 0 && (
+        <div className="shrink-0 bg-background pb-4">
+          {shouldCompressAdded ? (
+            <button
+              type="button"
+              onClick={() => setAddedExpanded(true)}
+              className="flex w-full items-center justify-between gap-3 rounded-2xl bg-surface px-4 py-3 text-left ring-1 ring-border transition hover:bg-surface/80"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium">
+                  {exercises.length} exercises added
+                </p>
+                <p className="mt-0.5 truncate text-xs text-muted">
+                  {addedSummary}
+                  {exercises.length > 2 ? ` +${exercises.length - 2} more` : ''}
+                </p>
+              </div>
+              <ChevronDown size={16} className="shrink-0 text-muted" strokeWidth={2} />
+            </button>
+          ) : (
+            <div className="overflow-hidden rounded-xl bg-surface/50 ring-1 ring-border/50">
+              {exercises.length >= ADDED_COMPRESS_THRESHOLD && (
+                <div className="flex items-center justify-between gap-2 border-b border-border/50 px-3 py-1.5">
+                  <p className="text-[11px] font-medium text-muted">
+                    {exercises.length} exercises added
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setAddedExpanded(false)}
+                    className="flex h-5 shrink-0 items-center gap-0.5 rounded-full bg-foreground/5 px-2 text-[10px] font-medium text-muted/80 ring-1 ring-border/50 transition hover:bg-foreground/10 hover:text-muted dark:bg-white/5 dark:ring-white/10"
+                  >
+                    Collapse
+                    <ChevronDown size={10} className="rotate-180" strokeWidth={2} />
+                  </button>
+                </div>
+              )}
+              <ul className="max-h-[min(40vh,16rem)] divide-y divide-border overflow-y-auto overscroll-contain">
+                {exercises.map((exercise) => (
+                  <li
+                    key={exercise.id}
+                    className="flex items-center justify-between gap-3 px-4 py-2.5"
+                  >
+                    <p className="min-w-0 truncate text-sm font-medium">{exercise.name}</p>
+                    <button
+                      type="button"
+                      onClick={() => onRemoveExercise(day, group, exercise.id)}
+                      aria-label={`Remove ${exercise.name}`}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-red-600 transition hover:bg-red-500/10 dark:text-red-400"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        {availableLibrary.length > 0 ? (
+          <>
+            <div className="shrink-0 bg-background pb-2">
+              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+                Available exercises
+              </p>
+            </div>
+            <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pb-[calc(var(--mobile-nav-height)+0.75rem)] lg:pb-6">
+              <ul className="divide-y divide-border">
+                {availableLibrary.map((exercise) => (
+                  <li key={exercise.id} className="flex items-center gap-3 py-2.5">
+                    <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg ring-1 ring-border/60">
+                      <img
+                        src={exercise.image}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium leading-snug">{exercise.name}</p>
+                      <p className="mt-0.5 truncate text-xs text-muted">{exercise.equipment}</p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(`/exercises/${exercise.id}`, {
+                            state: { fromPlan: true, planDay: day, planMuscle: group },
+                          })
+                        }
+                        className="flex h-6 items-center gap-0.5 rounded-full bg-foreground/5 px-2.5 text-[11px] font-medium text-muted ring-1 ring-border/60 backdrop-blur-sm transition hover:bg-foreground/10 hover:text-foreground dark:bg-white/5 dark:ring-white/10 dark:hover:bg-white/10"
+                      >
+                        Explore
+                        <ChevronRight size={11} strokeWidth={2} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => addFromLibrary(exercise.name)}
+                        aria-label={`Add ${exercise.name}`}
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500/20 text-green-600 ring-1 ring-green-500/30 backdrop-blur-sm transition hover:bg-green-500/30 dark:bg-green-500/15 dark:text-green-400 dark:ring-green-400/25 dark:hover:bg-green-500/25"
+                      >
+                        <Plus size={12} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
+        ) : exercises.length > 0 ? (
+          <div className="flex-1 overflow-y-auto pb-[calc(var(--mobile-nav-height)+0.75rem)] lg:pb-6">
+            <p className="py-2 text-center text-sm text-muted">All exercises added for this muscle.</p>
+          </div>
+        ) : null}
+      </div>
+    </section>
   )
 }
 
@@ -430,14 +505,16 @@ export default function WeeklyPlanPanel({
 
   if (planDay && planMuscle) {
     return (
-      <MuscleScreen
-        day={planDay}
-        group={planMuscle}
-        exercises={exercisesForMuscle(plan[planDay], planMuscle)}
-        onBack={() => onNavigateDay(planDay)}
-        onAddExercise={onAddExercise}
-        onRemoveExercise={onRemoveExercise}
-      />
+      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+        <MuscleScreen
+          day={planDay}
+          group={planMuscle}
+          exercises={exercisesForMuscle(plan[planDay], planMuscle)}
+          onBack={() => onNavigateDay(planDay)}
+          onAddExercise={onAddExercise}
+          onRemoveExercise={onRemoveExercise}
+        />
+      </div>
     )
   }
 
@@ -457,7 +534,9 @@ export default function WeeklyPlanPanel({
 
   return (
     <div className="space-y-3">
-      <h2 className="text-sm font-medium uppercase tracking-wider text-muted">Weekly plan</h2>
+      <h2 className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+        Weekly plan
+      </h2>
       <WeekGrid
         plan={plan}
         onSelectDay={onNavigateDay}

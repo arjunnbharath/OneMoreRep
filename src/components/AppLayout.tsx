@@ -17,9 +17,8 @@ export default function AppLayout() {
   const location = useLocation()
   const { user } = useAuth()
   const isWorkoutDetail = location.pathname.startsWith('/workout/')
-  const hideMobileNavSpacer =
-    location.pathname === '/tracker/workout/library' ||
-    location.pathname.startsWith('/tracker/workout/library/')
+  const isTrackerRoute = location.pathname.startsWith('/tracker')
+  const hideMobileNavSpacer = isTrackerRoute
 
   function isNavActive(to: string, exact?: boolean) {
     if (isWorkoutDetail && to.startsWith('/tracker')) return true
