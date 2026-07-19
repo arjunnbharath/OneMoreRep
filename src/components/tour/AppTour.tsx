@@ -21,6 +21,38 @@ interface AppTourProps {
 }
 
 const SPOTLIGHT_PADDING = 10
+const MOVE_DURATION_MS = 650
+const MOVE_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'
+
+function waitForScrollEnd(timeout = 700) {
+  return new Promise<void>((resolve) => {
+    let settled = false
+    let debounceTimer = 0
+    let maxTimer = 0
+
+    const finish = () => {
+      if (settled) return
+      settled = true
+      window.clearTimeout(debounceTimer)
+      window.clearTimeout(maxTimer)
+      window.removeEventListener('scroll', onScroll, true)
+      window.removeEventListener('scrollend', onScrollEnd)
+      resolve()
+    }
+
+    const onScroll = () => {
+      window.clearTimeout(debounceTimer)
+      debounceTimer = window.setTimeout(finish, 100)
+    }
+
+    const onScrollEnd = () => finish()
+
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('scrollend', onScrollEnd, { once: true })
+    debounceTimer = window.setTimeout(finish, 120)
+    maxTimer = window.setTimeout(finish, timeout)
+  })
+}
 
 function findVisibleElement(selector: string): Element | null {
   const elements = document.querySelectorAll(selector)
@@ -217,6 +249,8 @@ export default function AppTour({
   const [ready, setReady] = useState(false)
   const [measuring, setMeasuring] = useState(false)
   const measuringRef = useRef(false)
+  const transitionLockRef = useRef(false)
+  const hasShownRef = useRef(false)
   const activeSelectorRef = useRef<string | null>(null)
   const resolveSelectorRef = useRef<(() => string | undefined) | null>(null)
   const updateGenerationRef = useRef(0)
@@ -249,7 +283,7 @@ export default function AppTour({
     let selector: string | undefined
     let element: Element | null = null
 
-    for (let attempt = 0; attempt < 24; attempt++) {
+    for (let attempt = 0; attempt < 28; attempt++) {
       if (isStale()) return
 
       selector = resolveSelectorRef.current()
@@ -260,7 +294,7 @@ export default function AppTour({
       const measured = measureTarget(selector)
       if (element && measured) break
 
-      await wait(attempt < 4 ? 50 : 80)
+      await wait(attempt < 6 ? 40 : 70)
     }
 
     if (isStale()) return
@@ -270,22 +304,32 @@ export default function AppTour({
       if (initial && !isInViewport(initial, selector) && !isFixedOrSticky(element)) {
         element.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
         scrollTargetIntoView(element, 'smooth', selector)
-        await wait(320)
+        await waitForScrollEnd()
         await waitForNextFrame()
         if (isStale()) return
       } else if (!isFixedOrSticky(element)) {
-        scrollTargetIntoView(element, 'auto', selector)
+        scrollTargetIntoView(element, 'smooth', selector)
+        await waitForScrollEnd(400)
         await waitForNextFrame()
         if (isStale()) return
       }
 
       const nextRect = measureTarget(selector)
+      transitionLockRef.current = true
+      window.setTimeout(() => {
+        transitionLockRef.current = false
+      }, MOVE_DURATION_MS + 50)
       setRect((current) => (rectsEqual(current, nextRect) ? current : nextRect))
     } else {
+      transitionLockRef.current = true
+      window.setTimeout(() => {
+        transitionLockRef.current = false
+      }, MOVE_DURATION_MS + 50)
       activeSelectorRef.current = null
       setRect(null)
     }
 
+    hasShownRef.current = true
     setReady(true)
     setMeasuring(false)
     measuringRef.current = false
@@ -294,6 +338,8 @@ export default function AppTour({
   useEffect(() => {
     if (!open) {
       updateGenerationRef.current += 1
+      hasShownRef.current = false
+      transitionLockRef.current = false
       setRect(null)
       setReady(false)
       setMeasuring(false)
@@ -319,7 +365,7 @@ export default function AppTour({
     let frame = 0
 
     function remeasureTarget() {
-      if (measuringRef.current) return
+      if (measuringRef.current || transitionLockRef.current) return
       const selector = resolveSelectorRef.current?.() ?? activeSelectorRef.current
       if (!selector) return
 
@@ -375,6 +421,8 @@ export default function AppTour({
 
   const tooltip = getTooltipPosition(rect, placement, tooltipGap, activeSelectorRef.current)
   const isCenter = placement === 'center' || !rect
+  const showTooltip = ready || hasShownRef.current
+  const moveTransition = `top ${MOVE_DURATION_MS}ms ${MOVE_EASING}, left ${MOVE_DURATION_MS}ms ${MOVE_EASING}, width ${MOVE_DURATION_MS}ms ${MOVE_EASING}, opacity 280ms ease-out, transform 280ms ease-out`
 
   function handleNext() {
     if (isLast) {
@@ -397,7 +445,7 @@ export default function AppTour({
     >
       {rect ? (
         <div
-          className="pointer-events-auto fixed transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[top,left,width,height]"
+          className="pointer-events-auto fixed will-change-[top,left,width,height,border-radius]"
           style={{
             top: rect.top,
             left: rect.left,
@@ -405,28 +453,41 @@ export default function AppTour({
             height: rect.height,
             borderRadius: rect.radius,
             boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.72)',
+            pointerEvents: 'auto',
+            transition: `top ${MOVE_DURATION_MS}ms ${MOVE_EASING}, left ${MOVE_DURATION_MS}ms ${MOVE_EASING}, width ${MOVE_DURATION_MS}ms ${MOVE_EASING}, height ${MOVE_DURATION_MS}ms ${MOVE_EASING}, border-radius ${MOVE_DURATION_MS}ms ${MOVE_EASING}`,
           }}
+          aria-hidden="true"
         />
       ) : (
-        <div className="absolute inset-0 bg-black/72 transition-opacity duration-300" />
+        <div
+          className="absolute inset-0 bg-black/72"
+          style={{
+            opacity: showTooltip ? 1 : 0,
+            transition: 'opacity 320ms ease-out',
+          }}
+        />
       )}
 
       <div
         className={[
-          'fixed z-[201] touch-auto overflow-hidden rounded-2xl bg-surface shadow-2xl ring-1 ring-border transition-[opacity,transform] duration-300 ease-out pointer-events-auto',
-          ready ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
-          measuring && ready ? 'scale-[0.99] opacity-90' : '',
+          'fixed z-[201] touch-auto overflow-hidden rounded-2xl bg-surface shadow-2xl ring-1 ring-border pointer-events-auto',
+          showTooltip ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0',
+          measuring ? 'opacity-95' : '',
         ].join(' ')}
         style={{
           top: tooltip.top,
           left: tooltip.left,
           width: tooltip.width,
+          transition: showTooltip ? moveTransition : undefined,
         }}
       >
         <div className="h-1 bg-border/50">
           <div
-            className="h-full bg-foreground/80 transition-all duration-300 ease-out"
-            style={{ width: `${progress}%` }}
+            className="h-full bg-foreground/80"
+            style={{
+              width: `${progress}%`,
+              transition: `width ${MOVE_DURATION_MS}ms ${MOVE_EASING}`,
+            }}
           />
         </div>
 
