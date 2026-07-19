@@ -12,13 +12,13 @@ import { WEEKDAYS } from '../types/workoutPlan'
 import { emptyWeeklyPlan } from './workoutPlan'
 
 const PUSH: ExerciseGroup[] = ['chest', 'shoulders', 'triceps']
-const PULL: ExerciseGroup[] = ['back', 'biceps']
+const PULL: ExerciseGroup[] = ['back', 'biceps', 'forearms']
 const LEGS: ExerciseGroup[] = ['legs', 'calves']
-const UPPER: ExerciseGroup[] = ['chest', 'back', 'shoulders', 'biceps', 'triceps']
+const UPPER: ExerciseGroup[] = ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'forearms']
 const LOWER: ExerciseGroup[] = ['legs', 'calves', 'abdominals']
 const FULL_BODY: ExerciseGroup[] = ['chest', 'back', 'shoulders', 'legs', 'abdominals']
 const BRO_CHEST_TRI: ExerciseGroup[] = ['chest', 'triceps']
-const BRO_BACK_BI: ExerciseGroup[] = ['back', 'biceps']
+const BRO_BACK_BI: ExerciseGroup[] = ['back', 'biceps', 'forearms']
 const BRO_LEGS: ExerciseGroup[] = ['legs', 'calves']
 const SHOULDERS_ABS: ExerciseGroup[] = ['shoulders', 'abdominals']
 

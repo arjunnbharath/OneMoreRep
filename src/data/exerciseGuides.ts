@@ -4,6 +4,7 @@ export type ExerciseGroup =
   | 'shoulders'
   | 'biceps'
   | 'triceps'
+  | 'forearms'
   | 'abdominals'
   | 'legs'
   | 'calves'
@@ -25,6 +26,7 @@ export const exerciseGroupLabels: Record<ExerciseGroup, string> = {
   shoulders: 'Shoulders',
   biceps: 'Biceps',
   triceps: 'Triceps',
+  forearms: 'Forearms',
   abdominals: 'Abdominals',
   legs: 'Legs',
   calves: 'Calves',
@@ -36,6 +38,7 @@ const groupImages: Record<ExerciseGroup, string> = {
   shoulders: '/images/workout-pic/shoulders/shoulder.gif',
   biceps: '/images/workout-pic/biceps/biceps.jpg',
   triceps: '/images/workout-pic/triceps/triceps.jpg',
+  forearms: '/images/workout-pic/forearms/forearms.webp',
   abdominals: '/images/workout-pic/abdominals/abs.jpg',
   legs: '/images/workout-pic/legs/leg.jpg',
   calves: '/images/workout-pic/calves/calves.jpg',
@@ -56,7 +59,10 @@ function inferEquipment(name: string): string {
   if (n.includes('machine') || n.includes('pec deck') || n.includes('hack squat')) return 'Machine'
   if (n.includes('kettlebell')) return 'Kettlebell'
   if (n.includes('band') || n.includes('mini-band')) return 'Resistance band'
-  if (n.includes('bodyweight') || n.includes('push up') || n.includes('pull up') || n.includes('plank') || n.includes('burpee') || n.includes('lunge') && !n.includes('dumbbell')) return 'Bodyweight'
+  if (n.includes('bodyweight') || n.includes('push up') || n.includes('pull up') || n.includes('plank') || n.includes('burpee') || n.includes('hang') || (n.includes('lunge') && !n.includes('dumbbell'))) return 'Bodyweight'
+  if (n.includes('farmer')) return 'Dumbbell'
+  if (n.includes('wrist curl')) return 'Barbell'
+  if (n.includes('hammer curl')) return 'Dumbbell'
   if (n.includes('smith')) return 'Smith machine'
   if (n.includes('ez bar')) return 'EZ bar'
   if (n.includes('medicine ball')) return 'Medicine ball'
@@ -162,6 +168,13 @@ const exerciseNames: Record<ExerciseGroup, string[]> = {
     'Seated Barbell Wrist Curl',
     'Seated Barbell Wrist Extension',
     'Reverse Barbell Curl',
+  ],
+  forearms: [
+    'Wrist Curls',
+    'Reverse Wrist Curls',
+    'Hammer Curls',
+    "Farmer's Carries",
+    'Dead Hangs',
   ],
   triceps: [
     'Lying Triceps Extension',

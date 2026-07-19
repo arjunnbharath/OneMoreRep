@@ -10,6 +10,7 @@ export const PLAN_GROUPS: ExerciseGroup[] = [
   'shoulders',
   'biceps',
   'triceps',
+  'forearms',
   'legs',
   'abdominals',
   'calves',

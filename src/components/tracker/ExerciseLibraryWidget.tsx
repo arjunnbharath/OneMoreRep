@@ -1,6 +1,8 @@
 import { BookOpen, ChevronRight } from 'lucide-react'
 import { exerciseGroups } from '../../data/exerciseGuides'
 
+const WIDGET_GROUP_LIMIT = 8
+
 interface ExerciseLibraryWidgetProps {
   onOpen: () => void
 }
@@ -8,6 +10,8 @@ interface ExerciseLibraryWidgetProps {
 export default function ExerciseLibraryWidget({
   onOpen,
 }: ExerciseLibraryWidgetProps) {
+  const previewGroups = exerciseGroups.slice(0, WIDGET_GROUP_LIMIT)
+
   return (
     <button
       type="button"
@@ -33,7 +37,7 @@ export default function ExerciseLibraryWidget({
       </div>
 
       <div className="grid grid-cols-4 gap-2 p-4 pt-3">
-        {exerciseGroups.map((group) => (
+        {previewGroups.map((group) => (
           <div
             key={group.id}
             className="relative aspect-[4/5] overflow-hidden rounded-xl ring-1 ring-border/50 transition duration-300 group-hover:ring-border"
