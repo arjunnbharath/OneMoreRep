@@ -61,6 +61,7 @@ import {
   trackerViewPath,
   type TrackerView,
 } from '../lib/trackerPaths'
+import { useTour } from '../context/TourContext'
 
 type DayWorkoutFlow = {
   day: Weekday
@@ -153,17 +154,21 @@ export default function Tracker() {
   const { preferences, ready: prefsReady, savePreferences, skipOnboarding } =
     useWorkoutPreferences()
 
+  const { isOpen: tourOpen } = useTour()
+
   const needsPlanOnboarding =
     planReady &&
     prefsReady &&
     daysWithPlan(plan).length === 0 &&
-    !preferences.onboarded
+    !preferences.onboarded &&
+    !tourOpen
 
   useEffect(() => {
-    if (needsPlanOnboarding && (planDay || planMuscle)) {
+    if (!needsPlanOnboarding || tourOpen) return
+    if (planDay || planMuscle) {
       navigate(TRACKER_PATHS.plan, { replace: true })
     }
-  }, [needsPlanOnboarding, planDay, planMuscle, navigate])
+  }, [needsPlanOnboarding, planDay, planMuscle, navigate, tourOpen])
 
   const [planSwipeHintKey, setPlanSwipeHintKey] = useState(0)
   const [dayWorkoutFlow, setDayWorkoutFlow] = useState<DayWorkoutFlow | null>(null)

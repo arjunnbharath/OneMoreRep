@@ -247,7 +247,7 @@ function DayScreen({
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
             {dayPlan.muscles.length === 0 ? 'Choose muscle groups' : 'Add muscle group'}
           </p>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          <div data-tour="plan-add-muscle" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {availableGroups.map((group) => (
               <button
                 key={group.id}
@@ -413,7 +413,7 @@ function MuscleScreen({
         </div>
       )}
 
-      <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="relative flex min-h-0 flex-1 flex-col" data-tour="plan-add-exercises">
         {availableLibrary.length > 0 ? (
           <>
             <div className="shrink-0 space-y-2.5 pb-2">
@@ -442,7 +442,7 @@ function MuscleScreen({
             <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain px-px pb-[calc(var(--mobile-nav-height)+0.75rem)] lg:pb-6">
               {filteredAvailable.length > 0 ? (
                 <ul className="space-y-2">
-                  {filteredAvailable.map((exercise) => (
+                  {filteredAvailable.map((exercise, index) => (
                     <li
                       key={exercise.id}
                       className="flex min-w-0 items-center gap-2.5 rounded-2xl bg-surface p-2.5 ring-1 ring-border"
@@ -475,6 +475,7 @@ function MuscleScreen({
                           type="button"
                           onClick={() => addFromLibrary(exercise.name)}
                           aria-label={`Add ${exercise.name}`}
+                          data-tour={index === 0 ? 'plan-add-exercise-btn' : undefined}
                           className="flex h-7 w-7 items-center justify-center rounded-full bg-green-500/20 text-green-600 ring-1 ring-green-500/30 backdrop-blur-sm transition hover:bg-green-500/30 dark:bg-green-500/15 dark:text-green-400 dark:ring-green-400/25"
                         >
                           <Plus size={13} strokeWidth={2.5} />

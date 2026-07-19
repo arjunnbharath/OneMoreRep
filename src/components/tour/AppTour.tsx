@@ -22,7 +22,38 @@ interface AppTourProps {
 
 const SPOTLIGHT_PADDING = 10
 
-function getTourBottomInset() {
+function findVisibleElement(selector: string): Element | null {
+  const elements = document.querySelectorAll(selector)
+  for (const element of elements) {
+    const rect = element.getBoundingClientRect()
+    if (rect.width > 0 && rect.height > 0) {
+      return element
+    }
+  }
+  return null
+}
+
+function isFixedOrSticky(element: Element) {
+  const style = window.getComputedStyle(element)
+  return style.position === 'fixed' || style.position === 'sticky'
+}
+
+function rectsEqual(a: Rect | null, b: Rect | null) {
+  if (!a || !b) return a === b
+  return (
+    Math.abs(a.top - b.top) < 0.5 &&
+    Math.abs(a.left - b.left) < 0.5 &&
+    Math.abs(a.width - b.width) < 0.5 &&
+    Math.abs(a.height - b.height) < 0.5 &&
+    Math.abs(a.radius - b.radius) < 0.5
+  )
+}
+
+function getTourBottomInset(activeSelector?: string | null) {
+  if (activeSelector?.includes('main-nav-mobile')) {
+    return 16
+  }
+
   const mobileNav = document.querySelector('[data-tour="main-nav-mobile"]')
   if (mobileNav) {
     const rect = mobileNav.getBoundingClientRect()
@@ -42,19 +73,25 @@ function getTourBottomInset() {
   return 88
 }
 
-function scrollTargetIntoView(element: Element) {
+function scrollTargetIntoView(
+  element: Element,
+  behavior: ScrollBehavior = 'smooth',
+  activeSelector?: string | null,
+) {
+  if (isFixedOrSticky(element)) return
+
   const topMargin = 16
-  const bottomLimit = window.innerHeight - getTourBottomInset()
+  const bottomLimit = window.innerHeight - getTourBottomInset(activeSelector)
   const rect = element.getBoundingClientRect()
 
   if (rect.bottom > bottomLimit) {
-    scrollByDelta(element, rect.bottom - bottomLimit)
+    scrollByDelta(element, rect.bottom - bottomLimit, behavior)
   } else if (rect.top < topMargin) {
-    scrollByDelta(element, rect.top - topMargin)
+    scrollByDelta(element, rect.top - topMargin, behavior)
   }
 }
 
-function scrollByDelta(element: Element, delta: number) {
+function scrollByDelta(element: Element, delta: number, behavior: ScrollBehavior = 'smooth') {
   if (Math.abs(delta) < 1) return
 
   let node: Element | null = element
@@ -71,13 +108,19 @@ function scrollByDelta(element: Element, delta: number) {
         style.overflow === 'auto' ||
         style.overflow === 'scroll')
     ) {
-      parent.scrollTop += delta
+      parent.scrollBy({ top: delta, behavior })
       return
     }
     node = parent
   }
 
-  window.scrollBy({ top: delta, behavior: 'auto' })
+  window.scrollBy({ top: delta, behavior })
+}
+
+function wait(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms)
+  })
 }
 
 function waitForNextFrame() {
@@ -89,7 +132,7 @@ function waitForNextFrame() {
 }
 
 function measureTarget(selector: string): Rect | null {
-  const element = document.querySelector(selector)
+  const element = findVisibleElement(selector)
   if (!element) return null
 
   const box = element.getBoundingClientRect()
@@ -106,9 +149,9 @@ function measureTarget(selector: string): Rect | null {
   }
 }
 
-function isInViewport(rect: Rect) {
+function isInViewport(rect: Rect, activeSelector?: string | null) {
   const margin = 16
-  const bottomLimit = window.innerHeight - getTourBottomInset()
+  const bottomLimit = window.innerHeight - getTourBottomInset(activeSelector)
   return (
     rect.top >= margin &&
     rect.left >= margin &&
@@ -120,10 +163,11 @@ function getTooltipPosition(
   rect: Rect | null,
   placement: TourPlacement,
   gap = 24,
+  activeSelector?: string | null,
 ): { top: number; left: number; width: number } {
   const margin = 16
   const tooltipWidth = Math.min(340, window.innerWidth - margin * 2)
-  const bottomLimit = window.innerHeight - getTourBottomInset()
+  const bottomLimit = window.innerHeight - getTourBottomInset(activeSelector)
 
   if (!rect || placement === 'center') {
     return {
@@ -171,9 +215,11 @@ export default function AppTour({
 }: AppTourProps) {
   const [rect, setRect] = useState<Rect | null>(null)
   const [ready, setReady] = useState(false)
+  const [measuring, setMeasuring] = useState(false)
   const measuringRef = useRef(false)
   const activeSelectorRef = useRef<string | null>(null)
   const resolveSelectorRef = useRef<(() => string | undefined) | null>(null)
+  const updateGenerationRef = useRef(0)
 
   const step = steps[stepIndex]
   const isFirst = stepIndex === 0
@@ -185,61 +231,87 @@ export default function AppTour({
   const updateRect = useCallback(async () => {
     if (!open || !step) return
 
+    const generation = updateGenerationRef.current + 1
+    updateGenerationRef.current = generation
+    const isStale = () => updateGenerationRef.current !== generation
+
     measuringRef.current = true
-    setReady(false)
-    setRect(null)
+    setMeasuring(true)
     if (step.onEnter) await step.onEnter()
+    if (isStale()) return
 
     resolveSelectorRef.current = () => step.getTarget?.() ?? step.target
 
-    await new Promise((resolve) => window.setTimeout(resolve, 150))
+    await waitForNextFrame()
+    await waitForNextFrame()
+    if (isStale()) return
 
     let selector: string | undefined
     let element: Element | null = null
 
-    for (let attempt = 0; attempt < 20; attempt++) {
+    for (let attempt = 0; attempt < 24; attempt++) {
+      if (isStale()) return
+
       selector = resolveSelectorRef.current()
       activeSelectorRef.current = selector ?? null
       if (!selector) break
 
-      element = document.querySelector(selector)
+      element = findVisibleElement(selector)
       const measured = measureTarget(selector)
       if (element && measured) break
 
-      await new Promise((resolve) => window.setTimeout(resolve, 100))
+      await wait(attempt < 4 ? 50 : 80)
     }
+
+    if (isStale()) return
 
     if (selector && element) {
       const initial = measureTarget(selector)
-      if (initial && !isInViewport(initial)) {
-        element.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' })
-        await new Promise((resolve) => window.setTimeout(resolve, 80))
-        scrollTargetIntoView(element)
+      if (initial && !isInViewport(initial, selector) && !isFixedOrSticky(element)) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+        scrollTargetIntoView(element, 'smooth', selector)
+        await wait(320)
         await waitForNextFrame()
-      } else {
-        scrollTargetIntoView(element)
+        if (isStale()) return
+      } else if (!isFixedOrSticky(element)) {
+        scrollTargetIntoView(element, 'auto', selector)
         await waitForNextFrame()
+        if (isStale()) return
       }
 
-      setRect(measureTarget(selector))
+      const nextRect = measureTarget(selector)
+      setRect((current) => (rectsEqual(current, nextRect) ? current : nextRect))
     } else {
       activeSelectorRef.current = null
       setRect(null)
     }
 
     setReady(true)
+    setMeasuring(false)
     measuringRef.current = false
   }, [open, step])
 
   useEffect(() => {
     if (!open) {
+      updateGenerationRef.current += 1
       setRect(null)
       setReady(false)
+      setMeasuring(false)
       activeSelectorRef.current = null
       return
     }
     void updateRect()
   }, [open, stepIndex, updateRect])
+
+  useEffect(() => {
+    if (!open) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [open])
 
   useLayoutEffect(() => {
     if (!open) return
@@ -255,7 +327,8 @@ export default function AppTour({
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
         if (measuringRef.current) return
-        setRect(measureTarget(selector))
+        const nextRect = measureTarget(selector)
+        setRect((current) => (rectsEqual(current, nextRect) ? current : nextRect))
       })
     }
 
@@ -263,7 +336,7 @@ export default function AppTour({
     window.addEventListener('scroll', remeasureTarget, true)
 
     const selector = resolveSelectorRef.current?.() ?? activeSelectorRef.current
-    const element = selector ? document.querySelector(selector) : null
+    const element = selector ? findVisibleElement(selector) : null
     let observer: ResizeObserver | null = null
     if (element && typeof ResizeObserver !== 'undefined') {
       observer = new ResizeObserver(() => remeasureTarget())
@@ -300,7 +373,7 @@ export default function AppTour({
 
   if (!open || !step) return null
 
-  const tooltip = getTooltipPosition(rect, placement, tooltipGap)
+  const tooltip = getTooltipPosition(rect, placement, tooltipGap, activeSelectorRef.current)
   const isCenter = placement === 'center' || !rect
 
   function handleNext() {
@@ -324,7 +397,7 @@ export default function AppTour({
     >
       {rect ? (
         <div
-          className="pointer-events-auto fixed transition-all duration-300 ease-out"
+          className="pointer-events-auto fixed transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[top,left,width,height]"
           style={{
             top: rect.top,
             left: rect.left,
@@ -335,13 +408,14 @@ export default function AppTour({
           }}
         />
       ) : (
-        <div className="absolute inset-0 bg-black/72" />
+        <div className="absolute inset-0 bg-black/72 transition-opacity duration-300" />
       )}
 
       <div
         className={[
-          'fixed z-[201] touch-auto overflow-hidden rounded-2xl bg-surface shadow-2xl ring-1 ring-border transition-all duration-300 pointer-events-auto',
+          'fixed z-[201] touch-auto overflow-hidden rounded-2xl bg-surface shadow-2xl ring-1 ring-border transition-[opacity,transform] duration-300 ease-out pointer-events-auto',
           ready ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
+          measuring && ready ? 'scale-[0.99] opacity-90' : '',
         ].join(' ')}
         style={{
           top: tooltip.top,

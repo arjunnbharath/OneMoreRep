@@ -1,10 +1,24 @@
 import type { NavigateFunction } from 'react-router-dom'
+import type { ExerciseGroup } from '../data/exerciseGuides'
 import type { TourStep } from './tourTypes'
 import { getTodayWeekday, WEEKDAY_LABELS } from './workoutPlan'
 import { TRACKER_PATHS } from './trackerPaths'
 
 interface AppTourActions {
   navigate: NavigateFunction
+}
+
+const TOUR_PLAN_MUSCLE: ExerciseGroup = 'chest'
+
+function getVisibleMainNavSelector(): string {
+  const mobileNav = document.querySelector('[data-tour="main-nav-mobile"]')
+  if (mobileNav) {
+    const rect = mobileNav.getBoundingClientRect()
+    if (rect.width > 0 && rect.height > 0) {
+      return '[data-tour="main-nav-mobile"]'
+    }
+  }
+  return '[data-tour="main-nav-desktop"]'
 }
 
 function getVisibleTrackerNavSelector(): string {
@@ -85,11 +99,9 @@ export function createAppTourSteps({ navigate }: AppTourActions): TourStep[] {
       id: 'main-nav',
       title: 'Get around fast',
       body: 'Jump between Home, Calories, Progress, Exercises, and Profile from here.',
-      getTarget: () =>
-        document.querySelector('[data-tour="main-nav-mobile"]')
-          ? '[data-tour="main-nav-mobile"]'
-          : '[data-tour="main-nav-desktop"]',
+      getTarget: () => getVisibleMainNavSelector(),
       placement: 'top',
+      tooltipGap: 16,
     },
     {
       id: 'tracker-tabs',
@@ -98,6 +110,52 @@ export function createAppTourSteps({ navigate }: AppTourActions): TourStep[] {
       getTarget: () => getVisibleTrackerNavSelector(),
       placement: 'bottom',
       onEnter: () => navigate(TRACKER_PATHS.plan),
+    },
+    {
+      id: 'plan-week',
+      title: 'Build your weekly plan',
+      body: 'See your full week at a glance. Tap any day to plan muscle groups and exercises.',
+      target: '[data-tour="plan-week-grid"]',
+      placement: 'bottom',
+      tooltipGap: 20,
+      onEnter: () => navigate(TRACKER_PATHS.plan),
+    },
+    {
+      id: 'plan-day',
+      title: 'Add muscle groups',
+      body: `Open a day and pick the muscles you want to train. Let's set up ${todayLabel}.`,
+      getTarget: () => {
+        if (document.querySelector('[data-tour="plan-add-muscle"]')) {
+          return '[data-tour="plan-add-muscle"]'
+        }
+        if (document.querySelector('[data-tour="plan-day-header"]')) {
+          return '[data-tour="plan-day-header"]'
+        }
+        return '[data-tour="plan-week-grid"]'
+      },
+      placement: 'bottom',
+      tooltipGap: 20,
+      onEnter: () => navigate(TRACKER_PATHS.planDay(today)),
+    },
+    {
+      id: 'plan-add-exercise',
+      title: 'Add exercises',
+      body: 'Browse exercises for each muscle group and tap the green + button to add them to your plan.',
+      getTarget: () => {
+        if (document.querySelector('[data-tour="plan-add-exercises"]')) {
+          return '[data-tour="plan-add-exercises"]'
+        }
+        if (document.querySelector('[data-tour="plan-add-exercise-btn"]')) {
+          return '[data-tour="plan-add-exercise-btn"]'
+        }
+        if (document.querySelector('[data-tour="plan-muscle-header"]')) {
+          return '[data-tour="plan-muscle-header"]'
+        }
+        return undefined
+      },
+      placement: 'top',
+      tooltipGap: 16,
+      onEnter: () => navigate(TRACKER_PATHS.planMuscle(today, TOUR_PLAN_MUSCLE)),
     },
     {
       id: 'workout-ready',

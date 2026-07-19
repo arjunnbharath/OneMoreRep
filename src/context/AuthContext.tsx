@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { changePassword as apiChangePassword, deleteAccount as apiDeleteAccount, getMe, login as apiLogin, register as apiRegister, updateAvatar as apiUpdateAvatar, type User } from '../lib/api'
 import { clearUserDataCache } from '../lib/userDataSync'
+import { markPendingTour } from '../lib/tourSession'
 
 const TOKEN_KEY = 'onemorerep-token'
 const USER_KEY = 'onemorerep-user'
@@ -78,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (name: string, username: string, email: string, password: string) => {
       const data = await apiRegister(name, username, email, password)
       persist(data.token, data.user)
+      markPendingTour()
     },
     [persist],
   )

@@ -9,10 +9,9 @@ import {
 } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppTour from '../components/tour/AppTour'
-import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { useWorkoutPreferences } from '../hooks/useWorkoutPreferences'
 import { createAppTourSteps } from '../lib/appTour'
-import { daysWithPlan } from '../lib/workoutPlan'
+import { clearPendingTour, hasPendingTour } from '../lib/tourSession'
 
 interface TourContextValue {
   activeStepId: string | null
@@ -25,7 +24,6 @@ const TourContext = createContext<TourContextValue | null>(null)
 
 export function TourProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
-  const { plan, ready: planReady } = useWorkoutPlan()
   const { preferences, ready: prefsReady, completeUiTour } = useWorkoutPreferences()
   const [isOpen, setIsOpen] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
@@ -33,9 +31,6 @@ export function TourProvider({ children }: { children: ReactNode }) {
 
   const steps = useMemo(() => createAppTourSteps({ navigate }), [navigate])
   const activeStepId = isOpen ? (steps[stepIndex]?.id ?? null) : null
-
-  const needsPlanOnboarding =
-    planReady && prefsReady && daysWithPlan(plan).length === 0 && !preferences.onboarded
 
   const startTour = useCallback(() => {
     setTourSession((session) => session + 1)
@@ -54,23 +49,25 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const finishTour = useCallback(() => {
     setIsOpen(false)
     setStepIndex(0)
+    clearPendingTour()
     completeUiTour()
   }, [completeUiTour])
 
   useEffect(() => {
-    if (!planReady || !prefsReady || needsPlanOnboarding) return
-    if (!preferences.onboarded || preferences.uiTourCompleted) return
+    if (!prefsReady || preferences.uiTourCompleted || !hasPendingTour()) return
 
-    const timer = window.setTimeout(() => startTour(), 1000)
-    return () => window.clearTimeout(timer)
-  }, [
-    planReady,
-    prefsReady,
-    needsPlanOnboarding,
-    preferences.onboarded,
-    preferences.uiTourCompleted,
-    startTour,
-  ])
+    let cancelled = false
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!cancelled) startTour()
+      })
+    })
+
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(frame)
+    }
+  }, [prefsReady, preferences.uiTourCompleted, startTour])
 
   const value = useMemo(
     () => ({
