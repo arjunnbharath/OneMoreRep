@@ -6,6 +6,7 @@ import {
   SettingsRow,
   SettingsSection,
 } from './SettingsUI'
+import { useCameraPermission } from '../../hooks/useCameraPermission'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 
 interface SettingsHubProps {
@@ -30,9 +31,14 @@ export default function SettingsHub({
   setTheme,
 }: SettingsHubProps) {
   const { supported, available, enabled } = usePushNotifications()
+  const { supported: cameraSupported, granted: cameraGranted } = useCameraPermission()
 
+  const totalPermissions = (supported && available ? 1 : 0) + (cameraSupported ? 1 : 0)
+  const activePermissions = (enabled ? 1 : 0) + (cameraGranted ? 1 : 0)
   const permissionsSummary =
-    supported && available ? `${enabled ? 1 : 0} of 1 active` : 'Not available'
+    totalPermissions === 0
+      ? 'Not available'
+      : `${activePermissions} of ${totalPermissions} active`
 
   return (
     <SettingsPageLayout title="Settings" subtitle="Profile" onBack={onBack}>

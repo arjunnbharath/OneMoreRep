@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Coffee,
   Cookie,
-  Loader2,
   Moon,
   Plus,
   ScanBarcode,
@@ -187,8 +186,6 @@ function AddFoodPanel({
   const [mealType, setMealType] = useState<MealType>(defaultMeal ?? 'lunch')
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null)
   const [grams, setGrams] = useState('100')
-  const [scanError, setScanError] = useState('')
-  const [scanning, setScanning] = useState(false)
   const [customName, setCustomName] = useState('')
   const [customCal, setCustomCal] = useState('')
   const [customProtein, setCustomProtein] = useState('')
@@ -214,25 +211,6 @@ function AddFoodPanel({
       fatPer100g: Number(customFat),
     })
     handleLog(food, 100)
-  }
-
-  async function handleBarcodeScan(barcode: string) {
-    setScanError('')
-    setScanning(true)
-    try {
-      const food = await lookupFoodByBarcode(barcode)
-      if (!food) {
-        setScanError('Product not found. Try searching by name instead.')
-        return
-      }
-      setSelectedFood(food)
-      setGrams(String(food.suggestedServingGrams ?? 100))
-      setTab('search')
-    } catch {
-      setScanError('Lookup failed. Check your connection and try again.')
-    } finally {
-      setScanning(false)
-    }
   }
 
   const tabLabels: Record<typeof tab, string> = {
@@ -368,17 +346,11 @@ function AddFoodPanel({
         )}
 
         {tab === 'scan' && (
-          <div className="space-y-3">
-            {scanning ? (
-              <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted">
-                <Loader2 size={18} className="animate-spin" />
-                Looking up product…
-              </div>
-            ) : (
-              <BarcodeScanner onScan={(code) => void handleBarcodeScan(code)} onClose={onClose} />
-            )}
-            {scanError && <p className="text-xs text-red-600 dark:text-red-400">{scanError}</p>}
-          </div>
+          <BarcodeScanner
+            lookupBarcode={lookupFoodByBarcode}
+            onFoodFound={(food, servingGrams) => handleLog(food, servingGrams)}
+            onClose={onClose}
+          />
         )}
 
         {tab === 'custom' && (

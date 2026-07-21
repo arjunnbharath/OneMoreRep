@@ -7,9 +7,9 @@ export interface ScannedFood extends FoodItem {
 
 export async function lookupFoodByBarcode(
   token: string,
-  barcode: string,
+  scanValue: string,
 ): Promise<ScannedFood | null> {
-  const normalized = barcode.replace(/\D/g, '')
+  const normalized = scanValue.trim()
   if (!normalized) return null
 
   try {

@@ -1,23 +1,76 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Barcode, Camera, Loader2 } from 'lucide-react'
 import Button from '../Button'
+import { useCameraPermission } from '../../hooks/useCameraPermission'
+import { extractBarcodeFromScan } from '../../lib/barcodeScan'
+import { macrosForGrams } from '../../lib/nutritionMath'
+import type { FoodItem } from '../../types/nutrition'
 
 interface BarcodeScannerProps {
-  onScan: (barcode: string) => void
+  lookupBarcode: (scanValue: string) => Promise<FoodItem | null>
+  onFoodFound: (food: FoodItem, servingGrams: number) => void
   onClose: () => void
 }
 
-export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
+const SCAN_FORMATS = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'qr_code'] as const
+const SERVING_PRESETS = [50, 100, 150, 200]
+
+export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [manualCode, setManualCode] = useState('')
   const [cameraError, setCameraError] = useState('')
+  const [lookupError, setLookupError] = useState('')
   const [starting, setStarting] = useState(true)
+  const [lookingUp, setLookingUp] = useState(false)
+  const [foundFood, setFoundFood] = useState<FoodItem | null>(null)
+  const [grams, setGrams] = useState('100')
   const streamRef = useRef<MediaStream | null>(null)
+  const lastLookupRef = useRef('')
+  const lookupBarcodeRef = useRef(lookupBarcode)
+
+  const { supported: cameraSupported, granted, denied, requesting, request } = useCameraPermission()
+
+  useEffect(() => {
+    lookupBarcodeRef.current = lookupBarcode
+  }, [lookupBarcode])
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop())
     streamRef.current = null
   }, [])
+
+  const runLookup = useCallback(async (scanValue: string) => {
+    const extracted = extractBarcodeFromScan(scanValue)
+    if (!extracted) {
+      setLookupError('Could not read a valid barcode from that scan.')
+      return
+    }
+
+    if (lastLookupRef.current === extracted) return
+    lastLookupRef.current = extracted
+
+    setLookupError('')
+    setLookingUp(true)
+    setFoundFood(null)
+
+    try {
+      const food = await lookupBarcodeRef.current(scanValue)
+      if (!food) {
+        setLookupError('Product not found in food database.')
+        lastLookupRef.current = ''
+        return
+      }
+
+      setFoundFood(food)
+      setGrams(String(food.suggestedServingGrams ?? 100))
+      stopCamera()
+    } catch {
+      setLookupError('Lookup failed. Check your connection and try again.')
+      lastLookupRef.current = ''
+    } finally {
+      setLookingUp(false)
+    }
+  }, [stopCamera])
 
   useEffect(() => {
     let cancelled = false
@@ -25,7 +78,7 @@ export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps)
     let frame = 0
 
     async function start() {
-      if (!('BarcodeDetector' in window)) {
+      if (!('BarcodeDetector' in window) || !granted) {
         setStarting(false)
         return
       }
@@ -46,15 +99,15 @@ export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps)
           await videoRef.current.play()
         }
 
-        detector = new window.BarcodeDetector!({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'] })
+        detector = new window.BarcodeDetector!({ formats: [...SCAN_FORMATS] })
 
         const scan = async () => {
-          if (cancelled || !videoRef.current || !detector) return
+          if (cancelled || !videoRef.current || !detector || lookingUp || foundFood) return
           try {
             const codes = await detector.detect(videoRef.current)
-            const match = codes.find((code) => (code.rawValue?.replace(/\D/g, '').length ?? 0) >= 8)
+            const match = codes.find((code) => Boolean(code.rawValue?.trim()))
             if (match?.rawValue) {
-              onScan(match.rawValue.replace(/\D/g, ''))
+              void runLookup(match.rawValue.trim())
               return
             }
           } catch {
@@ -80,19 +133,119 @@ export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps)
       cancelAnimationFrame(frame)
       stopCamera()
     }
-  }, [onScan, stopCamera])
+  }, [granted, lookingUp, foundFood, runLookup, stopCamera])
+
+  useEffect(() => {
+    const normalized = extractBarcodeFromScan(manualCode)
+    if (!normalized || normalized.length < 8) return
+
+    const timer = window.setTimeout(() => {
+      void runLookup(manualCode)
+    }, 700)
+
+    return () => window.clearTimeout(timer)
+  }, [manualCode, runLookup])
 
   function handleManualSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const normalized = manualCode.replace(/\D/g, '')
-    if (normalized.length >= 8) onScan(normalized)
+    if (manualCode.trim()) void runLookup(manualCode.trim())
+  }
+
+  function handleLogFound() {
+    if (!foundFood) return
+    onFoodFound(foundFood, Number(grams) || 100)
+  }
+
+  function resetScan() {
+    lastLookupRef.current = ''
+    setFoundFood(null)
+    setLookupError('')
+    setManualCode('')
+    setCameraError('')
   }
 
   const hasDetector = typeof window !== 'undefined' && 'BarcodeDetector' in window
+  const preview = foundFood ? macrosForGrams(foundFood, Number(grams) || 0) : null
+
+  if (foundFood && preview) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl bg-surface p-4 ring-1 ring-border">
+          <p className="font-medium">{foundFood.name}</p>
+          {foundFood.brand && <p className="text-xs text-muted">{foundFood.brand}</p>}
+          <p className="mt-2 text-xs text-muted">
+            {foundFood.caloriesPer100g} kcal / 100g · P {foundFood.proteinPer100g}g · C{' '}
+            {foundFood.carbsPer100g}g · F {foundFood.fatPer100g}g
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {SERVING_PRESETS.map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => setGrams(String(g))}
+              className={[
+                'rounded-full px-3 py-1 text-xs font-medium transition',
+                Number(grams) === g
+                  ? 'bg-foreground text-background'
+                  : 'bg-surface text-muted ring-1 ring-border',
+              ].join(' ')}
+            >
+              {g}g
+            </button>
+          ))}
+        </div>
+
+        <div className="rounded-2xl bg-surface px-4 py-3 text-sm ring-1 ring-border">
+          <span className="font-medium tabular-nums">{preview.calories} kcal</span>
+          <span className="text-muted">
+            {' '}
+            · P {preview.protein}g · C {preview.carbs}g · F {preview.fat}g
+          </span>
+        </div>
+
+        <div className="flex gap-2">
+          <Button type="button" variant="secondary" className="flex-1" onClick={resetScan}>
+            Scan again
+          </Button>
+          <Button type="button" className="flex-1" onClick={handleLogFound}>
+            Add to log
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
-      {hasDetector ? (
+      {cameraSupported && !granted && (
+        <div className="rounded-2xl bg-surface px-4 py-4 ring-1 ring-border">
+          <div className="flex items-start gap-3">
+            <Camera size={18} className="mt-0.5 shrink-0 text-muted" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">Camera access needed</p>
+              <p className="mt-1 text-xs text-muted">
+                {denied
+                  ? 'Camera is blocked. Allow it in Profile → Settings → Permissions, or in your browser site settings.'
+                  : 'Allow camera to scan barcodes and QR codes. We look up nutrition automatically.'}
+              </p>
+              {!denied && (
+                <Button
+                  type="button"
+                  className="mt-3 w-full py-2.5 text-sm"
+                  disabled={requesting}
+                  onClick={() => void request()}
+                >
+                  {requesting ? 'Requesting…' : 'Allow camera'}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {hasDetector && granted ? (
         <div className="relative overflow-hidden rounded-2xl bg-black ring-1 ring-border">
           <video
             ref={videoRef}
@@ -100,41 +253,59 @@ export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps)
             playsInline
             muted
           />
-          {starting && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-              <Loader2 size={24} className="animate-spin text-white" />
+          {(starting || lookingUp) && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white">
+              <Loader2 size={24} className="animate-spin" />
+              <p className="text-xs">{lookingUp ? 'Looking up product…' : 'Starting camera…'}</p>
             </div>
           )}
           <div className="pointer-events-none absolute inset-8 rounded-xl border-2 border-white/70" />
+          <p className="pointer-events-none absolute inset-x-0 bottom-3 text-center text-[11px] text-white/80">
+            Point at a barcode or QR code
+          </p>
         </div>
-      ) : (
+      ) : granted ? (
         <div className="rounded-2xl bg-surface px-4 py-8 text-center ring-1 ring-border">
           <Camera size={28} className="mx-auto text-muted" />
           <p className="mt-2 text-sm text-muted">
             Camera scanning isn&apos;t supported in this browser. Enter the barcode below.
           </p>
         </div>
-      )}
+      ) : null}
 
       {cameraError && <p className="text-xs text-amber-600 dark:text-amber-400">{cameraError}</p>}
+      {lookupError && <p className="text-xs text-red-600 dark:text-red-400">{lookupError}</p>}
 
       <form onSubmit={handleManualSubmit} className="space-y-3">
         <label className="flex items-center gap-2 rounded-2xl bg-surface px-4 py-3 ring-1 ring-border">
           <Barcode size={16} className="shrink-0 text-muted" />
           <input
             value={manualCode}
-            onChange={(e) => setManualCode(e.target.value.replace(/\D/g, ''))}
-            placeholder="Enter barcode number"
-            inputMode="numeric"
+            onChange={(e) => {
+              setManualCode(e.target.value)
+              setLookupError('')
+              lastLookupRef.current = ''
+            }}
+            placeholder="Enter barcode or paste QR content"
             className="w-full bg-transparent text-sm outline-none"
-            autoFocus={!hasDetector}
+            autoFocus={!hasDetector || !granted}
           />
         </label>
+        {lookingUp && (
+          <p className="flex items-center gap-2 text-xs text-muted">
+            <Loader2 size={14} className="animate-spin" />
+            Searching food database…
+          </p>
+        )}
         <div className="flex gap-2">
           <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" className="flex-1" disabled={manualCode.replace(/\D/g, '').length < 8}>
+          <Button
+            type="submit"
+            className="flex-1"
+            disabled={!extractBarcodeFromScan(manualCode) || lookingUp}
+          >
             Look up
           </Button>
         </div>

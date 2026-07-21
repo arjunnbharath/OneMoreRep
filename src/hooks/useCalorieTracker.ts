@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { commonFoods } from '../data/commonFoods'
 import { lookupFoodByBarcode as lookupBarcodeFood } from '../lib/barcodeFood'
+import { extractBarcodeFromScan } from '../lib/barcodeScan'
 import {
   calculateBmr,
   calculateCalorieTarget,
@@ -237,16 +238,16 @@ export function useCalorieTracker() {
   )
 
   const lookupFoodByBarcode = useCallback(
-    async (barcode: string) => {
+    async (scanValue: string) => {
       if (!token) return null
 
-      const normalized = barcode.replace(/\D/g, '')
+      const normalized = extractBarcodeFromScan(scanValue)
       if (!normalized) return null
 
       const existing = allFoods.find((food) => food.barcode === normalized)
       if (existing) return existing
 
-      const scanned = await lookupBarcodeFood(token, normalized)
+      const scanned = await lookupBarcodeFood(token, scanValue)
       if (!scanned) return null
 
       const item: FoodItem = {
