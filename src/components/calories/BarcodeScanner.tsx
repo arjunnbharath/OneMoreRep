@@ -3,6 +3,7 @@ import { Barcode, Camera, Loader2 } from 'lucide-react'
 import Button from '../Button'
 import { useCameraPermission } from '../../hooks/useCameraPermission'
 import { extractBarcodeFromScan } from '../../lib/barcodeScan'
+import { formatMacroPreview, formatNutritionPer100g } from '../../lib/foodNutritionDisplay'
 import { macrosForGrams } from '../../lib/nutritionMath'
 import type { FoodItem } from '../../types/nutrition'
 
@@ -177,10 +178,7 @@ export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: 
         <div className="rounded-2xl bg-surface p-4 ring-1 ring-border">
           <p className="font-medium">{foundFood.name}</p>
           {foundFood.brand && <p className="text-xs text-muted">{foundFood.brand}</p>}
-          <p className="mt-2 text-xs text-muted">
-            {foundFood.caloriesPer100g} kcal / 100g · P {foundFood.proteinPer100g}g · C{' '}
-            {foundFood.carbsPer100g}g · F {foundFood.fatPer100g}g
-          </p>
+          <p className="mt-2 text-xs text-muted">{formatNutritionPer100g(foundFood)}</p>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
@@ -203,10 +201,7 @@ export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: 
 
         <div className="rounded-2xl bg-surface px-4 py-3 text-sm ring-1 ring-border">
           <span className="font-medium tabular-nums">{preview.calories} kcal</span>
-          <span className="text-muted">
-            {' '}
-            · P {preview.protein}g · C {preview.carbs}g · F {preview.fat}g
-          </span>
+          <span className="text-muted"> {formatMacroPreview(preview)}</span>
         </div>
 
         <div className="flex gap-2">

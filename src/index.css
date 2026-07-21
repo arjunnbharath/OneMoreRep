@@ -244,6 +244,56 @@ input:-webkit-autofill:focus {
   min-height: 100vh;
 }
 
+@keyframes add-food-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes add-food-sheet-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(100%) scale(0.96);
+  }
+}
+
+.add-food-sheet {
+  transform-origin: 100% 100%;
+  will-change: transform, opacity;
+}
+
+.add-food-sheet--open {
+  animation: add-food-sheet-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.add-food-sheet--closed {
+  animation: add-food-sheet-out 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes add-food-step-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.add-food-step-enter {
+  animation: add-food-step-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 @keyframes calendar-month-fade-in {
   from {
     opacity: 0;

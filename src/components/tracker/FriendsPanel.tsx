@@ -1,7 +1,6 @@
 import { useState, type FormEvent, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, BellOff, ChevronRight, Hand, UserPlus, Users, X } from 'lucide-react'
-import FriendsActivityFeed from './FriendsActivityFeed'
 import UserAvatar from '../UserAvatar'
 import { useFriends } from '../../hooks/useFriends'
 import { useFriendNudges } from '../../hooks/useFriendNudges'
@@ -89,8 +88,6 @@ export default function FriendsPanel() {
           </div>
         </div>
       )}
-
-      <FriendsActivityFeed />
 
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">

@@ -4,7 +4,7 @@ import { AuthError } from '../auth-bridge.js'
 
 const require = createRequire(import.meta.url)
 const { getUserIdFromAuthHeader } = require('../../api/lib/friends.js')
-const { lookupBarcode } = require('../../api/lib/food.js')
+const { lookupBarcode, searchFood } = require('../../api/lib/food.js')
 
 const router = Router()
 
@@ -31,5 +31,28 @@ async function handleLookup(req: import('express').Request, res: import('express
 
 router.get('/barcode', handleLookup)
 router.get('/barcode/:code', handleLookup)
+
+async function handleSearch(req: import('express').Request, res: import('express').Response) {
+  try {
+    await getUserIdFromAuthHeader(req.headers.authorization)
+    const q = String(req.query.q ?? '').trim()
+    if (!q) {
+      res.status(400).json({ error: 'Search query is required' })
+      return
+    }
+
+    const foods = await searchFood(q)
+    res.json({ foods })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Food search error:', err)
+    res.status(500).json({ error: 'Failed to search foods' })
+  }
+}
+
+router.get('/search', handleSearch)
 
 export default router

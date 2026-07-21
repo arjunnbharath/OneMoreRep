@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { commonFoods } from '../data/commonFoods'
 import { lookupFoodByBarcode as lookupBarcodeFood } from '../lib/barcodeFood'
+import { searchFoodOnline as searchFoodOnlineApi } from '../lib/foodSearch'
 import { extractBarcodeFromScan } from '../lib/barcodeScan'
 import {
   calculateBmr,
@@ -259,6 +260,9 @@ export function useCalorieTracker() {
         carbsPer100g: scanned.carbsPer100g,
         fatPer100g: scanned.fatPer100g,
         fiberPer100g: scanned.fiberPer100g,
+        sugarPer100g: scanned.sugarPer100g,
+        saturatedFatPer100g: scanned.saturatedFatPer100g,
+        saltPer100g: scanned.saltPer100g,
         isCustom: false,
         barcode: scanned.barcode,
         suggestedServingGrams: scanned.suggestedServingGrams,
@@ -272,6 +276,37 @@ export function useCalorieTracker() {
       })
 
       return item
+    },
+    [token, allFoods],
+  )
+
+  const searchFoodOnline = useCallback(
+    async (query: string) => {
+      if (!token) return []
+
+      const foods = await searchFoodOnlineApi(token, query)
+      const newItems: FoodItem[] = []
+
+      for (const food of foods) {
+        const existing = allFoods.find((f) => f.id === food.id || f.barcode === food.barcode)
+        if (existing) {
+          newItems.push(existing)
+        } else {
+          newItems.push(food)
+        }
+      }
+
+      setCustomFoods((prev) => {
+        const next = [...prev]
+        for (const food of foods) {
+          if (!next.some((f) => f.id === food.id || f.barcode === food.barcode)) {
+            next.unshift(food)
+          }
+        }
+        return next
+      })
+
+      return newItems
     },
     [token, allFoods],
   )
@@ -303,5 +338,6 @@ export function useCalorieTracker() {
     removeLog,
     searchFoods,
     lookupFoodByBarcode,
+    searchFoodOnline,
   }
 }

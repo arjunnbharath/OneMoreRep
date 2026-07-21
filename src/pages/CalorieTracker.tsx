@@ -1,22 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import {
-  Apple,
   ChevronLeft,
   ChevronRight,
-  Coffee,
-  Cookie,
-  Moon,
   Plus,
-  ScanBarcode,
-  Search,
   Settings,
-  Sun,
   Trash2,
   X,
 } from 'lucide-react'
 import NutritionOnboarding from '../components/calories/NutritionOnboarding'
-import BarcodeScanner from '../components/calories/BarcodeScanner'
+import AddFoodPanel, { MEALS } from '../components/calories/AddFoodPanel'
+import AddFoodModal, { AddFoodFab } from '../components/calories/AddFoodModal'
 import Button from '../components/Button'
 import {
   DailyCalorieSummary,
@@ -24,25 +18,14 @@ import {
   WeekStrip,
   WeeklyCalorieSection,
 } from '../components/calories/CalorieWidgets'
-import {
-  macrosForGrams,
-  toLocalDateKey,
-} from '../lib/nutritionMath'
+import { toLocalDateKey } from '../lib/nutritionMath'
 import { CalorieTrackerProvider, useCalorieTrackerContext } from '../context/CalorieTrackerContext'
 import type {
   ActivityLevel,
-  FoodItem,
   GoalType,
   MealType,
   UserNutritionProfile,
 } from '../types/nutrition'
-
-const MEALS: { id: MealType; label: string; icon: typeof Coffee }[] = [
-  { id: 'breakfast', label: 'Breakfast', icon: Coffee },
-  { id: 'lunch', label: 'Lunch', icon: Sun },
-  { id: 'dinner', label: 'Dinner', icon: Moon },
-  { id: 'snack', label: 'Snacks', icon: Cookie },
-]
 
 const ACTIVITY_OPTIONS: { id: ActivityLevel; label: string; desc: string }[] = [
   { id: 'sedentary', label: 'Sedentary', desc: 'Desk job, little exercise' },
@@ -57,8 +40,6 @@ const GOAL_OPTIONS: { id: GoalType; label: string; desc: string }[] = [
   { id: 'maintain', label: 'Maintain', desc: 'Stay at current weight' },
   { id: 'bulk', label: 'Bulk', desc: 'Build muscle · +400 kcal' },
 ]
-
-const SERVING_PRESETS = [50, 100, 150, 200]
 
 function shiftDateKey(key: string, days: number) {
   const [y, m, d] = key.split('-').map(Number)
@@ -166,269 +147,6 @@ function SettingsPanel({
           </Button>
         </form>
       </div>
-    </div>
-  )
-}
-
-function AddFoodPanel({
-  onClose,
-  dateKey,
-  defaultMeal,
-}: {
-  onClose: () => void
-  dateKey: string
-  defaultMeal?: MealType
-}) {
-  const { logFood, searchFoods, recentFoods, addCustomFood, lookupFoodByBarcode } =
-    useCalorieTrackerContext()
-  const [tab, setTab] = useState<'search' | 'recent' | 'custom' | 'scan'>('search')
-  const [query, setQuery] = useState('')
-  const [mealType, setMealType] = useState<MealType>(defaultMeal ?? 'lunch')
-  const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null)
-  const [grams, setGrams] = useState('100')
-  const [customName, setCustomName] = useState('')
-  const [customCal, setCustomCal] = useState('')
-  const [customProtein, setCustomProtein] = useState('')
-  const [customCarbs, setCustomCarbs] = useState('')
-  const [customFat, setCustomFat] = useState('')
-
-  const results = useMemo(() => searchFoods(query), [query, searchFoods])
-  const preview = selectedFood ? macrosForGrams(selectedFood, Number(grams) || 0) : null
-
-  function handleLog(food: FoodItem, quantity: number) {
-    if (quantity <= 0) return
-    logFood({ food, mealType, quantityGrams: quantity, dateKey })
-    onClose()
-  }
-
-  function handleCustomSubmit(e: FormEvent) {
-    e.preventDefault()
-    const food = addCustomFood({
-      name: customName.trim(),
-      caloriesPer100g: Number(customCal),
-      proteinPer100g: Number(customProtein),
-      carbsPer100g: Number(customCarbs),
-      fatPer100g: Number(customFat),
-    })
-    handleLog(food, 100)
-  }
-
-  const tabLabels: Record<typeof tab, string> = {
-    search: 'Search',
-    recent: 'Recent',
-    custom: 'Custom',
-    scan: 'Scan',
-  }
-
-  return (
-    <div className="flex h-full max-h-[85dvh] flex-col rounded-t-3xl bg-background lg:max-h-none lg:rounded-2xl lg:ring-1 lg:ring-border">
-      <div className="flex items-center justify-between border-b border-border px-5 py-4">
-        <div>
-          <h3 className="font-semibold">Add food</h3>
-          <p className="text-xs text-muted">Log to {MEALS.find((m) => m.id === mealType)?.label}</p>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-surface"
-        >
-          <X size={18} />
-        </button>
-      </div>
-
-      <div className="flex gap-1 border-b border-border p-2">
-        {(['search', 'recent', 'scan', 'custom'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={[
-              'flex flex-1 items-center justify-center gap-1 rounded-xl py-2 text-xs font-medium transition',
-              tab === t ? 'bg-foreground text-background' : 'text-muted hover:bg-surface',
-            ].join(' ')}
-          >
-            {t === 'scan' && <ScanBarcode size={12} />}
-            {tabLabels[t]}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="mb-4 flex flex-wrap gap-1.5">
-          {MEALS.map((m) => {
-            const Icon = m.icon
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setMealType(m.id)}
-                className={[
-                  'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition',
-                  mealType === m.id
-                    ? 'bg-foreground text-background'
-                    : 'bg-surface text-muted ring-1 ring-border',
-                ].join(' ')}
-              >
-                <Icon size={12} />
-                {m.label}
-              </button>
-            )
-          })}
-        </div>
-
-        {tab === 'search' && (
-          <>
-            <label className="flex items-center gap-2 rounded-2xl bg-surface px-4 py-3 ring-1 ring-border">
-              <Search size={16} className="shrink-0 text-muted" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search foods..."
-                className="w-full bg-transparent text-sm outline-none"
-                autoFocus
-              />
-            </label>
-            <ul className="mt-3 space-y-1">
-              {results.map((food) => (
-                <li key={food.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedFood(food)
-                      setGrams('100')
-                    }}
-                    className={[
-                      'flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm transition',
-                      selectedFood?.id === food.id
-                        ? 'bg-foreground text-background'
-                        : 'hover:bg-surface',
-                    ].join(' ')}
-                  >
-                    <div>
-                      <span className="font-medium">{food.name}</span>
-                      {food.brand && (
-                        <span className={['ml-1 text-xs', selectedFood?.id === food.id ? 'opacity-70' : 'text-muted'].join(' ')}>
-                          · {food.brand}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-xs tabular-nums opacity-70">{food.caloriesPer100g} kcal</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-
-        {tab === 'recent' && (
-          <ul className="space-y-1">
-            {recentFoods.length === 0 ? (
-              <div className="py-8 text-center">
-                <Apple size={28} className="mx-auto text-muted" />
-                <p className="mt-2 text-sm text-muted">No recent foods yet</p>
-              </div>
-            ) : (
-              recentFoods.map((food) => (
-                <li key={food.id}>
-                  <button
-                    type="button"
-                    onClick={() => handleLog(food, 100)}
-                    className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm hover:bg-surface"
-                  >
-                    <span className="font-medium">{food.name}</span>
-                    <span className="text-xs text-muted">Tap to log 100g</span>
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
-        )}
-
-        {tab === 'scan' && (
-          <BarcodeScanner
-            lookupBarcode={lookupFoodByBarcode}
-            onFoodFound={(food, servingGrams) => handleLog(food, servingGrams)}
-            onClose={onClose}
-          />
-        )}
-
-        {tab === 'custom' && (
-          <form onSubmit={handleCustomSubmit} className="space-y-3">
-            <input
-              placeholder="Food name"
-              value={customName}
-              onChange={(e) => setCustomName(e.target.value)}
-              className="w-full rounded-2xl bg-surface px-4 py-3 text-sm ring-1 ring-border outline-none"
-              required
-            />
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { val: customCal, set: setCustomCal, ph: 'Cal/100g' },
-                { val: customProtein, set: setCustomProtein, ph: 'Protein/100g' },
-                { val: customCarbs, set: setCustomCarbs, ph: 'Carbs/100g' },
-                { val: customFat, set: setCustomFat, ph: 'Fat/100g' },
-              ].map(({ val, set, ph }) => (
-                <input
-                  key={ph}
-                  placeholder={ph}
-                  type="number"
-                  value={val}
-                  onChange={(e) => set(e.target.value)}
-                  className="rounded-2xl bg-surface px-4 py-3 text-sm ring-1 ring-border outline-none"
-                  required
-                />
-              ))}
-            </div>
-            <Button type="submit" className="w-full py-3">Save & log 100g</Button>
-          </form>
-        )}
-      </div>
-
-      {tab !== 'custom' && tab !== 'scan' && selectedFood && (
-        <div className="border-t border-border p-4">
-          <p className="font-medium">{selectedFood.name}</p>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {SERVING_PRESETS.map((g) => (
-              <button
-                key={g}
-                type="button"
-                onClick={() => setGrams(String(g))}
-                className={[
-                  'rounded-full px-3 py-1 text-xs font-medium transition',
-                  Number(grams) === g
-                    ? 'bg-foreground text-background'
-                    : 'bg-surface text-muted ring-1 ring-border',
-                ].join(' ')}
-              >
-                {g}g
-              </button>
-            ))}
-          </div>
-          <input
-            type="number"
-            min={1}
-            value={grams}
-            onChange={(e) => setGrams(e.target.value)}
-            className="mt-3 w-full rounded-2xl bg-surface px-4 py-3 text-sm ring-1 ring-border outline-none"
-          />
-          {preview && (
-            <div className="mt-3 flex gap-3 text-xs text-muted">
-              <span className="font-semibold text-foreground">{preview.calories} kcal</span>
-              <span>P {preview.protein}g</span>
-              <span>C {preview.carbs}g</span>
-              <span>F {preview.fat}g</span>
-            </div>
-          )}
-          <Button
-            type="button"
-            onClick={() => handleLog(selectedFood, Number(grams))}
-            className="mt-4 w-full py-3"
-          >
-            Log food
-          </Button>
-        </div>
-      )}
     </div>
   )
 }
@@ -675,33 +393,20 @@ function DailyLog() {
               onClose={() => {}}
               dateKey={selectedDate}
               defaultMeal={addMeal}
+              variant="embedded"
             />
           </div>
         </aside>
       </div>
 
-      <button
-        type="button"
-        onClick={() => openAdd(addMeal)}
-        className="fixed right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition hover:scale-105 lg:hidden"
-        style={{ bottom: 'calc(var(--mobile-nav-height) + 1rem)' }}
-        aria-label="Add food"
-      >
-        <Plus size={24} />
-      </button>
+      <AddFoodFab onClick={() => openAdd(addMeal)} hidden={showAdd} />
 
-      {showAdd && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/50 lg:hidden">
-          <button type="button" className="flex-1" onClick={() => setShowAdd(false)} aria-label="Close" />
-          <div style={{ marginBottom: 'var(--mobile-nav-height)' }}>
-            <AddFoodPanel
-              onClose={() => setShowAdd(false)}
-              dateKey={selectedDate}
-              defaultMeal={addMeal}
-            />
-          </div>
-        </div>
-      )}
+      <AddFoodModal
+        open={showAdd}
+        onClose={() => setShowAdd(false)}
+        dateKey={selectedDate}
+        defaultMeal={addMeal}
+      />
 
       {showSettings && profile && (
         <SettingsPanel profile={profile} onClose={() => setShowSettings(false)} />

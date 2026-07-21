@@ -20,6 +20,9 @@ export interface FoodItem {
   carbsPer100g: number
   fatPer100g: number
   fiberPer100g?: number
+  sugarPer100g?: number
+  saturatedFatPer100g?: number
+  saltPer100g?: number
   isCustom: boolean
   barcode?: string
   suggestedServingGrams?: number

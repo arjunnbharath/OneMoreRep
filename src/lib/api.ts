@@ -282,24 +282,6 @@ export async function setFriendNotificationMute(
   })
 }
 
-export interface FriendActivityItem {
-  id: string
-  friend: FriendUser
-  session: import('../types/tracker').WorkoutSession
-}
-
-export async function getFriendsActivity(
-  token: string,
-  limit = 12,
-): Promise<{ items: FriendActivityItem[] }> {
-  return request<{ items: FriendActivityItem[] }>(
-    apiUrl(`/api/friends/activity?limit=${limit}`),
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    },
-  )
-}
-
 export async function lookupFoodByBarcode(
   token: string,
   scanValue: string,
@@ -310,6 +292,15 @@ export async function lookupFoodByBarcode(
       headers: { Authorization: `Bearer ${token}` },
     },
   )
+}
+
+export async function searchFoodOnline(
+  token: string,
+  query: string,
+): Promise<{ foods: import('../types/nutrition').FoodItem[] }> {
+  return request(apiUrl(`/api/food/search?q=${encodeURIComponent(query.trim())}`), {
+    headers: { Authorization: `Bearer ${token}` },
+  })
 }
 
 export async function getVapidPublicKey(): Promise<{ publicKey: string | null }> {

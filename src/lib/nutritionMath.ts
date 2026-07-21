@@ -52,15 +52,26 @@ export function macrosForGrams(
     proteinPer100g: number
     carbsPer100g: number
     fatPer100g: number
+    fiberPer100g?: number
+    sugarPer100g?: number
+    saturatedFatPer100g?: number
+    saltPer100g?: number
   },
   grams: number,
 ) {
   const factor = grams / 100
+  const scale = (value: number) => Math.round(value * factor * 10) / 10
+
   return {
     calories: Math.round(food.caloriesPer100g * factor),
-    protein: Math.round(food.proteinPer100g * factor * 10) / 10,
-    carbs: Math.round(food.carbsPer100g * factor * 10) / 10,
-    fat: Math.round(food.fatPer100g * factor * 10) / 10,
+    protein: scale(food.proteinPer100g),
+    carbs: scale(food.carbsPer100g),
+    fat: scale(food.fatPer100g),
+    fiber: food.fiberPer100g !== undefined ? scale(food.fiberPer100g) : undefined,
+    sugar: food.sugarPer100g !== undefined ? scale(food.sugarPer100g) : undefined,
+    saturatedFat:
+      food.saturatedFatPer100g !== undefined ? scale(food.saturatedFatPer100g) : undefined,
+    salt: food.saltPer100g !== undefined ? scale(food.saltPer100g) : undefined,
   }
 }
 

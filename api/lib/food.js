@@ -54,9 +54,42 @@ function barcodeLookupCandidates(scanValue) {
   return [...candidates]
 }
 
+function mapProductFromOff(product, barcode) {
+  const nutriments = product.nutriments ?? {}
+  const calories =
+    parseNumber(nutriments['energy-kcal_100g']) ||
+    (parseNumber(nutriments.energy_100g) > 0 ? parseNumber(nutriments.energy_100g) / 4.184 : 0)
+
+  const servingGrams = parseNumber(product.serving_quantity) || 100
+  const fiber = parseNumber(nutriments.fiber_100g)
+  const sugar = parseNumber(nutriments.sugars_100g)
+  const saturatedFat = parseNumber(nutriments['saturated-fat_100g'])
+  const salt = parseNumber(nutriments.salt_100g)
+
+  const name = product.product_name || product.generic_name
+  if (!name) return null
+
+  return {
+    id: `off-${barcode}`,
+    name,
+    brand: product.brands?.split(',')[0]?.trim() || undefined,
+    caloriesPer100g: Math.round(calories * 10) / 10,
+    proteinPer100g: parseNumber(nutriments.proteins_100g),
+    carbsPer100g: parseNumber(nutriments.carbohydrates_100g),
+    fatPer100g: parseNumber(nutriments.fat_100g),
+    fiberPer100g: fiber > 0 ? fiber : undefined,
+    sugarPer100g: sugar > 0 ? sugar : undefined,
+    saturatedFatPer100g: saturatedFat > 0 ? saturatedFat : undefined,
+    saltPer100g: salt > 0 ? salt : undefined,
+    isCustom: false,
+    barcode,
+    suggestedServingGrams: servingGrams,
+  }
+}
+
 async function fetchProductFromOff(barcode) {
   const response = await fetch(
-    `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=product_name,generic_name,brands,nutriments,serving_size,serving_quantity,quantity`,
+    `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=product_name,generic_name,brands,nutriments,serving_size,serving_quantity,quantity,nutriscore_grade`,
   )
 
   if (!response.ok) {
@@ -68,27 +101,7 @@ async function fetchProductFromOff(barcode) {
     return null
   }
 
-  const product = payload.product
-  const nutriments = product.nutriments ?? {}
-  const calories =
-    parseNumber(nutriments['energy-kcal_100g']) ||
-    (parseNumber(nutriments.energy_100g) > 0 ? parseNumber(nutriments.energy_100g) / 4.184 : 0)
-
-  const servingGrams = parseNumber(product.serving_quantity) || 100
-
-  return {
-    id: `off-${barcode}`,
-    name: product.product_name || product.generic_name || 'Unknown product',
-    brand: product.brands?.split(',')[0]?.trim() || undefined,
-    caloriesPer100g: Math.round(calories * 10) / 10,
-    proteinPer100g: parseNumber(nutriments.proteins_100g),
-    carbsPer100g: parseNumber(nutriments.carbohydrates_100g),
-    fatPer100g: parseNumber(nutriments.fat_100g),
-    fiberPer100g: parseNumber(nutriments.fiber_100g) || undefined,
-    isCustom: false,
-    barcode,
-    suggestedServingGrams: servingGrams,
-  }
+  return mapProductFromOff(payload.product, barcode)
 }
 
 async function lookupBarcode(scanValue) {
@@ -105,4 +118,48 @@ async function lookupBarcode(scanValue) {
   throw new AuthError('Product not found', 404)
 }
 
-module.exports = { lookupBarcode, extractBarcodeFromScan, barcodeLookupCandidates }
+async function searchFood(query, limit = 12) {
+  const q = String(query ?? '').trim()
+  if (!q) return []
+
+  const url = new URL('https://world.openfoodfacts.org/cgi/search.pl')
+  url.searchParams.set('search_terms', q)
+  url.searchParams.set('search_simple', '1')
+  url.searchParams.set('action', 'process')
+  url.searchParams.set('json', '1')
+  url.searchParams.set('page_size', String(Math.min(limit, 24)))
+  url.searchParams.set(
+    'fields',
+    'code,product_name,generic_name,brands,nutriments,serving_quantity',
+  )
+
+  const response = await fetch(url.toString())
+  if (!response.ok) {
+    throw new AuthError('Food search failed', 502)
+  }
+
+  const payload = await response.json()
+  const products = payload.products ?? []
+  const foods = []
+  const seen = new Set()
+
+  for (const product of products) {
+    const barcode = String(product.code ?? '').trim()
+    if (!barcode || seen.has(barcode)) continue
+    seen.add(barcode)
+
+    const mapped = mapProductFromOff(product, barcode)
+    if (mapped && mapped.caloriesPer100g > 0) {
+      foods.push(mapped)
+    }
+  }
+
+  return foods
+}
+
+module.exports = {
+  lookupBarcode,
+  searchFood,
+  extractBarcodeFromScan,
+  barcodeLookupCandidates,
+}

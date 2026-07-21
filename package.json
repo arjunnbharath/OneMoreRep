@@ -25,6 +25,8 @@
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
     "@neondatabase/serverless": "^1.1.0",
+    "@tensorflow-models/mobilenet": "^2.1.1",
+    "@tensorflow/tfjs": "^4.22.0",
     "@vercel/node": "^5.8.22",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",

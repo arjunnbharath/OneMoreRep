@@ -23,7 +23,7 @@ const {
 } = require('./friends.js')
 const { sendNudge, listNudges, markNudgesRead, clearNudges } = require('./friendNudges.js')
 const { setFriendNotificationMute } = require('./friendMutes.js')
-const { lookupBarcode } = require('./food.js')
+const { lookupBarcode, searchFood } = require('./food.js')
 const {
   getVapidPublicKey,
   saveSubscription,
@@ -214,6 +214,18 @@ async function handleFoodBarcode(req, res) {
   return res.status(200).json({ food })
 }
 
+async function handleFoodSearch(req, res) {
+  await getUserIdFromAuthHeader(req.headers.authorization)
+
+  const q = String(req.query?.q ?? '').trim()
+  if (!q) {
+    return res.status(400).json({ error: 'Search query is required' })
+  }
+
+  const foods = await searchFood(q)
+  return res.status(200).json({ foods })
+}
+
 async function handleFriendsNudge(req, res) {
   const userId = await getUserIdFromAuthHeader(req.headers.authorization)
   const { friendId, type } = parseBody(req)
@@ -284,6 +296,7 @@ const routes = [
   { route: 'friends/progress', method: 'GET', handler: handleFriendsProgress },
   { route: 'friends/activity', method: 'GET', handler: handleFriendsActivity },
   { route: 'food/barcode', method: 'GET', handler: handleFoodBarcode },
+  { route: 'food/search', method: 'GET', handler: handleFoodSearch },
   { route: 'friends/nudge', method: 'POST', handler: handleFriendsNudge },
   { route: 'friends/nudges', method: 'GET', handler: handleFriendsNudges },
   { route: 'friends/nudges/read', method: 'POST', handler: handleFriendsNudgesRead },
