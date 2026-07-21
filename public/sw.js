@@ -1,13 +1,7 @@
-const CACHE_NAME = 'onemorerep-v3'
-const PRECACHE_URLS = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg']
+const CACHE_NAME = 'onemorerep-v4'
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting()),
-  )
+  event.waitUntil(self.skipWaiting())
 })
 
 self.addEventListener('activate', (event) => {
@@ -19,24 +13,62 @@ self.addEventListener('activate', (event) => {
   )
 })
 
+function isSameOrigin(url) {
+  return url.origin === self.location.origin
+}
+
+function isNavigationRequest(request) {
+  return (
+    request.mode === 'navigate' ||
+    (request.method === 'GET' && request.headers.get('accept')?.includes('text/html'))
+  )
+}
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
   const url = new URL(event.request.url)
-  const isAppShell =
-    url.origin === self.location.origin &&
-    (url.pathname === '/' || url.pathname === '/index.html' || url.pathname.endsWith('.webmanifest'))
+  if (!isSameOrigin(url)) return
 
-  if (isAppShell) {
+  if (isNavigationRequest(event.request)) {
     event.respondWith(
-      caches.match(event.request).then((cached) => cached || fetch(event.request)),
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone()
+            void caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', copy))
+          }
+          return response
+        })
+        .catch(async () => {
+          const cached = await caches.match('/index.html')
+          if (cached) return cached
+          return caches.match('/')
+        }),
     )
     return
   }
 
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request)),
-  )
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        const network = fetch(event.request)
+          .then((response) => {
+            if (response.ok) {
+              const copy = response.clone()
+              void caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy))
+            }
+            return response
+          })
+          .catch(() => cached)
+
+        return cached || network
+      }),
+    )
+    return
+  }
+
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)))
 })
 
 self.addEventListener('push', (event) => {

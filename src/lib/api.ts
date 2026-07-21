@@ -302,11 +302,14 @@ export async function getFriendsActivity(
 
 export async function lookupFoodByBarcode(
   token: string,
-  barcode: string,
+  scanValue: string,
 ): Promise<{ food: import('../types/nutrition').FoodItem & { suggestedServingGrams?: number } }> {
-  return request(apiUrl(`/api/food/barcode/${encodeURIComponent(barcode)}`), {
-    headers: { Authorization: `Bearer ${token}` },
-  })
+  return request(
+    apiUrl(`/api/food/barcode?code=${encodeURIComponent(scanValue.trim())}`),
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  )
 }
 
 export async function getVapidPublicKey(): Promise<{ publicKey: string | null }> {

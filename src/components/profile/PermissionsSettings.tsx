@@ -56,17 +56,19 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
   const {
     supported: cameraSupported,
     permission: cameraPermission,
-    granted: cameraGranted,
+    enabled: cameraEnabled,
+    active: cameraActive,
     denied: cameraDenied,
     requesting: cameraRequesting,
-    request: requestCamera,
+    enable: enableCamera,
+    disable: disableCamera,
   } = useCameraPermission()
 
   const notificationAvailable = supported && available
   const totalPermissions =
     (notificationAvailable ? 1 : 0) + (cameraSupported ? 1 : 0)
   const activePermissions =
-    (enabled ? 1 : 0) + (cameraGranted ? 1 : 0)
+    (enabled ? 1 : 0) + (cameraActive ? 1 : 0)
   const summary =
     totalPermissions === 0
       ? 'No permissions available'
@@ -82,8 +84,12 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
   }
 
   async function handleCameraToggle() {
-    if (cameraRequesting || cameraGranted) return
-    await requestCamera()
+    if (cameraRequesting) return
+    if (cameraEnabled) {
+      disableCamera()
+      return
+    }
+    await enableCamera()
   }
 
   const notificationsBlocked = notificationPermission === 'denied'
@@ -144,14 +150,16 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
                 value={
                   cameraDenied
                     ? 'Blocked in browser settings'
-                    : cameraGranted
+                    : cameraActive
                       ? 'Scan barcodes and QR codes for food lookup'
-                      : 'Needed to scan product barcodes'
+                      : cameraEnabled
+                        ? 'Waiting for browser camera access'
+                        : 'Off — turn on to scan product barcodes'
                 }
                 trailing={
                   <Toggle
-                    checked={cameraGranted}
-                    disabled={cameraRequesting || cameraDenied || cameraGranted}
+                    checked={cameraEnabled}
+                    disabled={cameraRequesting || (cameraDenied && !cameraEnabled)}
                     onChange={() => void handleCameraToggle()}
                     label="Camera"
                   />
@@ -159,12 +167,17 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
               />
               {cameraDenied && (
                 <p className="border-t border-border px-4 py-2.5 text-xs text-muted">
-                  To use the scanner, allow camera access in your browser&apos;s site settings.
+                  Camera is blocked by your browser. Allow it in site settings, then turn it on here.
                 </p>
               )}
-              {cameraPermission === 'prompt' && !cameraGranted && (
+              {cameraPermission === 'prompt' && !cameraActive && cameraEnabled && (
                 <p className="border-t border-border px-4 py-2.5 text-xs text-muted">
-                  Turn on camera to scan products in Calories. Nutrition data is fetched automatically.
+                  Camera is on in the app. Allow access when your browser asks.
+                </p>
+              )}
+              {!cameraEnabled && !cameraDenied && (
+                <p className="border-t border-border px-4 py-2.5 text-xs text-muted">
+                  Turn on camera to scan products in Calories. You can turn it off anytime.
                 </p>
               )}
             </>

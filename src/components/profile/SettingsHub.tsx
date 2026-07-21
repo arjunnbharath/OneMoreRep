@@ -31,10 +31,10 @@ export default function SettingsHub({
   setTheme,
 }: SettingsHubProps) {
   const { supported, available, enabled } = usePushNotifications()
-  const { supported: cameraSupported, granted: cameraGranted } = useCameraPermission()
+  const { supported: cameraSupported, active: cameraActive } = useCameraPermission()
 
   const totalPermissions = (supported && available ? 1 : 0) + (cameraSupported ? 1 : 0)
-  const activePermissions = (enabled ? 1 : 0) + (cameraGranted ? 1 : 0)
+  const activePermissions = (enabled ? 1 : 0) + (cameraActive ? 1 : 0)
   const permissionsSummary =
     totalPermissions === 0
       ? 'Not available'

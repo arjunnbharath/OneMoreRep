@@ -83,6 +83,15 @@ export async function promptPwaInstall() {
 export function registerServiceWorker() {
   if (typeof window === 'undefined' || isNativeApp() || !('serviceWorker' in navigator)) return
 
+  if (import.meta.env.DEV) {
+    void navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => {
+        void registration.unregister()
+      })
+    })
+    return
+  }
+
   const swUrl = `${import.meta.env.BASE_URL}sw.js`
 
   window.addEventListener('load', () => {

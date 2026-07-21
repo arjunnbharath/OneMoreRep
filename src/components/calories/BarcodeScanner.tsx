@@ -28,7 +28,7 @@ export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: 
   const lastLookupRef = useRef('')
   const lookupBarcodeRef = useRef(lookupBarcode)
 
-  const { supported: cameraSupported, granted, denied, requesting, request } = useCameraPermission()
+  const { supported: cameraSupported, active, denied, requesting, enable } = useCameraPermission()
 
   useEffect(() => {
     lookupBarcodeRef.current = lookupBarcode
@@ -56,7 +56,9 @@ export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: 
     try {
       const food = await lookupBarcodeRef.current(scanValue)
       if (!food) {
-        setLookupError('Product not found in food database.')
+        setLookupError(
+          `Product not found for barcode ${extracted}. Try searching by name instead.`,
+        )
         lastLookupRef.current = ''
         return
       }
@@ -64,8 +66,10 @@ export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: 
       setFoundFood(food)
       setGrams(String(food.suggestedServingGrams ?? 100))
       stopCamera()
-    } catch {
-      setLookupError('Lookup failed. Check your connection and try again.')
+    } catch (err) {
+      setLookupError(
+        err instanceof Error ? err.message : 'Lookup failed. Check your connection and try again.',
+      )
       lastLookupRef.current = ''
     } finally {
       setLookingUp(false)
@@ -78,7 +82,7 @@ export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: 
     let frame = 0
 
     async function start() {
-      if (!('BarcodeDetector' in window) || !granted) {
+      if (!('BarcodeDetector' in window) || !active) {
         setStarting(false)
         return
       }
@@ -133,7 +137,7 @@ export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: 
       cancelAnimationFrame(frame)
       stopCamera()
     }
-  }, [granted, lookingUp, foundFood, runLookup, stopCamera])
+  }, [active, lookingUp, foundFood, runLookup, stopCamera])
 
   useEffect(() => {
     const normalized = extractBarcodeFromScan(manualCode)
@@ -219,7 +223,7 @@ export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: 
 
   return (
     <div className="space-y-4">
-      {cameraSupported && !granted && (
+      {cameraSupported && !active && (
         <div className="rounded-2xl bg-surface px-4 py-4 ring-1 ring-border">
           <div className="flex items-start gap-3">
             <Camera size={18} className="mt-0.5 shrink-0 text-muted" />
@@ -228,16 +232,16 @@ export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: 
               <p className="mt-1 text-xs text-muted">
                 {denied
                   ? 'Camera is blocked. Allow it in Profile → Settings → Permissions, or in your browser site settings.'
-                  : 'Allow camera to scan barcodes and QR codes. We look up nutrition automatically.'}
+                  : 'Turn on camera in Profile → Settings → Permissions to scan barcodes and QR codes.'}
               </p>
               {!denied && (
                 <Button
                   type="button"
                   className="mt-3 w-full py-2.5 text-sm"
                   disabled={requesting}
-                  onClick={() => void request()}
+                  onClick={() => void enable()}
                 >
-                  {requesting ? 'Requesting…' : 'Allow camera'}
+                  {requesting ? 'Turning on…' : 'Turn on camera'}
                 </Button>
               )}
             </div>
@@ -245,7 +249,7 @@ export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: 
         </div>
       )}
 
-      {hasDetector && granted ? (
+      {hasDetector && active ? (
         <div className="relative overflow-hidden rounded-2xl bg-black ring-1 ring-border">
           <video
             ref={videoRef}
@@ -264,7 +268,7 @@ export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: 
             Point at a barcode or QR code
           </p>
         </div>
-      ) : granted ? (
+      ) : active ? (
         <div className="rounded-2xl bg-surface px-4 py-8 text-center ring-1 ring-border">
           <Camera size={28} className="mx-auto text-muted" />
           <p className="mt-2 text-sm text-muted">
@@ -288,7 +292,7 @@ export default function BarcodeScanner({ lookupBarcode, onFoodFound, onClose }: 
             }}
             placeholder="Enter barcode or paste QR content"
             className="w-full bg-transparent text-sm outline-none"
-            autoFocus={!hasDetector || !granted}
+            autoFocus={!hasDetector || !active}
           />
         </label>
         {lookingUp && (

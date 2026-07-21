@@ -15,7 +15,8 @@ export async function lookupFoodByBarcode(
   try {
     const { food } = await apiLookupFoodByBarcode(token, normalized)
     return food
-  } catch {
-    return null
+  } catch (err) {
+    if (err instanceof Error) throw err
+    throw new Error('Food lookup failed')
   }
 }

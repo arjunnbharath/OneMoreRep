@@ -8,10 +8,16 @@ const { lookupBarcode } = require('../../api/lib/food.js')
 
 const router = Router()
 
-router.get('/barcode/:code', async (req, res) => {
+async function handleLookup(req: import('express').Request, res: import('express').Response) {
   try {
     await getUserIdFromAuthHeader(req.headers.authorization)
-    const food = await lookupBarcode(req.params.code)
+    const code = String(req.query.code ?? req.params.code ?? '').trim()
+    if (!code) {
+      res.status(400).json({ error: 'Barcode or QR code is required' })
+      return
+    }
+
+    const food = await lookupBarcode(code)
     res.json({ food })
   } catch (err) {
     if (err instanceof AuthError) {
@@ -21,6 +27,9 @@ router.get('/barcode/:code', async (req, res) => {
     console.error('Barcode lookup error:', err)
     res.status(500).json({ error: 'Failed to look up barcode' })
   }
-})
+}
+
+router.get('/barcode', handleLookup)
+router.get('/barcode/:code', handleLookup)
 
 export default router

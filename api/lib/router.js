@@ -198,7 +198,18 @@ async function handleFriendsActivity(req, res) {
 
 async function handleFoodBarcode(req, res) {
   await getUserIdFromAuthHeader(req.headers.authorization)
-  const code = req.query?.code
+
+  const route = getRoute(req)
+  let code = req.query?.code
+
+  if (!code && typeof route === 'string' && route.startsWith('food/barcode/')) {
+    code = decodeURIComponent(route.slice('food/barcode/'.length))
+  }
+
+  if (!code) {
+    return res.status(400).json({ error: 'Barcode or QR code is required' })
+  }
+
   const food = await lookupBarcode(code)
   return res.status(200).json({ food })
 }
