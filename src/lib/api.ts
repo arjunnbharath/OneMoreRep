@@ -282,6 +282,33 @@ export async function setFriendNotificationMute(
   })
 }
 
+export interface FriendActivityItem {
+  id: string
+  friend: FriendUser
+  session: import('../types/tracker').WorkoutSession
+}
+
+export async function getFriendsActivity(
+  token: string,
+  limit = 12,
+): Promise<{ items: FriendActivityItem[] }> {
+  return request<{ items: FriendActivityItem[] }>(
+    apiUrl(`/api/friends/activity?limit=${limit}`),
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  )
+}
+
+export async function lookupFoodByBarcode(
+  token: string,
+  barcode: string,
+): Promise<{ food: import('../types/nutrition').FoodItem & { suggestedServingGrams?: number } }> {
+  return request(apiUrl(`/api/food/barcode/${encodeURIComponent(barcode)}`), {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
 export async function getVapidPublicKey(): Promise<{ publicKey: string | null }> {
   return request<{ publicKey: string | null }>(apiUrl('/api/push/vapid-public-key'))
 }

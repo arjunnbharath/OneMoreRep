@@ -6,8 +6,10 @@ import {
   ChevronRight,
   Coffee,
   Cookie,
+  Loader2,
   Moon,
   Plus,
+  ScanBarcode,
   Search,
   Settings,
   Sun,
@@ -15,6 +17,7 @@ import {
   X,
 } from 'lucide-react'
 import NutritionOnboarding from '../components/calories/NutritionOnboarding'
+import BarcodeScanner from '../components/calories/BarcodeScanner'
 import Button from '../components/Button'
 import {
   DailyCalorieSummary,
@@ -177,12 +180,15 @@ function AddFoodPanel({
   dateKey: string
   defaultMeal?: MealType
 }) {
-  const { logFood, searchFoods, recentFoods, addCustomFood } = useCalorieTrackerContext()
-  const [tab, setTab] = useState<'search' | 'recent' | 'custom'>('search')
+  const { logFood, searchFoods, recentFoods, addCustomFood, lookupFoodByBarcode } =
+    useCalorieTrackerContext()
+  const [tab, setTab] = useState<'search' | 'recent' | 'custom' | 'scan'>('search')
   const [query, setQuery] = useState('')
   const [mealType, setMealType] = useState<MealType>(defaultMeal ?? 'lunch')
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null)
   const [grams, setGrams] = useState('100')
+  const [scanError, setScanError] = useState('')
+  const [scanning, setScanning] = useState(false)
   const [customName, setCustomName] = useState('')
   const [customCal, setCustomCal] = useState('')
   const [customProtein, setCustomProtein] = useState('')
@@ -210,6 +216,32 @@ function AddFoodPanel({
     handleLog(food, 100)
   }
 
+  async function handleBarcodeScan(barcode: string) {
+    setScanError('')
+    setScanning(true)
+    try {
+      const food = await lookupFoodByBarcode(barcode)
+      if (!food) {
+        setScanError('Product not found. Try searching by name instead.')
+        return
+      }
+      setSelectedFood(food)
+      setGrams(String(food.suggestedServingGrams ?? 100))
+      setTab('search')
+    } catch {
+      setScanError('Lookup failed. Check your connection and try again.')
+    } finally {
+      setScanning(false)
+    }
+  }
+
+  const tabLabels: Record<typeof tab, string> = {
+    search: 'Search',
+    recent: 'Recent',
+    custom: 'Custom',
+    scan: 'Scan',
+  }
+
   return (
     <div className="flex h-full max-h-[85dvh] flex-col rounded-t-3xl bg-background lg:max-h-none lg:rounded-2xl lg:ring-1 lg:ring-border">
       <div className="flex items-center justify-between border-b border-border px-5 py-4">
@@ -228,17 +260,18 @@ function AddFoodPanel({
       </div>
 
       <div className="flex gap-1 border-b border-border p-2">
-        {(['search', 'recent', 'custom'] as const).map((t) => (
+        {(['search', 'recent', 'scan', 'custom'] as const).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setTab(t)}
             className={[
-              'flex-1 rounded-xl py-2 text-xs font-medium capitalize transition',
+              'flex flex-1 items-center justify-center gap-1 rounded-xl py-2 text-xs font-medium transition',
               tab === t ? 'bg-foreground text-background' : 'text-muted hover:bg-surface',
             ].join(' ')}
           >
-            {t}
+            {t === 'scan' && <ScanBarcode size={12} />}
+            {tabLabels[t]}
           </button>
         ))}
       </div>
@@ -334,6 +367,20 @@ function AddFoodPanel({
           </ul>
         )}
 
+        {tab === 'scan' && (
+          <div className="space-y-3">
+            {scanning ? (
+              <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted">
+                <Loader2 size={18} className="animate-spin" />
+                Looking up product…
+              </div>
+            ) : (
+              <BarcodeScanner onScan={(code) => void handleBarcodeScan(code)} onClose={onClose} />
+            )}
+            {scanError && <p className="text-xs text-red-600 dark:text-red-400">{scanError}</p>}
+          </div>
+        )}
+
         {tab === 'custom' && (
           <form onSubmit={handleCustomSubmit} className="space-y-3">
             <input
@@ -366,7 +413,7 @@ function AddFoodPanel({
         )}
       </div>
 
-      {tab !== 'custom' && selectedFood && (
+      {tab !== 'custom' && tab !== 'scan' && selectedFood && (
         <div className="border-t border-border p-4">
           <p className="font-medium">{selectedFood.name}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">

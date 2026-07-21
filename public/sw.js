@@ -1,7 +1,13 @@
-const CACHE_NAME = 'onemorerep-v2'
+const CACHE_NAME = 'onemorerep-v3'
+const PRECACHE_URLS = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg']
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(self.skipWaiting())
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting()),
+  )
 })
 
 self.addEventListener('activate', (event) => {
@@ -15,6 +21,18 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
+
+  const url = new URL(event.request.url)
+  const isAppShell =
+    url.origin === self.location.origin &&
+    (url.pathname === '/' || url.pathname === '/index.html' || url.pathname.endsWith('.webmanifest'))
+
+  if (isAppShell) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => cached || fetch(event.request)),
+    )
+    return
+  }
 
   event.respondWith(
     fetch(event.request).catch(() => caches.match(event.request)),

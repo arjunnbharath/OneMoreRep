@@ -22,6 +22,7 @@ export interface FoodItem {
   fiberPer100g?: number
   isCustom: boolean
   barcode?: string
+  suggestedServingGrams?: number
 }
 
 export interface FoodLogEntry {

@@ -19,9 +19,11 @@ const {
   addFriendByUsername,
   removeFriend,
   getFriendProgress,
+  listFriendsActivity,
 } = require('./friends.js')
 const { sendNudge, listNudges, markNudgesRead, clearNudges } = require('./friendNudges.js')
 const { setFriendNotificationMute } = require('./friendMutes.js')
+const { lookupBarcode } = require('./food.js')
 const {
   getVapidPublicKey,
   saveSubscription,
@@ -187,6 +189,20 @@ async function handleFriendsProgress(req, res) {
   return res.status(200).json(data)
 }
 
+async function handleFriendsActivity(req, res) {
+  const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+  const limit = Number(req.query?.limit) || 20
+  const items = await listFriendsActivity(userId, limit)
+  return res.status(200).json({ items })
+}
+
+async function handleFoodBarcode(req, res) {
+  await getUserIdFromAuthHeader(req.headers.authorization)
+  const code = req.query?.code
+  const food = await lookupBarcode(code)
+  return res.status(200).json({ food })
+}
+
 async function handleFriendsNudge(req, res) {
   const userId = await getUserIdFromAuthHeader(req.headers.authorization)
   const { friendId, type } = parseBody(req)
@@ -255,6 +271,8 @@ const routes = [
   { route: 'friends', method: 'POST', handler: handleFriends },
   { route: 'friends', method: 'DELETE', handler: handleFriends },
   { route: 'friends/progress', method: 'GET', handler: handleFriendsProgress },
+  { route: 'friends/activity', method: 'GET', handler: handleFriendsActivity },
+  { route: 'food/barcode', method: 'GET', handler: handleFoodBarcode },
   { route: 'friends/nudge', method: 'POST', handler: handleFriendsNudge },
   { route: 'friends/nudges', method: 'GET', handler: handleFriendsNudges },
   { route: 'friends/nudges/read', method: 'POST', handler: handleFriendsNudgesRead },

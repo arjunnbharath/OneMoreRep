@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { changePassword as apiChangePassword, deleteAccount as apiDeleteAccount, getMe, login as apiLogin, register as apiRegister, updateAvatar as apiUpdateAvatar, type User } from '../lib/api'
-import { clearUserDataCache } from '../lib/userDataSync'
+import { clearUserDataCache, flushSyncQueue } from '../lib/userDataSync'
 import { markPendingTour } from '../lib/tourSession'
 
 const TOKEN_KEY = 'onemorerep-token'
@@ -62,10 +62,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(({ user: verifiedUser }) => {
         setUser(verifiedUser)
         localStorage.setItem(USER_KEY, JSON.stringify(verifiedUser))
+        void flushSyncQueue(verifiedUser.id, token)
       })
       .catch(() => logout())
       .finally(() => setIsLoading(false))
   }, [token, logout])
+
+  useEffect(() => {
+    function handleOnline() {
+      if (!user?.id || !token) return
+      void flushSyncQueue(user.id, token)
+    }
+
+    window.addEventListener('online', handleOnline)
+    return () => window.removeEventListener('online', handleOnline)
+  }, [user?.id, token])
 
   const login = useCallback(
     async (identifier: string, password: string) => {

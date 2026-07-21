@@ -9,6 +9,7 @@ const {
   addFriendByUsername,
   removeFriend,
   getFriendProgress,
+  listFriendsActivity,
 } = require('../../api/lib/friends.js')
 const { sendNudge, listNudges, markNudgesRead, clearNudges } = require('../../api/lib/friendNudges.js')
 const { setFriendNotificationMute } = require('../../api/lib/friendMutes.js')
@@ -75,6 +76,22 @@ router.get('/progress', async (req, res) => {
     }
     console.error('Friend progress error:', err)
     res.status(500).json({ error: 'Failed to load friend progress' })
+  }
+})
+
+router.get('/activity', async (req, res) => {
+  try {
+    const userId = await getUserIdFromAuthHeader(req.headers.authorization)
+    const limit = Number(req.query.limit) || 20
+    const items = await listFriendsActivity(userId, limit)
+    res.json({ items })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('Friends activity error:', err)
+    res.status(500).json({ error: 'Failed to load activity feed' })
   }
 })
 

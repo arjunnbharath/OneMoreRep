@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { commonFoods } from '../data/commonFoods'
+import { lookupFoodByBarcode as lookupBarcodeFood } from '../lib/barcodeFood'
 import {
   calculateBmr,
   calculateCalorieTarget,
@@ -228,10 +229,50 @@ export function useCalorieTracker() {
       return allFoods.filter(
         (f) =>
           f.name.toLowerCase().includes(q) ||
-          f.brand?.toLowerCase().includes(q),
+          f.brand?.toLowerCase().includes(q) ||
+          f.barcode?.includes(q.replace(/\D/g, '')),
       )
     },
     [allFoods],
+  )
+
+  const lookupFoodByBarcode = useCallback(
+    async (barcode: string) => {
+      if (!token) return null
+
+      const normalized = barcode.replace(/\D/g, '')
+      if (!normalized) return null
+
+      const existing = allFoods.find((food) => food.barcode === normalized)
+      if (existing) return existing
+
+      const scanned = await lookupBarcodeFood(token, normalized)
+      if (!scanned) return null
+
+      const item: FoodItem = {
+        id: scanned.id,
+        name: scanned.name,
+        brand: scanned.brand,
+        caloriesPer100g: scanned.caloriesPer100g,
+        proteinPer100g: scanned.proteinPer100g,
+        carbsPer100g: scanned.carbsPer100g,
+        fatPer100g: scanned.fatPer100g,
+        fiberPer100g: scanned.fiberPer100g,
+        isCustom: false,
+        barcode: scanned.barcode,
+        suggestedServingGrams: scanned.suggestedServingGrams,
+      }
+
+      setCustomFoods((prev) => {
+        if (prev.some((food) => food.id === item.id || food.barcode === item.barcode)) {
+          return prev
+        }
+        return [item, ...prev]
+      })
+
+      return item
+    },
+    [token, allFoods],
   )
 
   const caloriesByDay = useMemo(() => {
@@ -260,5 +301,6 @@ export function useCalorieTracker() {
     logFood,
     removeLog,
     searchFoods,
+    lookupFoodByBarcode,
   }
 }

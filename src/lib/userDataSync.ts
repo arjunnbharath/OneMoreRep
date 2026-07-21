@@ -6,6 +6,22 @@ let cachedStore: Record<string, unknown> | null = null
 let inflight: Promise<Record<string, unknown>> | null = null
 
 const pendingSaves = new Map<string, ReturnType<typeof setTimeout>>()
+const SYNC_QUEUE_KEY = 'onemorerep-sync-queue'
+
+type QueuedSave = {
+  userId: number
+  key: UserDataKey
+  data: unknown
+  timestamp: number
+}
+
+const syncListeners = new Set<() => void>()
+
+function notifySyncStatus() {
+  for (const listener of syncListeners) {
+    listener()
+  }
+}
 
 function scopedLocalKey(userId: number, key: UserDataKey) {
   return `onemorerep:${userId}:${key}`
@@ -17,6 +33,41 @@ function readLocal<T>(storageKey: string): T | null {
     return raw ? (JSON.parse(raw) as T) : null
   } catch {
     return null
+  }
+}
+
+function readSyncQueue(): QueuedSave[] {
+  try {
+    const raw = localStorage.getItem(SYNC_QUEUE_KEY)
+    return raw ? (JSON.parse(raw) as QueuedSave[]) : []
+  } catch {
+    return []
+  }
+}
+
+function writeSyncQueue(queue: QueuedSave[]) {
+  localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue))
+  notifySyncStatus()
+}
+
+function queueFailedSave(userId: number, key: UserDataKey, data: unknown) {
+  const queue = readSyncQueue().filter((item) => !(item.userId === userId && item.key === key))
+  queue.push({ userId, key, data, timestamp: Date.now() })
+  writeSyncQueue(queue)
+}
+
+export function isOnline() {
+  return typeof navigator === 'undefined' ? true : navigator.onLine
+}
+
+export function getPendingSyncCount() {
+  return readSyncQueue().length
+}
+
+export function subscribeSyncStatus(listener: () => void) {
+  syncListeners.add(listener)
+  return () => {
+    syncListeners.delete(listener)
   }
 }
 
@@ -44,10 +95,19 @@ export function clearLocalUserData(userId: number) {
   for (const key of LEGACY_LOCAL_KEYS) {
     localStorage.removeItem(key)
   }
+  const queue = readSyncQueue().filter((item) => item.userId !== userId)
+  writeSyncQueue(queue)
   clearUserDataCache()
 }
 
 async function ensureRemoteStore(userId: number, token: string) {
+  if (!isOnline()) {
+    if (cachedUserId === userId && cachedStore) return cachedStore
+    cachedUserId = userId
+    cachedStore = cachedStore ?? {}
+    return cachedStore
+  }
+
   if (cachedUserId === userId && cachedStore) return cachedStore
   if (inflight) return inflight
 
@@ -61,8 +121,8 @@ async function ensureRemoteStore(userId: number, token: string) {
     .catch(() => {
       inflight = null
       cachedUserId = userId
-      cachedStore = {}
-      return {}
+      cachedStore = cachedStore ?? {}
+      return cachedStore ?? {}
     })
 
   return inflight
@@ -75,8 +135,15 @@ export async function loadUserDataValue<T>(
   fallback: T,
   legacyLocalKey?: string,
 ): Promise<T> {
-  const store = await ensureRemoteStore(userId, token)
   const localKey = scopedLocalKey(userId, key)
+  const localValue = readLocal<T>(localKey)
+
+  if (!isOnline()) {
+    if (localValue !== null) return localValue
+    return fallback
+  }
+
+  const store = await ensureRemoteStore(userId, token)
 
   if (store[key] !== undefined && store[key] !== null) {
     const value = store[key] as T
@@ -84,7 +151,6 @@ export async function loadUserDataValue<T>(
     return value
   }
 
-  const localValue = readLocal<T>(localKey)
   if (localValue !== null) {
     scheduleUserDataSave(userId, token, key, localValue)
     return localValue
@@ -100,6 +166,27 @@ export async function loadUserDataValue<T>(
   }
 
   return fallback
+}
+
+async function persistRemote(
+  userId: number,
+  token: string,
+  key: UserDataKey,
+  data: unknown,
+) {
+  if (!isOnline()) {
+    queueFailedSave(userId, key, data)
+    return
+  }
+
+  try {
+    await putUserData(token, key, data)
+    const queue = readSyncQueue().filter((item) => !(item.userId === userId && item.key === key))
+    writeSyncQueue(queue)
+  } catch (err) {
+    console.error(`Failed to sync ${key}:`, err)
+    queueFailedSave(userId, key, data)
+  }
 }
 
 export function scheduleUserDataSave<T>(
@@ -121,9 +208,35 @@ export function scheduleUserDataSave<T>(
     pendingKey,
     setTimeout(() => {
       pendingSaves.delete(pendingKey)
-      void putUserData(token, key, data).catch((err) => {
-        console.error(`Failed to sync ${key}:`, err)
-      })
+      void persistRemote(userId, token, key, data)
     }, 700),
   )
+}
+
+export async function flushSyncQueue(userId: number, token: string) {
+  if (!isOnline()) return
+
+  const queue = readSyncQueue().filter((item) => item.userId === userId)
+  if (queue.length === 0) return
+
+  const remaining: QueuedSave[] = readSyncQueue().filter((item) => item.userId !== userId)
+
+  for (const item of queue) {
+    try {
+      await putUserData(token, item.key, item.data)
+      if (cachedStore) cachedStore[item.key] = item.data
+    } catch (err) {
+      console.error(`Failed to flush sync for ${item.key}:`, err)
+      remaining.push(item)
+    }
+  }
+
+  const otherUsers = readSyncQueue().filter((item) => item.userId !== userId)
+  writeSyncQueue([...otherUsers, ...remaining])
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    notifySyncStatus()
+  })
 }

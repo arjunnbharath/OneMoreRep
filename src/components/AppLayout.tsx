@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Activity, BookOpen, Dumbbell, Flame, Home, User } from 'lucide-react'
 import MobileBottomNav from './MobileBottomNav'
+import OfflineBanner from './OfflineBanner'
 import UserAvatar from './UserAvatar'
 import { TourProvider } from '../context/TourContext'
 import { useAuth } from '../context/AuthContext'
@@ -28,6 +29,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-dvh bg-background text-foreground lg:flex">
+      <OfflineBanner />
       <aside className="desktop-sidebar-rail hidden border-r border-border bg-surface/90 shadow-sm backdrop-blur-xl lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:px-5 lg:py-8 dark:border-white/8 dark:bg-surface/60 dark:shadow-none">
         <div className="mb-8 flex items-center gap-3 px-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-foreground text-background shadow-sm">

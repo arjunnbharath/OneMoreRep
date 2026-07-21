@@ -162,10 +162,64 @@ async function getFriendProgress(userId, friendId) {
   }
 }
 
+async function listFriendsActivity(userId, limit = 20) {
+  await ensureDb()
+
+  const friends = await listFriends(userId)
+  if (friends.length === 0) return []
+
+  const friendIds = friends.map((friend) => friend.id)
+  const sessionsResult = await query(
+    `SELECT user_id, data
+     FROM user_data
+     WHERE user_id = ANY($1::int[])
+       AND data_key = $2`,
+    [friendIds, USER_DATA_KEYS.trackerSessions],
+  )
+
+  const sessionsByFriend = new Map(
+    friendIds.map((id) => [id, []]),
+  )
+
+  for (const row of sessionsResult.rows) {
+    if (Array.isArray(row.data)) {
+      sessionsByFriend.set(row.user_id, row.data)
+    }
+  }
+
+  const items = []
+
+  for (const friend of friends) {
+    const sessions = sessionsByFriend.get(friend.id) ?? []
+    for (const session of sessions) {
+      if (!session?.id) continue
+      items.push({
+        id: `${friend.id}-${session.id}`,
+        friend: {
+          id: friend.id,
+          name: friend.name,
+          username: friend.username,
+          avatarUrl: friend.avatarUrl ?? null,
+        },
+        session,
+      })
+    }
+  }
+
+  return items
+    .sort((a, b) => {
+      const aTime = new Date(a.session.completedAt ?? a.session.date).getTime()
+      const bTime = new Date(b.session.completedAt ?? b.session.date).getTime()
+      return bTime - aTime
+    })
+    .slice(0, limit)
+}
+
 module.exports = {
   getUserIdFromAuthHeader,
   listFriends,
   addFriendByUsername,
   removeFriend,
   getFriendProgress,
+  listFriendsActivity,
 }
