@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, BookOpen, ChevronRight, Search } from 'lucide-react'
 import { useAppInstalled } from '../../hooks/useAppInstalled'
+import ExerciseImage from '../ExerciseImage'
 import {
   exerciseGroupLabels,
   exerciseGroups,
@@ -210,7 +211,11 @@ export default function ExerciseGuidesV1({ embedded = false, onBack }: ExerciseG
                         className="group flex w-full items-center gap-3 rounded-2xl bg-surface p-3 text-left ring-1 ring-border transition active:scale-[0.99]"
                       >
                         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-black ring-1 ring-border/80">
-                          <img src={exercise.image} alt="" className="h-full w-full object-cover" />
+                          <ExerciseImage
+                            src={exercise.image}
+                            group={exercise.group}
+                            className="h-full w-full object-cover"
+                          />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-semibold">{exercise.name}</p>
@@ -236,9 +241,9 @@ export default function ExerciseGuidesV1({ embedded = false, onBack }: ExerciseG
                         className="group flex h-full w-full flex-col overflow-hidden rounded-2xl bg-surface text-left ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-foreground/20"
                       >
                         <div className="relative aspect-[4/3] overflow-hidden bg-black">
-                          <img
+                          <ExerciseImage
                             src={exercise.image}
-                            alt=""
+                            group={exercise.group}
                             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                           />
                         </div>

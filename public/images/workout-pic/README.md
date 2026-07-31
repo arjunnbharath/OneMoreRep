@@ -16,6 +16,6 @@ Add images for each muscle group in its folder. They are served from `/images/wo
 ## Suggested files
 
 - **Muscle tile (Home grid):** e.g. `chest/cover.jpg` → `/images/workout-pic/chest/cover.jpg`
-- **Per exercise:** e.g. `chest/barbell-bench-press.jpg`
+- **Per exercise:** e.g. `chest/barbell-bench-press.gif`
 
-Supported formats: `.jpg`, `.jpeg`, `.png`, `.webp`
+Supported formats: `.gif`, `.jpg`, `.jpeg`, `.png`, `.webp` (per-exercise files use `.gif`)

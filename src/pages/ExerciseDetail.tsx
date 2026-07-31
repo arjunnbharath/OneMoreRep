@@ -1,6 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Dumbbell, Lightbulb, ListOrdered } from 'lucide-react'
 import Button from '../components/Button'
+import ExerciseImage from '../components/ExerciseImage'
 import { exerciseGroupLabels, getExerciseById, type ExerciseGroup } from '../data/exerciseGuides'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { useAppInstalled } from '../hooks/useAppInstalled'
@@ -61,7 +62,11 @@ export default function ExerciseDetail() {
   return (
     <div className="min-h-full bg-background text-foreground lg:desktop-page lg:mx-auto lg:grid lg:max-w-6xl lg:grid-cols-[minmax(320px,44%)_minmax(0,1fr)]">
       <div className="relative h-64 lg:sticky lg:top-0 lg:h-dvh">
-        <img src={currentExercise.image} alt="" className="h-full w-full object-cover" />
+        <ExerciseImage
+          src={currentExercise.image}
+          group={currentExercise.group}
+          className="h-full w-full object-cover"
+        />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30 lg:from-black/50 lg:via-black/10" />
         {!appInstalled && (
           <button

@@ -1,5 +1,6 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
+import ExerciseImage from '../components/ExerciseImage'
 import {
   getExerciseGroupById,
   getExercisesByGroup,
@@ -80,9 +81,9 @@ export default function MuscleGroupExercises() {
                 className="group flex w-full items-center gap-4 rounded-2xl bg-surface p-3.5 text-left shadow-sm ring-1 ring-border transition hover:bg-surface-elevated hover:ring-foreground/15 dark:shadow-none"
               >
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface-elevated ring-1 ring-border/80">
-                  <img
+                  <ExerciseImage
                     src={exercise.image}
-                    alt=""
+                    group={exercise.group}
                     className="h-full w-full object-cover"
                   />
                 </div>

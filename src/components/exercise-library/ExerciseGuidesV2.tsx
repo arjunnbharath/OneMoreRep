@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronRight, Search } from 'lucide-react'
 import { useAppInstalled } from '../../hooks/useAppInstalled'
+import ExerciseImage from '../ExerciseImage'
 import {
   exerciseGroups,
   exerciseGuides,
@@ -34,9 +35,9 @@ function ExerciseRow({
         className="group flex w-full items-center gap-3 rounded-xl px-1 py-2 text-left transition hover:bg-surface"
       >
         <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-black/5 ring-1 ring-border/60">
-          <img
+          <ExerciseImage
             src={exercise.image}
-            alt=""
+            group={exercise.group}
             className="h-full w-full object-cover"
           />
         </div>

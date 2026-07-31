@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronDown, ChevronRight, Plus, Search, Trash2 } from 'lucide-react'
 import SwipeablePlanDayCard, { SWIPE_HINT_TOTAL_MS } from '../plan/SwipeablePlanDayCard'
+import ExerciseImage from '../ExerciseImage'
 import { useAppInstalled } from '../../hooks/useAppInstalled'
 import {
   exerciseGroupLabels,
@@ -448,9 +449,9 @@ function MuscleScreen({
                       className="flex min-w-0 items-center gap-2.5 rounded-2xl bg-surface p-2.5 ring-1 ring-border"
                     >
                       <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl ring-1 ring-border/60">
-                        <img
+                        <ExerciseImage
                           src={exercise.image}
-                          alt=""
+                          group={exercise.group}
                           className="h-full w-full object-cover"
                         />
                       </div>

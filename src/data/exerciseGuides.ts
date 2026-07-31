@@ -1,3 +1,5 @@
+import { chestExerciseContent } from './exerciseContent/chest'
+
 export type ExerciseGroup =
   | 'chest'
   | 'back'
@@ -51,6 +53,24 @@ function slugify(name: string) {
     .replace(/(^-|-$)/g, '')
 }
 
+export function exerciseImagePath(group: ExerciseGroup, name: string) {
+  return `/images/workout-pic/${group}/${slugify(name)}.gif`
+}
+
+export function exerciseGroupImage(group: ExerciseGroup) {
+  return groupImages[group]
+}
+
+type ExerciseContentOverride = {
+  description: string
+  steps: string[]
+  tips: string[]
+}
+
+const exerciseContentById: Record<string, ExerciseContentOverride> = {
+  ...chestExerciseContent,
+}
+
 function inferEquipment(name: string): string {
   const n = name.toLowerCase()
   if (n.includes('dumbbell')) return 'Dumbbell'
@@ -71,24 +91,28 @@ function inferEquipment(name: string): string {
 }
 
 function makeExercise(name: string, group: ExerciseGroup): ExerciseGuide {
+  const id = slugify(name)
   const equipment = inferEquipment(name)
+  const custom = exerciseContentById[id]
   return {
-    id: slugify(name),
+    id,
     name,
     group,
     equipment,
-    description: `${name} targets the ${exerciseGroupLabels[group].toLowerCase()} with a focus on controlled reps, stable joints, and full range of motion.`,
-    steps: [
+    description:
+      custom?.description ??
+      `${name} targets the ${exerciseGroupLabels[group].toLowerCase()} with a focus on controlled reps, stable joints, and full range of motion.`,
+    steps: custom?.steps ?? [
       'Set your stance and grip, brace your core, and keep shoulders packed.',
       'Lower or extend through the working range with a slow, controlled tempo.',
       'Drive back to the start position without using momentum or bouncing.',
     ],
-    tips: [
+    tips: custom?.tips ?? [
       'Warm up with lighter weight before working sets.',
       'Stop the set when form breaks down, not when you hit a rep goal.',
       'Breathe out on the effort phase and keep tension on the target muscle.',
     ],
-    image: groupImages[group],
+    image: exerciseImagePath(group, name),
   }
 }
 
