@@ -1,4 +1,5 @@
 import { Check, ChevronRight, Plus, Snowflake, Trash2 } from 'lucide-react'
+import FireEmoji from '../components/ui/FireEmoji'
 import { useMemo, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import {
@@ -12,6 +13,8 @@ import { useWinterArc } from '../hooks/useWinterArc'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
 import type { WinterArcDailyTask } from '../types/winterArc'
+
+const WINTER_ARC_BG = '/images/gym_background/gym-pic.jpg'
 
 function HabitRow({
   task,
@@ -118,48 +121,84 @@ export default function WinterArc() {
   }
 
   return (
-    <div className="min-h-full bg-background pb-24 lg:pb-10">
-      <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-blue-950 text-white">
-        <div className="mx-auto max-w-2xl px-5 pb-5 pt-[max(1rem,env(safe-area-inset-top))] lg:px-8 lg:pt-6">
+    <div className="relative min-h-full pb-24 lg:pb-10">
+      <img
+        src={WINTER_ARC_BG}
+        alt=""
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/55 to-black/85"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[min(32rem,58vh)] bg-gradient-to-b from-slate-900/50 via-slate-900/25 to-transparent"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[min(32rem,58vh)] bg-gradient-to-br from-blue-950/40 via-blue-950/10 to-transparent"
+        aria-hidden
+      />
+
+      <div className="relative text-white">
+        <div className="relative mx-auto max-w-2xl px-5 pb-6 pt-[max(1.25rem,env(safe-area-inset-top))] lg:px-8 lg:pt-8">
           <button
             type="button"
             onClick={() => navigate('/home')}
-            className="mb-3 text-sm text-white/60 hover:text-white"
+            className="mb-4 text-sm text-white/60 transition hover:text-white"
           >
-            ← Home
+            ← Back to home
           </button>
 
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
-                <Snowflake size={18} className="text-sky-200" />
-              </span>
-              <div>
-                <h1 className="text-xl font-semibold">
-                  {progress.arcComplete ? 'Arc complete' : `Day ${progress.dayNumber}`}
-                </h1>
-                {!progress.arcComplete && (
-                  <p className="text-xs text-white/55">
-                    {progress.daysRemaining}d left · {formatWinterArcEndDate(progress.endDateKey)}
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
+                  <Snowflake size={18} className="text-sky-200" />
+                </span>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/50">
+                    Winter Arc
                   </p>
-                )}
+                  <h1 className="text-2xl font-semibold tracking-tight">
+                    {progress.arcComplete ? 'Arc complete' : `Day ${progress.dayNumber}`}
+                  </h1>
+                </div>
               </div>
+              <p className="mt-2 text-sm text-white/60">
+                {progress.arcComplete
+                  ? `${progress.totalWorkouts} workouts during your arc`
+                  : `${progress.daysRemaining} days left · ends ${formatWinterArcEndDate(progress.endDateKey)}`}
+              </p>
             </div>
+
             {progress.streak > 0 && (
-              <p className="text-sm font-semibold tabular-nums">{progress.streak}🔥</p>
+              <div className="flex shrink-0 items-center gap-1 rounded-xl bg-white/10 px-3 py-2 ring-1 ring-white/10">
+                <span className="text-lg font-bold tabular-nums leading-none text-white">
+                  {progress.streak}
+                </span>
+                <FireEmoji size={18} />
+              </div>
             )}
           </div>
 
-          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full rounded-full bg-sky-400"
-              style={{ width: `${progress.progressPercent}%` }}
-            />
+          <div className="mt-5">
+            <div className="mb-1.5 flex items-center justify-between text-[11px] text-white/55">
+              <span>Arc progress</span>
+              <span className="tabular-nums">{progress.progressPercent}%</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-300 transition-all"
+                style={{ width: `${progress.progressPercent}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-2xl px-5 py-5 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-2xl px-5 pt-4 lg:px-8">
         {!progress.arcComplete && (
           <section className="overflow-hidden rounded-2xl border border-border bg-surface ring-1 ring-border">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">

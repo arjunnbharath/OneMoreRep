@@ -18,6 +18,7 @@ interface HomeDesktopProps {
   showWinterArc?: boolean
   winterArcProgress?: WinterArcProgress | null
   winterArcTaskSummary?: { completed: number; total: number }
+  pendingHabits?: string[]
 }
 
 export default function HomeDesktop({
@@ -29,6 +30,7 @@ export default function HomeDesktop({
   showWinterArc,
   winterArcProgress,
   winterArcTaskSummary,
+  pendingHabits,
 }: HomeDesktopProps) {
   const navigate = useNavigate()
   const recentSessions = sessions.slice(0, 5)
@@ -74,6 +76,7 @@ export default function HomeDesktop({
               progress={winterArcProgress}
               tasksCompleted={winterArcTaskSummary?.completed ?? 0}
               tasksTotal={winterArcTaskSummary?.total ?? 0}
+              pendingHabits={pendingHabits ?? []}
               onOpen={() => navigate('/winter-arc')}
             />
           )}

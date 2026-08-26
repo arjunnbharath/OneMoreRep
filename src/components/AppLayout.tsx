@@ -4,6 +4,7 @@ import MobileBottomNav from './MobileBottomNav'
 import OfflineBanner from './OfflineBanner'
 import UserAvatar from './UserAvatar'
 import { TourProvider } from '../context/TourContext'
+import { WorkoutTrackerProvider } from '../context/WorkoutTrackerContext'
 import { useAuth } from '../context/AuthContext'
 
 const navItems = [
@@ -86,21 +87,23 @@ export default function AppLayout() {
         ].join(' ')}
       >
         <TourProvider>
-          <main
-            className={[
-              'desktop-main-scroll flex-1 overflow-x-hidden lg:pb-10',
-              hideMobileNavSpacer
-                ? 'flex h-[calc(100dvh-var(--mobile-nav-height))] min-h-0 flex-col overflow-hidden lg:h-auto lg:overflow-visible'
-                : '',
-            ].join(' ')}
-          >
-            <Outlet />
-          </main>
-          <div
-            className={hideMobileNavSpacer ? 'hidden' : 'mobile-nav-spacer lg:hidden'}
-            aria-hidden="true"
-          />
-          <MobileBottomNav />
+          <WorkoutTrackerProvider>
+            <main
+              className={[
+                'desktop-main-scroll flex-1 overflow-x-hidden lg:pb-10',
+                hideMobileNavSpacer
+                  ? 'flex h-[calc(100dvh-var(--mobile-nav-height))] min-h-0 flex-col overflow-hidden lg:h-auto lg:overflow-visible'
+                  : '',
+              ].join(' ')}
+            >
+              <Outlet />
+            </main>
+            <div
+              className={hideMobileNavSpacer ? 'hidden' : 'mobile-nav-spacer lg:hidden'}
+              aria-hidden="true"
+            />
+            <MobileBottomNav />
+          </WorkoutTrackerProvider>
         </TourProvider>
       </div>
     </div>

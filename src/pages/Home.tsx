@@ -4,16 +4,21 @@ import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
 import { useWinterArc } from '../hooks/useWinterArc'
 import { toLocalDateKey } from '../lib/nutritionMath'
 import { useCalorieTracker } from '../hooks/useCalorieTracker'
-import { computeWinterArcProgress, getDailyTasks, summarizeDailyTasks } from '../lib/winterArc'
+import {
+  computeWinterArcProgress,
+  getDailyTasks,
+  getPendingHabitLabels,
+  summarizeDailyTasks,
+} from '../lib/winterArc'
 import HomeDesktop from './home/HomeDesktop'
 import HomeMobile from './home/HomeMobile'
 import { useHomeStats } from './home/homeUtils'
 
 export default function Home() {
-  const { sessions } = useWorkoutTracker()
+  const { sessions, ready: trackerReady } = useWorkoutTracker()
   const { caloriesByDay } = useCalorieTracker()
   const { plan } = useWorkoutPlan()
-  const { state: winterArcState } = useWinterArc()
+  const { state: winterArcState, ready: winterArcReady } = useWinterArc()
 
   const stats = useHomeStats(sessions)
   const todayCalories = caloriesByDay[toLocalDateKey()] ?? 0
@@ -23,13 +28,23 @@ export default function Home() {
     [sessions, winterArcState],
   )
 
+  const habitsReady = winterArcReady && trackerReady
+
   const winterArcTaskSummary = useMemo(() => {
-    if (!winterArcState.enrolled) return { completed: 0, total: 0 }
+    if (!habitsReady || !winterArcState.enrolled) return { completed: 0, total: 0 }
     return summarizeDailyTasks(getDailyTasks(winterArcState, sessions, plan))
-  }, [winterArcState, sessions, plan])
+  }, [habitsReady, winterArcState, sessions, plan])
+
+  const pendingHabits = useMemo(() => {
+    if (!habitsReady || !winterArcState.enrolled) return []
+    return getPendingHabitLabels(getDailyTasks(winterArcState, sessions, plan))
+  }, [habitsReady, winterArcState, sessions, plan])
 
   const showWinterArc =
-    winterArcState.enrolled && winterArcState.showOnHome && winterArcProgress !== null
+    habitsReady &&
+    winterArcState.enrolled &&
+    winterArcState.showOnHome &&
+    winterArcProgress !== null
 
   const shared = {
     stats,
@@ -40,6 +55,7 @@ export default function Home() {
     showWinterArc,
     winterArcProgress,
     winterArcTaskSummary,
+    pendingHabits,
   }
 
   return (

@@ -61,19 +61,22 @@ export function computeWinterArcProgress(
   const arcComplete = todayKey > endDateKey || dayNumber >= WINTER_ARC_DURATION_DAYS
 
   const arcSessions = sessions.filter((session) => {
-    const key = toDateKey(new Date(session.date))
+    const stamp = session.completedAt ?? session.date
+    const key = toDateKey(new Date(stamp))
     return key >= state.enrolledAt! && key <= endDateKey
   })
 
   const weekKeys = getCurrentWeekKeySet(today)
-  const workoutsThisWeek = arcSessions.filter((session) =>
-    weekKeys.has(toDateKey(new Date(session.date))),
-  ).length
+  const workoutsThisWeek = arcSessions.filter((session) => {
+    const stamp = session.completedAt ?? session.date
+    return weekKeys.has(toDateKey(new Date(stamp)))
+  }).length
 
   const weeklyTarget = state.workoutsPerWeek
-  const trainedToday = arcSessions.some(
-    (session) => toDateKey(new Date(session.date)) === todayKey,
-  )
+  const trainedToday = arcSessions.some((session) => {
+    const stamp = session.completedAt ?? session.date
+    return toDateKey(new Date(stamp)) === todayKey
+  })
 
   const daysRemaining = arcComplete
     ? 0
@@ -102,8 +105,11 @@ export function formatWinterArcEndDate(endDateKey: string) {
   })
 }
 
-function sessionOnDate(sessions: WorkoutSession[], dateKey: string) {
-  return sessions.some((session) => toDateKey(new Date(session.date)) === dateKey)
+function workoutCompletedOnDate(sessions: WorkoutSession[], dateKey: string) {
+  return sessions.some((session) => {
+    const stamp = session.completedAt ?? session.date
+    return toDateKey(new Date(stamp)) === dateKey
+  })
 }
 
 export function getTodayWorkoutSummary(plan: WeeklyPlan) {
@@ -145,7 +151,7 @@ export function getDailyTasks(
   dateKey = toDateKey(new Date()),
 ): WinterArcDailyTask[] {
   const workoutSummary = getTodayWorkoutSummary(plan)
-  const trainedToday = sessionOnDate(sessions, dateKey)
+  const trainedToday = workoutCompletedOnDate(sessions, dateKey)
   const completedIds = state.completedByDate[dateKey] ?? []
 
   const workoutTask: WinterArcDailyTask = {
@@ -175,6 +181,25 @@ export function getDailyTasks(
 export function summarizeDailyTasks(tasks: WinterArcDailyTask[]) {
   const completed = tasks.filter((task) => task.completed).length
   return { completed, total: tasks.length }
+}
+
+const HABIT_KIND_ORDER: Record<WinterArcDailyTask['kind'], number> = {
+  workout: 0,
+  sugar: 1,
+  habit: 2,
+}
+
+function habitDisplayLabel(task: WinterArcDailyTask) {
+  if (task.kind === 'workout') return 'Workout'
+  if (task.kind === 'sugar') return 'Sugar cut'
+  return task.label
+}
+
+export function getPendingHabitLabels(tasks: WinterArcDailyTask[]) {
+  return tasks
+    .filter((task) => !task.completed)
+    .sort((a, b) => HABIT_KIND_ORDER[a.kind] - HABIT_KIND_ORDER[b.kind])
+    .map(habitDisplayLabel)
 }
 
 export function normalizeWinterArcTasks(raw: unknown): WinterArcTask[] {

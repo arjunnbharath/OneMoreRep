@@ -17,6 +17,7 @@ interface HomeMobileProps {
   showWinterArc?: boolean
   winterArcProgress?: WinterArcProgress | null
   winterArcTaskSummary?: { completed: number; total: number }
+  pendingHabits?: string[]
 }
 
 export default function HomeMobile({
@@ -28,6 +29,7 @@ export default function HomeMobile({
   showWinterArc,
   winterArcProgress,
   winterArcTaskSummary,
+  pendingHabits,
 }: HomeMobileProps) {
   const navigate = useNavigate()
 
@@ -54,6 +56,7 @@ export default function HomeMobile({
               progress={winterArcProgress}
               tasksCompleted={winterArcTaskSummary?.completed ?? 0}
               tasksTotal={winterArcTaskSummary?.total ?? 0}
+              pendingHabits={pendingHabits ?? []}
               onOpen={() => navigate('/winter-arc')}
             />
           )}
