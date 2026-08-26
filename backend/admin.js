@@ -9,14 +9,27 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret'
 function getAdminCredentials() {
   return {
     username: String(process.env.ADMIN_USERNAME || '').trim().toLowerCase(),
-    password: String(process.env.ADMIN_PASSWORD || ''),
+    password: String(process.env.ADMIN_PASSWORD || '').trim(),
+    email: String(process.env.ADMIN_EMAIL || '').trim().toLowerCase(),
   }
 }
 
+function isAdminConfigured() {
+  const { username, password } = getAdminCredentials()
+  return Boolean(username && password)
+}
+
+function matchesAdminIdentifier(identifier) {
+  const { username, email } = getAdminCredentials()
+  const normalized = String(identifier || '').trim().toLowerCase()
+  if (!normalized) return false
+  if (username && normalized === username) return true
+  if (email && normalized === email) return true
+  return false
+}
+
 function isAdminLoginAttempt(identifier) {
-  const { username } = getAdminCredentials()
-  if (!username) return false
-  return String(identifier || '').trim().toLowerCase() === username
+  return matchesAdminIdentifier(identifier)
 }
 
 function signAdminToken(username) {
@@ -46,7 +59,7 @@ async function loginAdmin(identifier, password) {
     throw new AuthError('User ID and password are required', 400)
   }
 
-  if (normalized !== username || password !== adminPassword) {
+  if (!matchesAdminIdentifier(identifier) || password !== adminPassword) {
     throw new AuthError('Invalid admin credentials', 401)
   }
 
@@ -237,6 +250,7 @@ module.exports = {
   requireAdmin,
   verifyAdminToken,
   isAdminLoginAttempt,
+  isAdminConfigured,
   listUsers,
   getUserById,
   getUserDataSummary,

@@ -85,7 +85,12 @@ function sendAuthError(res, err) {
 
 async function handleHealth(_req, res) {
   await ensureDb()
-  return res.status(200).json({ ok: true, database: 'connected' })
+  const { isAdminConfigured } = require('./admin.js')
+  return res.status(200).json({
+    ok: true,
+    database: 'connected',
+    adminConfigured: isAdminConfigured(),
+  })
 }
 
 async function handleAuthLogin(req, res) {
