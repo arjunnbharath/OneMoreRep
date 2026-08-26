@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import ScrollToTop from './components/ScrollToTop'
 import PushNotificationSync from './components/PushNotificationSync'
@@ -10,12 +11,23 @@ import MuscleGroupExercises from './pages/MuscleGroupExercises'
 import Home from './pages/Home'
 import WorkoutDetail from './pages/WorkoutDetail'
 import TrackerRoute from './components/tracker/TrackerRoute'
-import { CalorieTrackerPage } from './pages/CalorieTracker'
 import Profile from './pages/Profile'
 import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import Admin from './pages/Admin'
+
+const CalorieTrackerPage = lazy(() =>
+  import('./pages/CalorieTracker').then((m) => ({ default: m.CalorieTrackerPage })),
+)
+
+function PageLoader() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-foreground" />
+    </div>
+  )
+}
 
 export default function App() {
   return (
@@ -38,7 +50,14 @@ export default function App() {
           <Route path="/exercises/:id" element={<ExerciseDetail />} />
           <Route path="/workout/:id" element={<WorkoutDetail />} />
           <Route path="/tracker/*" element={<TrackerRoute />} />
-          <Route path="/calories" element={<CalorieTrackerPage />} />
+          <Route
+            path="/calories"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <CalorieTrackerPage />
+              </Suspense>
+            }
+          />
           <Route path="/profile/*" element={<Profile />} />
         </Route>
       </Route>
