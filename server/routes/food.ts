@@ -3,8 +3,8 @@ import { createRequire } from 'node:module'
 import { AuthError } from '../auth-bridge.js'
 
 const require = createRequire(import.meta.url)
-const { getUserIdFromAuthHeader } = require('../../api/lib/friends.js')
-const { lookupBarcode, searchFood } = require('../../api/lib/food.js')
+const { getUserIdFromAuthHeader } = require('../../backend/friends.js')
+const { lookupBarcode, searchFood } = require('../../backend/food.js')
 
 const router = Router()
 

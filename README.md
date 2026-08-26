@@ -74,7 +74,7 @@ npm run lint     # Oxlint
 
 ## API
 
-Auth and user data run as Vercel serverless functions in `api/` (production) and Express in `server/` (local dev). Both share `api/lib/`.
+Auth and user data run as a Vercel serverless function in `api/index.js` (production) and Express in `server/` (local dev). Both share `backend/`.
 
 ### Auth
 

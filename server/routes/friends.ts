@@ -10,9 +10,9 @@ const {
   removeFriend,
   getFriendProgress,
   listFriendsActivity,
-} = require('../../api/lib/friends.js')
-const { sendNudge, listNudges, markNudgesRead, clearNudges } = require('../../api/lib/friendNudges.js')
-const { setFriendNotificationMute } = require('../../api/lib/friendMutes.js')
+} = require('../../backend/friends.js')
+const { sendNudge, listNudges, markNudgesRead, clearNudges } = require('../../backend/friendNudges.js')
+const { setFriendNotificationMute } = require('../../backend/friendMutes.js')
 
 const router = Router()
 

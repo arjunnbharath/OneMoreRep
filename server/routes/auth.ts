@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import { AuthError, changeUserPassword, deleteUser, getUserFromToken, loginUser, registerUser, updateUserAvatar } from '../auth-bridge.js'
 
 const require = createRequire(import.meta.url)
-const { isAdminLoginAttempt, loginAdmin } = require('../../api/lib/admin.js')
+const { isAdminLoginAttempt, loginAdmin } = require('../../backend/admin.js')
 
 const router = Router()
 

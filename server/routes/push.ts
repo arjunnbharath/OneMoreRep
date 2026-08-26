@@ -7,8 +7,8 @@ const {
   getVapidPublicKey,
   saveSubscription,
   deleteSubscription,
-} = require('../../api/lib/push.js')
-const { getUserIdFromAuthHeader } = require('../../api/lib/friends.js')
+} = require('../../backend/push.js')
+const { getUserIdFromAuthHeader } = require('../../backend/friends.js')
 
 const router = Router()
 

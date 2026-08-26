@@ -17,7 +17,7 @@ const {
   setUserAdminAccess,
   clearAllUsersData,
   deleteAllUsers,
-} = require('../../api/lib/admin.js')
+} = require('../../backend/admin.js')
 
 const router = Router()
 

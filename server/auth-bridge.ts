@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
-const auth = require('../api/lib/auth.js')
+const auth = require('../backend/auth.js')
 
 export const AuthError = auth.AuthError
 export const registerUser = auth.registerUser

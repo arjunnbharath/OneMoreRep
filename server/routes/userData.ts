@@ -8,7 +8,7 @@ const {
   getAllUserData,
   setUserDataEntry,
   clearAllUserData,
-} = require('../../api/lib/userData.js')
+} = require('../../backend/userData.js')
 
 const router = Router()
 
