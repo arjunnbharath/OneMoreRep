@@ -14,8 +14,6 @@ import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
 import type { WinterArcDailyTask } from '../types/winterArc'
 
-const WINTER_ARC_BG = '/images/gym_background/gym-pic.jpg'
-
 function HabitRow({
   task,
   onPress,
@@ -121,28 +119,18 @@ export default function WinterArc() {
   }
 
   return (
-    <div className="relative min-h-full pb-24 lg:pb-10">
-      <img
-        src={WINTER_ARC_BG}
-        alt=""
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/55 to-black/85"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[min(32rem,58vh)] bg-gradient-to-b from-slate-900/50 via-slate-900/25 to-transparent"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[min(32rem,58vh)] bg-gradient-to-br from-blue-950/40 via-blue-950/10 to-transparent"
-        aria-hidden
-      />
+    <div className="min-h-full bg-background pb-24 lg:pb-10">
+      <div className="relative overflow-hidden text-white">
+        <div
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-blue-950"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background via-background/70 to-transparent"
+          aria-hidden
+        />
 
-      <div className="relative text-white">
-        <div className="relative mx-auto max-w-2xl px-5 pb-6 pt-[max(1.25rem,env(safe-area-inset-top))] lg:px-8 lg:pt-8">
+        <div className="relative mx-auto max-w-2xl px-5 pb-10 pt-[max(1.25rem,env(safe-area-inset-top))] lg:px-8 lg:pt-8">
           <button
             type="button"
             onClick={() => navigate('/home')}
@@ -174,12 +162,10 @@ export default function WinterArc() {
             </div>
 
             {progress.streak > 0 && (
-              <div className="flex shrink-0 items-center gap-1 rounded-xl bg-white/10 px-3 py-2 ring-1 ring-white/10">
-                <span className="text-lg font-bold tabular-nums leading-none text-white">
-                  {progress.streak}
-                </span>
+              <span className="text-lg font-bold tabular-nums leading-none text-white">
+                {progress.streak}
                 <FireEmoji size={18} />
-              </div>
+              </span>
             )}
           </div>
 
@@ -198,7 +184,7 @@ export default function WinterArc() {
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-2xl px-5 pt-4 lg:px-8">
+      <div className="mx-auto max-w-2xl px-5 py-5 lg:px-8">
         {!progress.arcComplete && (
           <section className="overflow-hidden rounded-2xl border border-border bg-surface ring-1 ring-border">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">

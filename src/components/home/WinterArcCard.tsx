@@ -63,10 +63,10 @@ export default function WinterArcCard({
 
           <div className="flex shrink-0 items-center gap-2">
             {streak > 0 && (
-              <div className="flex items-center gap-1 rounded-xl bg-white/10 px-3 py-2 ring-1 ring-white/10">
-                <span className="text-lg font-bold tabular-nums leading-none text-white">{streak}</span>
+              <span className="text-lg font-bold tabular-nums leading-none text-white">
+                {streak}
                 <FireEmoji size={18} />
-              </div>
+              </span>
             )}
             <ChevronRight size={18} className="text-white/45" />
           </div>

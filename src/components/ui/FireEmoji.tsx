@@ -1,16 +1,15 @@
-const FIRE_EMOJI_SRC =
-  'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f525.png'
-
 export default function FireEmoji({ size = 18 }: { size?: number }) {
   return (
-    <img
-      src={FIRE_EMOJI_SRC}
-      alt=""
-      width={size}
-      height={size}
-      className="inline-block shrink-0 select-none pointer-events-none border-0 outline-none"
+    <span
+      className="inline-block shrink-0 select-none leading-none"
+      style={{
+        fontSize: size,
+        fontFamily:
+          '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", emoji',
+      }}
       aria-hidden="true"
-      draggable={false}
-    />
+    >
+      🔥
+    </span>
   )
 }
