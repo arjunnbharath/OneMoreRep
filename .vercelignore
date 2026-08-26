@@ -1,0 +1,22 @@
+# Local dev server (Express) — not used on Vercel; api/ handles backend
+server/
+
+# Mobile native projects — large, not needed for web deploy
+android/
+ios/
+.capacitor/
+
+# Dev / local artifacts
+node_modules/
+.env
+.env.*
+!.env.example
+dist/
+data/
+.venv-data/
+flutter_app/
+
+# Editor & OS
+.vscode/
+.idea/
+*.log
