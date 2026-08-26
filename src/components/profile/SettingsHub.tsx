@@ -1,4 +1,4 @@
-import { Bell, ChevronRight, Database, LogOut, Map, Moon, Settings, Sun, User } from 'lucide-react'
+import { Bell, ChevronRight, Database, LogOut, Map, Moon, Settings, ShieldCheck, Sun, User } from 'lucide-react'
 import InstallAppSettings from './InstallAppSettings'
 import {
   SettingsCard,
@@ -18,6 +18,8 @@ interface SettingsHubProps {
   onLogout: () => void
   onReplayTour?: () => void
   setTheme: (mode: 'light' | 'dark') => void
+  hasAdminAccess?: boolean
+  onOpenAdmin?: () => void
 }
 
 export default function SettingsHub({
@@ -29,6 +31,8 @@ export default function SettingsHub({
   onLogout,
   onReplayTour,
   setTheme,
+  hasAdminAccess,
+  onOpenAdmin,
 }: SettingsHubProps) {
   const { supported, available, enabled } = usePushNotifications()
   const { supported: cameraSupported, active: cameraActive } = useCameraPermission()
@@ -74,6 +78,15 @@ export default function SettingsHub({
 
       <SettingsSection title="Account">
         <SettingsCard>
+          {hasAdminAccess && onOpenAdmin && (
+            <SettingsRow
+              icon={<ShieldCheck size={16} className="text-green-600 dark:text-green-400" />}
+              label="Admin panel"
+              value="Manage users and app data"
+              onClick={onOpenAdmin}
+              trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
+            />
+          )}
           <SettingsRow
             icon={<User size={16} />}
             label="Account"

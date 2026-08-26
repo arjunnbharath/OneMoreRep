@@ -5,22 +5,28 @@ import {
   ChevronRight,
   Flame,
 } from 'lucide-react'
+import StatGrid from '../components/ui/StatGrid'
 import UserAvatar from '../components/UserAvatar'
 import AccountSettings from '../components/profile/AccountSettings'
 import DataSettings from '../components/profile/DataSettings'
 import PermissionsSettings from '../components/profile/PermissionsSettings'
 import SettingsHub, { ProfileSettingsEntry } from '../components/profile/SettingsHub'
+import SugarCutHomeToggle from '../components/profile/SugarCutHomeToggle'
+import WinterArcPanel from '../components/profile/WinterArcPanel'
 import { useAuth } from '../context/AuthContext'
 import { clearAllUserData as apiClearAllUserData } from '../lib/api'
 import { clearLocalUserData, clearUserDataCache } from '../lib/userDataSync'
 import { useTheme } from '../context/ThemeContext'
 import { useTour } from '../context/TourContext'
 import { useCalorieTracker } from '../hooks/useCalorieTracker'
+import { useHomePreferences } from '../hooks/useHomePreferences'
+import { useWinterArc } from '../hooks/useWinterArc'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { toLocalDateKey } from '../lib/nutritionMath'
-import { getSessionDurationSeconds, sessionVolume } from '../lib/workoutProgress'
+import { sessionVolume } from '../lib/workoutProgress'
 import { computeStreak, toDateKey } from './home/homeUtils'
+import { computeWinterArcProgress } from '../lib/winterArc'
 import { getProfileView, isProfileSubPath, PROFILE_PATHS } from '../lib/profilePaths'
 
 function formatShortDate(iso: string) {
@@ -42,12 +48,14 @@ function getWeekKeys() {
 export default function Profile() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, token, logout, deleteAccount, changePassword } = useAuth()
+  const { user, token, logout, deleteAccount, changePassword, refreshUser } = useAuth()
   const { isDark, setTheme } = useTheme()
   const { replayTour } = useTour()
   const { sessions } = useWorkoutTracker()
   const { plan } = useWorkoutPlan()
   const { profile: nutritionProfile, logs, ready: nutritionReady } = useCalorieTracker()
+  const { preferences: homePreferences, setShowSugarCutStreak } = useHomePreferences()
+  const { state: winterArcState, enroll, leave, setShowOnHome } = useWinterArc()
   const view = getProfileView(location.pathname)
 
   useEffect(() => {
@@ -56,16 +64,19 @@ export default function Profile() {
     }
   }, [location.pathname, navigate])
 
+  useEffect(() => {
+    if (!token) return
+    void refreshUser().catch(() => {
+      // Keep cached profile if refresh fails offline.
+    })
+  }, [token, refreshUser, view])
+
   const firstName = user?.name?.split(' ')[0] ?? 'Athlete'
   const todayKey = toLocalDateKey()
 
   const stats = useMemo(() => {
     const workouts = sessions.length
     const streak = computeStreak(sessions.map((s) => s.date))
-    const minutes = sessions.reduce(
-      (sum, s) => sum + Math.floor(getSessionDurationSeconds(s) / 60),
-      0,
-    )
     const todayCals =
       nutritionReady && nutritionProfile?.onboarded
         ? logs
@@ -73,8 +84,24 @@ export default function Profile() {
             .reduce((sum, e) => sum + e.calories, 0)
         : null
 
-    return { workouts, streak, minutes, todayCals }
+    return { workouts, streak, todayCals }
   }, [sessions, logs, nutritionReady, nutritionProfile, todayKey])
+
+  const profileStatItems = useMemo(() => {
+    const items = [
+      { value: stats.workouts, label: 'Workouts' },
+      { value: stats.streak, label: 'Streak' },
+    ]
+    if (nutritionProfile?.onboarded && stats.todayCals !== null) {
+      items.push({ value: stats.todayCals, label: 'Calories' })
+    }
+    return items
+  }, [stats, nutritionProfile?.onboarded])
+
+  const winterArcProgress = useMemo(
+    () => computeWinterArcProgress(sessions, winterArcState),
+    [sessions, winterArcState],
+  )
 
   const workoutDays = useMemo(() => {
     const set = new Set(sessions.map((s) => toDateKey(new Date(s.date))))
@@ -132,6 +159,8 @@ export default function Profile() {
         onOpenData={() => navigate(PROFILE_PATHS.data)}
         onOpenPermissions={() => navigate(PROFILE_PATHS.permissions)}
         onReplayTour={replayTour}
+        hasAdminAccess={user?.hasAdminAccess}
+        onOpenAdmin={() => navigate('/admin')}
         onLogout={() => {
           logout()
           navigate('/login')
@@ -168,56 +197,14 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="relative z-10 mx-auto mt-8 hidden w-full max-w-md grid-cols-3 gap-2 rounded-2xl bg-white/10 p-2 backdrop-blur-sm lg:grid lg:max-w-sm">
-          {[
-            { value: stats.workouts, label: 'Workouts' },
-            { value: stats.minutes, label: 'Minutes' },
-            {
-              value:
-                nutritionProfile?.onboarded && stats.todayCals !== null
-                  ? stats.todayCals
-                  : stats.streak,
-              label:
-                nutritionProfile?.onboarded && stats.todayCals !== null
-                  ? 'Kcal today'
-                  : 'Streak',
-            },
-          ].map(({ value, label }) => (
-            <div key={label} className="rounded-xl px-2 py-4 text-center">
-              <p className="text-xl font-semibold tabular-nums">{value}</p>
-              <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-white/60">
-                {label}
-              </p>
-            </div>
-          ))}
+        <div className="relative z-10 mx-auto mt-8 hidden w-full max-w-md lg:block lg:max-w-sm">
+          <StatGrid items={profileStatItems} variant="light" />
         </div>
       </section>
 
       {/* Floating stats — mobile */}
       <div className="relative z-10 mx-auto -mt-10 max-w-lg px-5 lg:hidden">
-        <div className="grid grid-cols-3 gap-2 rounded-2xl bg-surface p-1 shadow-lg ring-1 ring-border">
-          {[
-            { value: stats.workouts, label: 'Workouts' },
-            { value: stats.minutes, label: 'Minutes' },
-            {
-              value:
-                nutritionProfile?.onboarded && stats.todayCals !== null
-                  ? stats.todayCals
-                  : stats.streak,
-              label:
-                nutritionProfile?.onboarded && stats.todayCals !== null
-                  ? 'Kcal today'
-                  : 'Streak',
-            },
-          ].map(({ value, label }) => (
-            <div key={label} className="rounded-xl px-2 py-4 text-center">
-              <p className="text-xl font-semibold tabular-nums">{value}</p>
-              <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
-                {label}
-              </p>
-            </div>
-          ))}
-        </div>
+        <StatGrid items={profileStatItems} className="shadow-lg" />
       </div>
 
       <div className="desktop-page-body desktop-page mx-auto max-w-lg space-y-6 px-5 pb-4 pt-8 lg:grid lg:max-w-none lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8 lg:px-10 lg:pb-10 lg:pt-10">
@@ -339,6 +326,19 @@ export default function Profile() {
             <ChevronRight size={16} className="text-muted" />
           </button>
         )}
+
+        <WinterArcPanel
+          state={winterArcState}
+          progress={winterArcProgress}
+          onEnroll={enroll}
+          onLeave={leave}
+          onShowOnHomeChange={setShowOnHome}
+        />
+
+        <SugarCutHomeToggle
+          enabled={homePreferences.showSugarCutStreak}
+          onChange={setShowSugarCutStreak}
+        />
 
         <ProfileSettingsEntry onClick={() => navigate(PROFILE_PATHS.settings)} />
         </div>

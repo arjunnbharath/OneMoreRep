@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { exerciseGroups } from '../../data/exerciseGuides'
+import { exerciseGroups, type ExerciseGroup, isExerciseGroup } from '../../data/exerciseGuides'
 import { saveScrollPosition } from '../../lib/scrollRestore'
+import { TRACKER_PATHS } from '../../lib/trackerPaths'
 
 interface MuscleExerciseListProps {
   onBeforeNavigate?: () => void
@@ -13,7 +14,11 @@ export default function MuscleExerciseList({ onBeforeNavigate }: MuscleExerciseL
   function openMuscle(groupId: string) {
     saveScrollPosition(location.pathname, location.search, location.hash)
     onBeforeNavigate?.()
-    navigate(`/muscle/${groupId}`)
+    if (isExerciseGroup(groupId)) {
+      navigate(TRACKER_PATHS.exerciseLibraryGroup(groupId as ExerciseGroup))
+      return
+    }
+    navigate(TRACKER_PATHS.exerciseLibrary)
   }
 
   return (

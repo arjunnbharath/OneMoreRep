@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 import ExerciseImage from '../components/ExerciseImage'
@@ -7,11 +8,18 @@ import {
   isExerciseGroup,
 } from '../data/exerciseGuides'
 import { saveScrollPosition } from '../lib/scrollRestore'
+import { TRACKER_PATHS } from '../lib/trackerPaths'
 
 export default function MuscleGroupExercises() {
   const { group: groupId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
+
+  useEffect(() => {
+    if (groupId && isExerciseGroup(groupId)) {
+      navigate(TRACKER_PATHS.exerciseLibraryGroup(groupId), { replace: true })
+    }
+  }, [groupId, navigate])
 
   function goBack() {
     if (window.history.length > 1) {

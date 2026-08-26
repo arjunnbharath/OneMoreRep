@@ -1,3 +1,5 @@
+require('./dnsFallback.js')
+
 const path = require('path')
 const fs = require('fs')
 const { neon } = require('@neondatabase/serverless')
@@ -69,6 +71,9 @@ async function ensureDb() {
   `)
   await getSql().query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(20)
+  `)
+  await getSql().query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false
   `)
   await getSql().query(`
     CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx ON users (LOWER(username))

@@ -7,6 +7,8 @@ export const USER_DATA_KEYS = {
   bookmarks: 'bookmarks',
   workoutPlan: 'workout_plan',
   workoutPreferences: 'workout_preferences',
+  homePreferences: 'home_preferences',
+  winterArc: 'winter_arc',
 } as const
 
 export type UserDataKey = (typeof USER_DATA_KEYS)[keyof typeof USER_DATA_KEYS]

@@ -320,12 +320,22 @@ export function useCalorieTracker() {
     return map
   }, [logs])
 
+  const sugarByDay = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const entry of logs) {
+      const key = toLocalDateKey(new Date(entry.loggedAt))
+      map[key] = (map[key] ?? 0) + (entry.sugar ?? 0)
+    }
+    return map
+  }, [logs])
+
   return {
     profile,
     logs,
     dayLogs,
     dayTotals,
     caloriesByDay,
+    sugarByDay,
     selectedDate,
     setSelectedDate,
     allFoods,

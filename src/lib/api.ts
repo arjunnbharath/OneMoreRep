@@ -1,3 +1,20 @@
+export interface AdminUser {
+  id: number
+  name: string
+  email: string
+  username: string | null
+  createdAt: string
+  hasAvatar: boolean
+  dataKeys?: number
+  hasAdminAccess?: boolean
+}
+
+export interface AdminDataSummaryItem {
+  key: string
+  updatedAt: string
+  sizeBytes: number
+}
+
 export interface User {
   id: number
   name: string
@@ -5,6 +22,7 @@ export interface User {
   username?: string | null
   avatarUrl?: string | null
   createdAt?: string
+  hasAdminAccess?: boolean
 }
 
 export interface FriendUser {
@@ -26,9 +44,23 @@ export interface AuthResponse {
   user: User
 }
 
+export type LoginResponse =
+  | { role: 'user'; token: string; user: User }
+  | { role: 'admin'; token: string; username: string }
+
 function apiUrl(path: string) {
   const base = import.meta.env.VITE_API_URL?.replace(/\/$/, '') ?? ''
   return `${base}${path}`
+}
+
+function adminAuthHeaders(token: string, json = false): HeadersInit {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+  }
+  if (json) {
+    headers['Content-Type'] = 'application/json'
+  }
+  return headers
 }
 
 async function parseError(res: Response): Promise<string> {
@@ -83,8 +115,8 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
-export async function login(identifier: string, password: string): Promise<AuthResponse> {
-  return request<AuthResponse>(apiUrl('/api/auth/login'), {
+export async function login(identifier: string, password: string): Promise<LoginResponse> {
+  return request<LoginResponse>(apiUrl('/api/auth/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ identifier, password }),
@@ -332,4 +364,131 @@ export async function unsubscribePush(
       headers: { Authorization: `Bearer ${token}` },
     },
   )
+}
+
+export async function getAdminSession(
+  token: string,
+): Promise<{ authenticated: boolean; username: string; role?: 'admin' | 'user' }> {
+  return request<{ authenticated: boolean; username: string; role?: 'admin' | 'user' }>(
+    apiUrl('/api/admin/me'),
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  )
+}
+
+export async function adminLogin(
+  username: string,
+  password: string,
+): Promise<{ token: string; username: string }> {
+  return request<{ token: string; username: string }>(apiUrl('/api/admin/login'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  })
+}
+
+export async function listAdminUsers(
+  token: string,
+  params?: { search?: string; limit?: number; offset?: number },
+): Promise<{ users: AdminUser[] }> {
+  const query = new URLSearchParams()
+  if (params?.search) query.set('search', params.search)
+  if (params?.limit) query.set('limit', String(params.limit))
+  if (params?.offset) query.set('offset', String(params.offset))
+  const suffix = query.toString() ? `?${query.toString()}` : ''
+  return request<{ users: AdminUser[] }>(apiUrl(`/api/admin/users${suffix}`), {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function getAdminUser(
+  token: string,
+  userId: number,
+): Promise<{ user: AdminUser; dataSummary: AdminDataSummaryItem[] }> {
+  return request(apiUrl(`/api/admin/users/${userId}`), {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function getAdminUserData(
+  token: string,
+  userId: number,
+): Promise<{ data: Record<string, unknown> }> {
+  return request(apiUrl(`/api/admin/users/${userId}/data`), {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function clearAdminUserData(
+  token: string,
+  userId: number,
+): Promise<{ success: boolean }> {
+  return request(apiUrl(`/api/admin/users/${userId}/data`), {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function deleteAdminUser(
+  token: string,
+  userId: number,
+): Promise<{ success: boolean }> {
+  return request(apiUrl(`/api/admin/users/${userId}`), {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function clearAllAdminUserData(
+  token: string,
+): Promise<{ success: boolean }> {
+  return request(apiUrl('/api/admin/users/all/data'), {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function deleteAllAdminUsers(
+  token: string,
+): Promise<{ success: boolean; deleted: number }> {
+  return request(apiUrl('/api/admin/users/all'), {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function deleteAdminUsersBulk(
+  token: string,
+  ids: number[],
+): Promise<{ success: boolean; deleted: number }> {
+  return request(apiUrl('/api/admin/users/bulk'), {
+    method: 'DELETE',
+    headers: adminAuthHeaders(token, true),
+    body: JSON.stringify({ ids }),
+  })
+}
+
+export async function resetAdminUserPassword(
+  token: string,
+  userId: number,
+  password: string,
+): Promise<{ success: boolean }> {
+  return request(apiUrl(`/api/admin/users/${userId}/password`), {
+    method: 'PATCH',
+    headers: adminAuthHeaders(token, true),
+    body: JSON.stringify({ password }),
+  })
+}
+
+export async function setAdminUserAccess(
+  token: string,
+  userId: number,
+  enabled: boolean,
+): Promise<{ user: AdminUser }> {
+  return request(apiUrl(`/api/admin/users/${userId}/admin-access`), {
+    method: 'PATCH',
+    headers: adminAuthHeaders(token, true),
+    body: JSON.stringify({ enabled }),
+  })
 }

@@ -7,6 +7,7 @@ import userDataRoutes from './routes/userData.js'
 import friendsRoutes from './routes/friends.js'
 import foodRoutes from './routes/food.js'
 import pushRoutes from './routes/push.js'
+import adminRoutes from './routes/admin.js'
 
 const app = express()
 const PORT = process.env.PORT ?? 3001
@@ -23,6 +24,7 @@ app.use('/api/user-data', userDataRoutes)
 app.use('/api/friends', friendsRoutes)
 app.use('/api/food', foodRoutes)
 app.use('/api/push', pushRoutes)
+app.use('/api/admin', adminRoutes)
 
 async function start() {
   try {

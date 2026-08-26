@@ -55,12 +55,14 @@ interface WorkoutCalendarProps {
   sessions: WorkoutSession[]
   onDaySelect?: (dateKey: string) => void
   variant?: 'default' | 'sidebar'
+  compact?: boolean
 }
 
 export default function WorkoutCalendar({
   sessions,
   onDaySelect,
   variant = 'default',
+  compact = false,
 }: WorkoutCalendarProps) {
   const todayKey = toDateKey(new Date())
   const [viewMonth, setViewMonth] = useState(() => startOfMonth(new Date()))
@@ -101,7 +103,12 @@ export default function WorkoutCalendar({
 
   return (
     <section className="overflow-hidden rounded-2xl border border-border">
-      <div className="relative min-h-[280px] overflow-hidden">
+      <div
+        className={[
+          'relative overflow-hidden',
+          compact ? 'min-h-[200px]' : 'min-h-[280px]',
+        ].join(' ')}
+      >
         <img
           key={monthKey}
           src={monthBackground.image}
@@ -111,29 +118,42 @@ export default function WorkoutCalendar({
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/55 to-black/85" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-black/30" />
 
-        <div className={['relative', isSidebar ? 'p-4' : 'p-5'].join(' ')}>
+        <div
+          className={[
+            'relative',
+            compact ? 'p-3' : isSidebar ? 'p-4' : 'p-5',
+          ].join(' ')}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45">
+              <p
+                className={[
+                  'font-semibold uppercase tracking-[0.16em] text-white/45',
+                  compact ? 'text-[10px]' : 'text-[11px]',
+                ].join(' ')}
+              >
                 Activity
               </p>
               <h2
                 className={[
-                  'mt-1 font-semibold tracking-tight text-white',
-                  isSidebar ? 'text-base' : 'text-lg',
+                  'mt-0.5 font-semibold tracking-tight text-white',
+                  compact ? 'text-sm' : isSidebar ? 'text-base' : 'text-lg',
                 ].join(' ')}
               >
                 {monthLabel}
               </h2>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               <button
                 type="button"
                 onClick={() => setViewMonth((m) => addMonths(m, -1))}
                 aria-label="Previous month"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-white/80 ring-1 ring-white/15 transition hover:bg-white/10 hover:text-white"
+                className={[
+                  'flex items-center justify-center rounded-full text-white/80 ring-1 ring-white/15 transition hover:bg-white/10 hover:text-white',
+                  compact ? 'h-7 w-7' : 'h-8 w-8',
+                ].join(' ')}
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={compact ? 14 : 16} />
               </button>
               <button
                 type="button"
@@ -141,7 +161,10 @@ export default function WorkoutCalendar({
                   setViewMonth(startOfMonth(new Date()))
                   setSelectedKey(todayKey)
                 }}
-                className="px-2 text-xs font-medium text-white/55 transition hover:text-white"
+                className={[
+                  'font-medium text-white/55 transition hover:text-white',
+                  compact ? 'px-1.5 text-[10px]' : 'px-2 text-xs',
+                ].join(' ')}
               >
                 Today
               </button>
@@ -149,20 +172,31 @@ export default function WorkoutCalendar({
                 type="button"
                 onClick={() => setViewMonth((m) => addMonths(m, 1))}
                 aria-label="Next month"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-white/80 ring-1 ring-white/15 transition hover:bg-white/10 hover:text-white"
+                className={[
+                  'flex items-center justify-center rounded-full text-white/80 ring-1 ring-white/15 transition hover:bg-white/10 hover:text-white',
+                  compact ? 'h-7 w-7' : 'h-8 w-8',
+                ].join(' ')}
               >
-                <ChevronRight size={16} />
+                <ChevronRight size={compact ? 14 : 16} />
               </button>
             </div>
           </div>
 
-          <div className={['mt-4 grid grid-cols-7', isSidebar ? 'gap-0.5' : 'gap-1'].join(' ')}>
+          <div
+            className={[
+              'grid grid-cols-7',
+              compact ? 'mt-3 gap-0.5' : isSidebar ? 'mt-4 gap-0.5' : 'mt-4 gap-1',
+            ].join(' ')}
+          >
             {WEEKDAYS.map((day) => (
               <div
                 key={day}
-                className="pb-2 text-center text-[10px] font-medium uppercase tracking-wide text-white/40"
+                className={[
+                  'text-center font-medium uppercase tracking-wide text-white/40',
+                  compact ? 'pb-1 text-[9px]' : 'pb-2 text-[10px]',
+                ].join(' ')}
               >
-                {day}
+                {compact ? day.slice(0, 1) : day}
               </div>
             ))}
 
@@ -178,20 +212,29 @@ export default function WorkoutCalendar({
                   onClick={() => handleSelect(key, inMonth)}
                   className={[
                     'relative flex aspect-square flex-col items-center justify-center rounded-lg transition duration-200',
-                    isSidebar ? 'text-xs' : 'text-sm',
                     !inMonth && !isToday ? 'text-white/20' : '',
                     inMonth && !isToday && !isSelected ? 'text-white/85 hover:bg-white/10' : '',
                     isToday
-                      ? 'bg-red-500 font-semibold text-white shadow-[0_4px_14px_rgba(239,68,68,0.45)]'
+                      ? compact
+                        ? 'bg-red-500 font-semibold text-white shadow-[0_2px_10px_rgba(239,68,68,0.4)]'
+                        : 'bg-red-500 font-semibold text-white shadow-[0_4px_14px_rgba(239,68,68,0.45)]'
                       : '',
                     isSelected ? 'bg-white font-medium text-black' : '',
                   ].join(' ')}
                 >
-                  <span className="font-medium tabular-nums">{day}</span>
+                  <span
+                    className={[
+                      'font-bold tabular-nums leading-none',
+                      compact ? 'text-sm' : isSidebar ? 'text-sm' : 'text-base',
+                    ].join(' ')}
+                  >
+                    {day}
+                  </span>
                   {hasWorkout && (
                     <span
                       className={[
-                        'mt-0.5 h-1 w-1 rounded-full',
+                        'rounded-full',
+                        compact ? 'mt-px h-0.5 w-0.5' : 'mt-0.5 h-1 w-1',
                         isToday || isSelected ? 'bg-white' : 'bg-red-400',
                       ].join(' ')}
                     />
@@ -204,9 +247,14 @@ export default function WorkoutCalendar({
       </div>
 
       {!isSidebar && (
-        <div className="border-t border-border bg-background p-5">
+        <div
+          className={[
+            'border-t border-border bg-background',
+            compact ? 'p-3' : 'p-5',
+          ].join(' ')}
+        >
           {selectedKey && (
-            <p className="text-xs text-muted">
+            <p className={compact ? 'text-[11px] text-muted' : 'text-xs text-muted'}>
               {parseDateKey(selectedKey).toLocaleDateString('en-US', {
                 weekday: 'long',
                 month: 'long',
@@ -216,14 +264,17 @@ export default function WorkoutCalendar({
           )}
 
           {selectedSessions.length > 0 ? (
-            <ul className="mt-3 space-y-2">
+            <ul className={compact ? 'mt-2 space-y-1.5' : 'mt-3 space-y-2'}>
               {selectedSessions.map((session) => (
                 <li
                   key={session.id}
-                  className="flex items-center justify-between rounded-xl bg-surface px-3 py-2.5 text-sm"
+                  className={[
+                    'flex items-center justify-between rounded-xl bg-surface',
+                    compact ? 'px-2.5 py-2 text-xs' : 'px-3 py-2.5 text-sm',
+                  ].join(' ')}
                 >
                   <span className="font-medium">{session.name}</span>
-                  <span className="text-xs text-muted">
+                  <span className="text-muted">
                     {session.exercises.length} exercise
                     {session.exercises.length === 1 ? '' : 's'}
                   </span>
@@ -231,7 +282,9 @@ export default function WorkoutCalendar({
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-muted">No workouts logged on this day.</p>
+            <p className={compact ? 'mt-1.5 text-xs text-muted' : 'mt-2 text-sm text-muted'}>
+              No workouts logged on this day.
+            </p>
           )}
         </div>
       )}

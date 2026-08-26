@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronRight, Search } from 'lucide-react'
 import { useAppInstalled } from '../../hooks/useAppInstalled'
@@ -9,6 +9,7 @@ import {
   type ExerciseGroup,
   type ExerciseGuide,
 } from '../../data/exerciseGuides'
+import { TRACKER_PATHS } from '../../lib/trackerPaths'
 
 const filterOptions: { id: ExerciseGroup | 'all'; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -18,6 +19,7 @@ const filterOptions: { id: ExerciseGroup | 'all'; label: string }[] = [
 interface ExerciseGuidesV2Props {
   embedded?: boolean
   onBack?: () => void
+  initialGroup?: ExerciseGroup | 'all'
 }
 
 function ExerciseRow({
@@ -54,11 +56,27 @@ function ExerciseRow({
   )
 }
 
-export default function ExerciseGuidesV2({ embedded = false, onBack }: ExerciseGuidesV2Props) {
+export default function ExerciseGuidesV2({
+  embedded = false,
+  onBack,
+  initialGroup = 'all',
+}: ExerciseGuidesV2Props) {
   const navigate = useNavigate()
   const appInstalled = useAppInstalled()
-  const [activeGroup, setActiveGroup] = useState<ExerciseGroup | 'all'>('all')
+  const [activeGroup, setActiveGroup] = useState<ExerciseGroup | 'all'>(initialGroup)
   const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    setActiveGroup(initialGroup)
+  }, [initialGroup])
+
+  function selectGroup(id: ExerciseGroup | 'all') {
+    setActiveGroup(id)
+    if (!embedded) return
+    navigate(
+      id === 'all' ? TRACKER_PATHS.exerciseLibrary : TRACKER_PATHS.exerciseLibraryGroup(id),
+    )
+  }
 
   const filtered = useMemo(() => {
     let list = exerciseGuides
@@ -137,7 +155,7 @@ export default function ExerciseGuidesV2({ embedded = false, onBack }: ExerciseG
             <button
               key={id}
               type="button"
-              onClick={() => setActiveGroup(id)}
+              onClick={() => selectGroup(id)}
               className={
                 activeGroup === id
                   ? 'muscle-filter-chip muscle-filter-chip--active'

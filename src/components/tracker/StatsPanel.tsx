@@ -35,12 +35,6 @@ interface StatsPanelProps {
   onOpenWorkout: () => void
 }
 
-function formatVolume(kg: number) {
-  if (kg <= 0) return '0'
-  if (kg >= 1000) return `${(kg / 1000).toFixed(1)}k`
-  return kg.toLocaleString()
-}
-
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
     <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
@@ -62,19 +56,6 @@ export default function StatsPanel({ sessions, activeSession, onOpenWorkout }: S
   const prHighlights = useMemo(() => getPRHighlights(sessions, 5), [sessions])
   const activityFeed = useMemo(() => getActivityFeed(sessions, 5), [sessions])
   const loggedExercises = useMemo(() => getLoggedExerciseNames(sessions), [sessions])
-
-  const stats = useMemo(() => {
-    const thisWeekSessions = weeklyProgress[weeklyProgress.length - 1]?.sessions ?? 0
-    const lastWeekSessions = weeklyProgress[weeklyProgress.length - 2]?.sessions ?? 0
-    const thisWeekVolume = weeklyProgress[weeklyProgress.length - 1]?.volume ?? 0
-    const lastWeekVolume = weeklyProgress[weeklyProgress.length - 2]?.volume ?? 0
-
-    return {
-      thisWeekSessions,
-      sessionDelta: thisWeekSessions - lastWeekSessions,
-      volumeDelta: thisWeekVolume - lastWeekVolume,
-    }
-  }, [weeklyProgress])
 
   const filteredExercises = useMemo(() => {
     const q = exerciseQuery.trim().toLowerCase()
@@ -198,145 +179,74 @@ export default function StatsPanel({ sessions, activeSession, onOpenWorkout }: S
           />
         </div>
 
-        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8">
-          <div className="min-w-0">
-            <SectionHeading>Training volume</SectionHeading>
-            <ProgressVolumeChart weekly={weeklyProgress} monthly={monthlyProgress} />
-          </div>
-
-          <aside className="mt-8 space-y-6 lg:mt-0 lg:sticky lg:top-8">
-            <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
-              <p className="text-sm font-semibold">This week at a glance</p>
-              <div className="mt-4 space-y-3">
-                {[
-                  {
-                    label: 'Sessions',
-                    value: stats.thisWeekSessions,
-                    sub: `${stats.sessionDelta >= 0 ? '+' : ''}${stats.sessionDelta} vs last week`,
-                  },
-                  {
-                    label: 'Volume',
-                    value: `${formatVolume(weeklyProgress[weeklyProgress.length - 1]?.volume ?? 0)} kg`,
-                    sub: `${stats.volumeDelta >= 0 ? '+' : ''}${formatVolume(Math.abs(stats.volumeDelta))} kg`,
-                  },
-                  {
-                    label: 'Minutes',
-                    value: weeklyProgress[weeklyProgress.length - 1]?.minutes ?? 0,
-                    sub: 'logged this week',
-                  },
-                ].map(({ label, value, sub }) => (
-                  <div
-                    key={label}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-background px-3 py-2.5"
-                  >
-                    <div>
-                      <p className="text-[10px] font-medium uppercase tracking-wide text-muted">
-                        {label}
-                      </p>
-                      <p className="mt-0.5 text-base font-semibold tabular-nums">{value}</p>
-                    </div>
-                    <p className="text-right text-[10px] text-muted">{sub}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {prHighlights.length > 0 && (
-              <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
-                <div className="flex items-center gap-2">
-                  <Trophy size={14} className="text-red-500" />
-                  <p className="text-sm font-semibold">Personal records</p>
-                </div>
-                <ul className="mt-4 space-y-3">
-                  {prHighlights.slice(0, 3).map((pr) => (
-                    <li key={pr.exercise}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedExercise(pr.exercise)
-                          setExerciseQuery('')
-                        }}
-                        className="w-full text-left transition hover:opacity-80"
-                      >
-                        <p className="truncate text-sm font-medium">{pr.exercise}</p>
-                        <p className="mt-0.5 text-xs text-muted">
-                          {pr.weight > 0 ? `${pr.weight} kg × ${pr.reps}` : `${pr.reps} reps`}
-                          {' · '}
-                          est. {pr.est1RM} kg
-                        </p>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </aside>
+        <div>
+          <SectionHeading>Training volume</SectionHeading>
+          <ProgressVolumeChart weekly={weeklyProgress} monthly={monthlyProgress} />
         </div>
 
-        {(topExercises.length > 0 || prHighlights.length > 0) && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {topExercises.length > 0 && (
-              <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
-                <SectionHeading>Most trained</SectionHeading>
-                <div className="space-y-3">
-                  {topExercises.map(({ name, count }) => {
-                    const maxCount = topExercises[0]?.count ?? 1
-                    const width = Math.round((count / maxCount) * 100)
-                    return (
-                      <button
-                        key={name}
-                        type="button"
-                        onClick={() => {
-                          setSelectedExercise(name)
-                          setExerciseQuery('')
-                        }}
-                        className="group w-full text-left"
-                      >
-                        <div className="flex items-center justify-between gap-2 text-sm">
-                          <span className="truncate font-medium group-hover:underline">
-                            {name}
-                          </span>
-                          <span className="shrink-0 text-xs text-muted">{count}×</span>
-                        </div>
-                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-background">
-                          <div
-                            className="h-full rounded-full bg-foreground/70 transition-all"
-                            style={{ width: `${width}%` }}
-                          />
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+        {prHighlights.length > 0 && (
+          <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
+            <div className="flex items-center gap-2">
+              <Trophy size={14} className="text-red-500" />
+              <p className="text-sm font-semibold">Personal records</p>
+            </div>
+            <ul className="mt-4 space-y-3 sm:grid sm:grid-cols-2 sm:gap-3 sm:space-y-0">
+              {prHighlights.slice(0, 4).map((pr) => (
+                <li key={pr.exercise}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedExercise(pr.exercise)
+                      setExerciseQuery('')
+                    }}
+                    className="w-full rounded-xl bg-background px-3 py-2.5 text-left transition hover:ring-1 hover:ring-border"
+                  >
+                    <p className="truncate text-sm font-medium">{pr.exercise}</p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {pr.weight > 0 ? `${pr.weight} kg × ${pr.reps}` : `${pr.reps} reps`}
+                      {' · '}
+                      est. {pr.est1RM} kg
+                    </p>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-            {prHighlights.length > 0 && (
-              <div className="rounded-2xl bg-surface p-5 ring-1 ring-border sm:hidden">
-                <div className="flex items-center gap-2">
-                  <Trophy size={14} className="text-red-500" />
-                  <SectionHeading>Personal records</SectionHeading>
-                </div>
-                <div className="space-y-3">
-                  {prHighlights.map((pr) => (
-                    <button
-                      key={pr.exercise}
-                      type="button"
-                      onClick={() => {
-                        setSelectedExercise(pr.exercise)
-                        setExerciseQuery('')
-                      }}
-                      className="w-full rounded-xl bg-background px-3 py-2.5 text-left transition hover:ring-1 hover:ring-border"
-                    >
-                      <p className="truncate text-sm font-medium">{pr.exercise}</p>
-                      <p className="mt-0.5 text-xs text-muted">
-                        est. {pr.est1RM} kg 1RM
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+        {topExercises.length > 0 && (
+          <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
+            <SectionHeading>Most trained</SectionHeading>
+            <div className="space-y-3">
+              {topExercises.map(({ name, count }) => {
+                const maxCount = topExercises[0]?.count ?? 1
+                const width = Math.round((count / maxCount) * 100)
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => {
+                      setSelectedExercise(name)
+                      setExerciseQuery('')
+                    }}
+                    className="group w-full text-left"
+                  >
+                    <div className="flex items-center justify-between gap-2 text-sm">
+                      <span className="truncate font-medium group-hover:underline">
+                        {name}
+                      </span>
+                      <span className="shrink-0 text-xs text-muted">{count}×</span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-background">
+                      <div
+                        className="h-full rounded-full bg-foreground/70 transition-all"
+                        style={{ width: `${width}%` }}
+                      />
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
           </div>
         )}
 

@@ -1,6 +1,10 @@
+import StatGrid from '../ui/StatGrid'
+
 interface HomeStatsStripProps {
-  stats: { completed: number; minutes: number; streak: number }
+  stats: { streak: number; thisWeek: number }
+  sessionCount: number
   todayCalories: number
+  sugarCutStreak?: number
 }
 
 function formatCalories(value: number) {
@@ -8,22 +12,18 @@ function formatCalories(value: number) {
   return String(value)
 }
 
-export default function HomeStatsStrip({ stats, todayCalories }: HomeStatsStripProps) {
+export default function HomeStatsStrip({
+  stats,
+  sessionCount,
+  todayCalories,
+  sugarCutStreak = 0,
+}: HomeStatsStripProps) {
   const items = [
     { value: stats.streak, label: 'Streak' },
-    { value: stats.minutes, label: 'Min' },
-    { value: stats.completed, label: 'Sessions' },
+    { value: sessionCount, label: 'Sessions' },
     { value: formatCalories(todayCalories), label: 'Intake' },
+    { value: sugarCutStreak, label: 'Sugar cut' },
   ]
 
-  return (
-    <div data-tour="home-stats" className="flex divide-x divide-border rounded-xl bg-surface py-2 ring-1 ring-border">
-      {items.map(({ value, label }) => (
-        <div key={label} className="flex flex-1 flex-col items-center gap-0.5 px-1">
-          <span className="text-sm font-semibold leading-none tabular-nums">{value}</span>
-          <span className="text-[9px] text-muted">{label}</span>
-        </div>
-      ))}
-    </div>
-  )
+  return <StatGrid items={items} data-tour="home-stats" compact />
 }

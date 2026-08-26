@@ -196,8 +196,8 @@ export default function FriendDetail({ friendId }: { friendId: number }) {
   ]
 
   return (
-    <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-3xl">
-      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm lg:desktop-page-header lg:static lg:px-10 lg:py-6">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background text-foreground lg:mx-auto lg:max-w-3xl lg:min-h-full lg:overflow-visible">
+      <header className="z-10 hidden shrink-0 items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm lg:flex lg:desktop-page-header lg:px-10 lg:py-6">
         <button
           type="button"
           onClick={handleBack}
@@ -216,7 +216,8 @@ export default function FriendDetail({ friendId }: { friendId: number }) {
         </div>
       </header>
 
-      <div className="desktop-page-body mx-auto max-w-lg space-y-6 px-5 py-6 lg:max-w-none lg:px-10 lg:pb-10">
+      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(var(--mobile-nav-height)+0.5rem)] lg:overflow-visible lg:pb-0">
+      <div className="desktop-page-body mx-auto max-w-lg space-y-6 px-5 pb-6 pt-[max(1rem,env(safe-area-inset-top))] lg:max-w-none lg:px-10 lg:py-6 lg:pb-10">
         {loading ? (
           <div className="space-y-4">
             <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
@@ -556,6 +557,7 @@ export default function FriendDetail({ friendId }: { friendId: number }) {
             </section>
           </>
         ) : null}
+      </div>
       </div>
     </div>
   )

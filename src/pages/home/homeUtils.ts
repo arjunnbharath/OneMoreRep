@@ -22,14 +22,25 @@ export function computeStreak(dates: string[]) {
   return streak
 }
 
+function getCurrentWeekKeySet() {
+  const today = new Date()
+  const mondayOffset = (today.getDay() + 6) % 7
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - mondayOffset)
+  return new Set(
+    Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday)
+      d.setDate(monday.getDate() + i)
+      return toDateKey(d)
+    }),
+  )
+}
+
 export function useHomeStats(sessions: WorkoutSession[]) {
-  const completed = sessions.length
-  const minutes =
-    completed > 0
-      ? sessions.reduce((sum, s) => sum + Math.max(s.exercises.length * 8, 15), 0)
-      : 0
+  const weekKeys = getCurrentWeekKeySet()
+  const thisWeek = sessions.filter((s) => weekKeys.has(toDateKey(new Date(s.date)))).length
   const streak = computeStreak(sessions.map((s) => s.date))
-  return { completed, minutes, streak }
+  return { streak, thisWeek }
 }
 
 export function getFeaturedWorkout(list: Workout[]) {

@@ -25,7 +25,7 @@ import ExerciseSetTable from '../components/tracker/ExerciseSetTable'
 import NextMuscleReady from '../components/tracker/NextMuscleReady'
 import ReadyToTrainPanel from '../components/tracker/ReadyToTrainPanel'
 import WorkoutHistoryWidget from '../components/tracker/WorkoutHistoryWidget'
-import ExerciseLibraryWidget from '../components/tracker/ExerciseLibraryWidget'
+import MuscleExerciseList from '../components/home/MuscleExerciseList'
 import ExerciseLibraryPanel from '../components/exercise-library/ExerciseLibraryPanel'
 import WeeklyPlanPanel from '../components/tracker/WeeklyPlanPanel'
 import PlanOnboarding from '../components/tracker/PlanOnboarding'
@@ -117,6 +117,7 @@ export default function Tracker() {
   const view = getTrackerView(route) ?? 'plan'
   const showWorkoutHistory = route.kind === 'workout' && route.history
   const showExerciseLibrary = route.kind === 'workout' && route.library === true
+  const libraryGroup = route.kind === 'workout' ? route.libraryGroup : undefined
   const planDay = route.kind === 'plan' ? route.day : undefined
   const planMuscle = route.kind === 'plan' ? route.muscle : undefined
   const isPlanMuscleView = view === 'plan' && Boolean(planMuscle)
@@ -530,7 +531,7 @@ export default function Tracker() {
           'min-h-0 flex-1',
           showExerciseLibrary || isPlanMuscleView
             ? 'flex flex-col overflow-hidden'
-            : 'overflow-y-auto overscroll-contain pb-[calc(var(--mobile-nav-height)+0.5rem)] lg:overflow-visible lg:pb-0',
+            : 'scrollbar-hide overflow-y-auto overscroll-contain pb-[calc(var(--mobile-nav-height)+0.5rem)] lg:overflow-visible lg:pb-0',
           view === 'progress' ? 'overflow-x-hidden' : '',
         ].join(' ')}
       >
@@ -639,6 +640,7 @@ export default function Tracker() {
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <ExerciseLibraryPanel
               embedded
+              initialGroup={libraryGroup ?? 'all'}
               onBack={appInstalled ? undefined : () => navigate(TRACKER_PATHS.workout)}
             />
           </div>
@@ -756,9 +758,24 @@ export default function Tracker() {
             </div>
 
             <div className="desktop-page mx-auto max-w-lg space-y-4 lg:max-w-3xl">
-              <ExerciseLibraryWidget
-                onOpen={() => navigate(TRACKER_PATHS.exerciseLibrary)}
-              />
+              <section data-tour="exercise-library">
+                <div className="mb-4 flex items-end justify-between gap-3">
+                  <div>
+                    <h2 className="text-base font-semibold lg:text-lg">Exercise library</h2>
+                    <p className="mt-0.5 text-xs text-muted lg:text-sm">
+                      Tap a muscle to browse exercises
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate(TRACKER_PATHS.exerciseLibrary)}
+                    className="shrink-0 text-xs font-medium text-foreground underline-offset-2 hover:underline lg:rounded-xl lg:bg-surface lg:px-4 lg:py-2 lg:no-underline lg:ring-1 lg:ring-border lg:transition lg:hover:bg-surface-elevated"
+                  >
+                    Browse all
+                  </button>
+                </div>
+                <MuscleExerciseList />
+              </section>
               <WorkoutHistoryWidget
                 sessions={sessions}
                 formatDate={formatDate}

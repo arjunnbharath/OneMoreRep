@@ -10,6 +10,7 @@ export const TRACKER_PATHS = {
   workout: '/tracker/workout',
   workoutHistory: '/tracker/workout/history',
   exerciseLibrary: '/tracker/workout/library',
+  exerciseLibraryGroup: (group: ExerciseGroup) => `/tracker/workout/library/${group}`,
   plan: '/tracker/plan',
   planDay: (day: Weekday) => `/tracker/plan/${day}`,
   planMuscle: (day: Weekday, muscle: ExerciseGroup) => `/tracker/plan/${day}/${muscle}`,
@@ -21,7 +22,7 @@ export const TRACKER_PATHS = {
 
 export type TrackerRoute =
   | { kind: 'redirect'; to: string }
-  | { kind: 'workout'; history: boolean; library?: boolean }
+  | { kind: 'workout'; history: boolean; library?: boolean; libraryGroup?: ExerciseGroup }
   | { kind: 'plan'; day?: Weekday; muscle?: ExerciseGroup }
   | { kind: 'progress' }
   | { kind: 'friends'; notifications?: boolean; friendId?: number }
@@ -55,6 +56,14 @@ export function parseTrackerRoute(pathname: string): TrackerRoute {
 
   if (path === TRACKER_PATHS.exerciseLibrary) {
     return { kind: 'workout', history: false, library: true }
+  }
+
+  const libraryMatch = path.match(/^\/tracker\/workout\/library\/([^/]+)$/)
+  if (libraryMatch) {
+    const groupSeg = libraryMatch[1]
+    const group = isExerciseGroup(groupSeg) ? groupSeg : undefined
+    if (!group) return { kind: 'redirect', to: TRACKER_PATHS.exerciseLibrary }
+    return { kind: 'workout', history: false, library: true, libraryGroup: group }
   }
 
   if (path === TRACKER_PATHS.workoutHistory) {

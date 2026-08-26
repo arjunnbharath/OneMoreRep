@@ -29,6 +29,22 @@ const {
   saveSubscription,
   deleteSubscription,
 } = require('./push.js')
+const {
+  loginAdmin,
+  requireAdmin,
+  isAdminLoginAttempt,
+  listUsers,
+  getUserById,
+  getUserDataSummary,
+  getUserDataForAdmin,
+  clearUserDataForAdmin,
+  deleteUserForAdmin,
+  deleteUsersForAdmin,
+  clearAllUsersData,
+  deleteAllUsers,
+  resetUserPasswordForAdmin,
+  setUserAdminAccess,
+} = require('./admin.js')
 
 function parseBody(req) {
   if (!req.body) return {}
@@ -75,8 +91,15 @@ async function handleHealth(_req, res) {
 async function handleAuthLogin(req, res) {
   const body = parseBody(req)
   const { identifier, email, password } = body
-  const data = await loginUser(identifier || email || '', password || '')
-  return res.status(200).json(data)
+  const id = identifier || email || ''
+
+  if (isAdminLoginAttempt(id)) {
+    const data = await loginAdmin(id, password || '')
+    return res.status(200).json({ role: 'admin', token: data.token, username: data.username })
+  }
+
+  const data = await loginUser(id, password || '')
+  return res.status(200).json({ role: 'user', token: data.token, user: data.user })
 }
 
 async function handleAuthRegister(req, res) {
@@ -279,6 +302,124 @@ async function handlePushUnsubscribe(req, res) {
   return res.status(200).json(result)
 }
 
+function parseAdminUserId(value) {
+  const id = Number(value)
+  if (!Number.isInteger(id) || id <= 0) return null
+  return id
+}
+
+async function handleAdmin(req, res, route) {
+  if (route === 'admin/login' && req.method === 'POST') {
+    const body = parseBody(req)
+    const data = await loginAdmin(body.username ?? body.identifier ?? '', body.password ?? '')
+    return res.status(200).json(data)
+  }
+
+  if (route === 'admin/me' && req.method === 'GET') {
+    const auth = await requireAdmin(req.headers.authorization)
+    return res.status(200).json({
+      authenticated: true,
+      username: auth.username,
+      role: auth.type,
+    })
+  }
+
+  if (route === 'admin/users' && req.method === 'GET') {
+    await requireAdmin(req.headers.authorization)
+    const search = String(req.query?.search ?? '')
+    const limit = Number(req.query?.limit) || 50
+    const offset = Number(req.query?.offset) || 0
+    const users = await listUsers({ search, limit, offset })
+    return res.status(200).json({ users })
+  }
+
+  if (route === 'admin/users/bulk' && req.method === 'DELETE') {
+    await requireAdmin(req.headers.authorization)
+    const body = parseBody(req)
+    const deleted = await deleteUsersForAdmin(body.ids ?? [])
+    return res.status(200).json({ success: true, deleted })
+  }
+
+  if (route === 'admin/users/all/data' && req.method === 'DELETE') {
+    await requireAdmin(req.headers.authorization)
+    await clearAllUsersData()
+    return res.status(200).json({ success: true })
+  }
+
+  if (route === 'admin/users/all' && req.method === 'DELETE') {
+    await requireAdmin(req.headers.authorization)
+    const deleted = await deleteAllUsers()
+    return res.status(200).json({ success: true, deleted })
+  }
+
+  const accessMatch = route.match(/^admin\/users\/(\d+)\/admin-access$/)
+  if (accessMatch && req.method === 'PATCH') {
+    const userId = parseAdminUserId(accessMatch[1])
+    if (!userId) {
+      return res.status(400).json({ error: 'Invalid user id' })
+    }
+    await requireAdmin(req.headers.authorization)
+    const body = parseBody(req)
+    const user = await setUserAdminAccess(userId, Boolean(body.enabled))
+    return res.status(200).json({ user })
+  }
+
+  const passwordMatch = route.match(/^admin\/users\/(\d+)\/password$/)
+  if (passwordMatch && req.method === 'PATCH') {
+    const userId = parseAdminUserId(passwordMatch[1])
+    if (!userId) {
+      return res.status(400).json({ error: 'Invalid user id' })
+    }
+    await requireAdmin(req.headers.authorization)
+    const body = parseBody(req)
+    await resetUserPasswordForAdmin(userId, body.password ?? '')
+    return res.status(200).json({ success: true })
+  }
+
+  const dataMatch = route.match(/^admin\/users\/(\d+)\/data$/)
+  if (dataMatch) {
+    const userId = parseAdminUserId(dataMatch[1])
+    if (!userId) {
+      return res.status(400).json({ error: 'Invalid user id' })
+    }
+
+    if (req.method === 'GET') {
+      await requireAdmin(req.headers.authorization)
+      const data = await getUserDataForAdmin(userId)
+      return res.status(200).json({ data })
+    }
+
+    if (req.method === 'DELETE') {
+      await requireAdmin(req.headers.authorization)
+      await clearUserDataForAdmin(userId)
+      return res.status(200).json({ success: true })
+    }
+  }
+
+  const userMatch = route.match(/^admin\/users\/(\d+)$/)
+  if (userMatch) {
+    const userId = parseAdminUserId(userMatch[1])
+    if (!userId) {
+      return res.status(400).json({ error: 'Invalid user id' })
+    }
+
+    if (req.method === 'GET') {
+      await requireAdmin(req.headers.authorization)
+      const user = await getUserById(userId)
+      const dataSummary = await getUserDataSummary(userId)
+      return res.status(200).json({ user, dataSummary })
+    }
+
+    if (req.method === 'DELETE') {
+      await requireAdmin(req.headers.authorization)
+      await deleteUserForAdmin(userId)
+      return res.status(200).json({ success: true })
+    }
+  }
+
+  return res.status(404).json({ error: 'Not found' })
+}
+
 const routes = [
   { route: 'health', method: 'GET', handler: handleHealth },
   { route: 'auth/login', method: 'POST', handler: handleAuthLogin },
@@ -309,6 +450,20 @@ const routes = [
 
 async function handleRequest(req, res) {
   const route = getRoute(req)
+
+  if (route === 'admin/me' || route === 'admin/login' || route.startsWith('admin/users')) {
+    try {
+      return await handleAdmin(req, res, route)
+    } catch (err) {
+      const authResponse = sendAuthError(res, err)
+      if (authResponse) return authResponse
+
+      console.error(`API error [${req.method} /api/${route}]:`, err)
+      const message = err instanceof Error ? err.message : 'Internal server error'
+      return res.status(500).json({ error: message })
+    }
+  }
+
   const match = routes.find((entry) => entry.route === route && entry.method === req.method)
 
   if (!match) {

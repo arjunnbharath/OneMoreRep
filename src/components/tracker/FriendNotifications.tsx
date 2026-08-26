@@ -66,8 +66,8 @@ export default function FriendNotifications({
   }
 
   return (
-    <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-3xl">
-      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm lg:px-10 lg:py-5">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background text-foreground lg:mx-auto lg:max-w-3xl lg:min-h-full lg:overflow-visible">
+      <header className="z-10 flex shrink-0 items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm lg:px-10 lg:py-5">
         <button
           type="button"
           onClick={onBack}
@@ -94,6 +94,7 @@ export default function FriendNotifications({
         )}
       </header>
 
+      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(var(--mobile-nav-height)+0.5rem)] lg:overflow-visible lg:pb-0">
       <div className="desktop-page-body mx-auto max-w-lg px-5 py-4 lg:max-w-none lg:px-10 lg:pb-10">
         {loading ? (
           <p className="py-8 text-center text-sm text-muted">Loading…</p>
@@ -167,6 +168,7 @@ export default function FriendNotifications({
             </div>
           </>
         )}
+      </div>
       </div>
     </div>
   )

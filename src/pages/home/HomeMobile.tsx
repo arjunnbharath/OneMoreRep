@@ -1,27 +1,33 @@
-import type { RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
 import WorkoutCalendar from '../../components/WorkoutCalendar'
 import TodayPlanCard from '../../components/home/TodayPlanCard'
 import HomeStatsStrip from '../../components/home/HomeStatsStrip'
-import MuscleExerciseList from '../../components/home/MuscleExerciseList'
+import WinterArcCard from '../../components/home/WinterArcCard'
 import AppWordmark from '../../components/AppWordmark'
 import { getTodayWeekday } from '../../lib/workoutPlan'
+import type { WinterArcProgress } from '../../types/winterArc'
 import type { WeeklyPlan } from '../../types/workoutPlan'
 
 interface HomeMobileProps {
-  stats: { completed: number; minutes: number; streak: number }
+  stats: { streak: number; thisWeek: number }
+  sessionCount: number
   todayCalories: number
+  sugarCutStreak?: number
   sessions: import('../../types/tracker').WorkoutSession[]
   plan: WeeklyPlan
-  workoutsRef: RefObject<HTMLElement | null>
+  showWinterArc?: boolean
+  winterArcProgress?: WinterArcProgress | null
 }
 
 export default function HomeMobile({
   stats,
+  sessionCount,
   todayCalories,
+  sugarCutStreak,
   sessions,
   plan,
-  workoutsRef,
+  showWinterArc,
+  winterArcProgress,
 }: HomeMobileProps) {
   const navigate = useNavigate()
 
@@ -29,9 +35,14 @@ export default function HomeMobile({
     <div className="min-h-full bg-background text-foreground lg:hidden">
       <header className="px-5 pb-6 pt-[max(2rem,env(safe-area-inset-top))]">
         <AppWordmark className="mb-4" />
-        <HomeStatsStrip stats={stats} todayCalories={todayCalories} />
+        <HomeStatsStrip
+          stats={stats}
+          sessionCount={sessionCount}
+          todayCalories={todayCalories}
+          sugarCutStreak={sugarCutStreak}
+        />
 
-        <div className="mt-5 overflow-x-hidden">
+        <div className="mt-5 space-y-4 overflow-x-hidden">
           <TodayPlanCard
             plan={plan}
             onPlan={() => navigate('/tracker/plan')}
@@ -39,31 +50,17 @@ export default function HomeMobile({
               navigate('/tracker/workout', { state: { startDay: getTodayWeekday() } })
             }
           />
+          {showWinterArc && winterArcProgress && (
+            <WinterArcCard
+              progress={winterArcProgress}
+              onOpenWorkout={() => navigate('/tracker/workout')}
+            />
+          )}
         </div>
       </header>
 
       <div className="space-y-8 px-5 pb-4 lg:pb-8">
-        <WorkoutCalendar sessions={sessions} />
-
-        <section id="workouts" ref={workoutsRef} data-tour="home-exercise-library">
-          <div className="flex items-end justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold">Exercise library</h2>
-              <p className="mt-0.5 text-xs text-muted">Tap a muscle to browse workouts</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/exercises')}
-              className="shrink-0 text-xs font-medium text-foreground underline-offset-2 hover:underline"
-            >
-              All exercises
-            </button>
-          </div>
-
-          <div className="mt-4">
-            <MuscleExerciseList />
-          </div>
-        </section>
+        <WorkoutCalendar sessions={sessions} compact />
       </div>
     </div>
   )

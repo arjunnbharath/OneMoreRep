@@ -1,5 +1,9 @@
 import { Router } from 'express'
+import { createRequire } from 'node:module'
 import { AuthError, changeUserPassword, deleteUser, getUserFromToken, loginUser, registerUser, updateUserAvatar } from '../auth-bridge.js'
+
+const require = createRequire(import.meta.url)
+const { isAdminLoginAttempt, loginAdmin } = require('../../api/lib/admin.js')
 
 const router = Router()
 
@@ -21,8 +25,16 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { identifier, email, password } = req.body
-    const data = await loginUser(identifier ?? email ?? '', password ?? '')
-    res.json(data)
+    const id = identifier ?? email ?? ''
+
+    if (isAdminLoginAttempt(id)) {
+      const data = await loginAdmin(id, password ?? '')
+      res.json({ role: 'admin', token: data.token, username: data.username })
+      return
+    }
+
+    const data = await loginUser(id, password ?? '')
+    res.json({ role: 'user', token: data.token, user: data.user })
   } catch (err) {
     if (err instanceof AuthError) {
       res.status(err.status).json({ error: err.message })

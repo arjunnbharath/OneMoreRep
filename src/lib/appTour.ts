@@ -44,19 +44,19 @@ function getVisibleTrackerTabSelector(tabTourId: string): string {
 }
 
 function getVisibleExerciseLibrarySelector(): string | undefined {
+  const workoutLibrary = document.querySelector('[data-tour="exercise-library"]')
+  if (workoutLibrary) {
+    const rect = workoutLibrary.getBoundingClientRect()
+    if (rect.width > 0 && rect.height > 0) {
+      return '[data-tour="exercise-library"]'
+    }
+  }
+
   const desktopLink = document.querySelector('[data-tour="main-nav-exercises"]')
   if (desktopLink) {
     const rect = desktopLink.getBoundingClientRect()
     if (rect.width > 0 && rect.height > 0) {
       return '[data-tour="main-nav-exercises"]'
-    }
-  }
-
-  const homeLibrary = document.querySelector('[data-tour="home-exercise-library"]')
-  if (homeLibrary) {
-    const rect = homeLibrary.getBoundingClientRect()
-    if (rect.width > 0 && rect.height > 0) {
-      return '[data-tour="home-exercise-library"]'
     }
   }
 
@@ -189,11 +189,11 @@ export function createAppTourSteps({ navigate }: AppTourActions): TourStep[] {
     {
       id: 'exercise-library',
       title: 'Exercise library',
-      body: 'Select Exercises to browse the full workout library — every exercise with demos, form tips, and muscle-group filters.',
+      body: 'Browse exercises by muscle group from the Workout tab — demos, form tips, and filters.',
       getTarget: () => getVisibleExerciseLibrarySelector(),
       placement: 'bottom',
       tooltipGap: 16,
-      onEnter: () => navigate('/home'),
+      onEnter: () => navigate(TRACKER_PATHS.workout),
     },
     {
       id: 'calories',

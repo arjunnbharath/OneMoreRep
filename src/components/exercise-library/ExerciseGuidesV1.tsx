@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, BookOpen, ChevronRight, Search } from 'lucide-react'
 import { useAppInstalled } from '../../hooks/useAppInstalled'
@@ -9,6 +9,7 @@ import {
   exerciseGuides,
   type ExerciseGroup,
 } from '../../data/exerciseGuides'
+import { TRACKER_PATHS } from '../../lib/trackerPaths'
 
 const filterOptions: { id: ExerciseGroup | 'all'; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -18,13 +19,30 @@ const filterOptions: { id: ExerciseGroup | 'all'; label: string }[] = [
 interface ExerciseGuidesV1Props {
   embedded?: boolean
   onBack?: () => void
+  initialGroup?: ExerciseGroup | 'all'
 }
 
-export default function ExerciseGuidesV1({ embedded = false, onBack }: ExerciseGuidesV1Props) {
+export default function ExerciseGuidesV1({
+  embedded = false,
+  onBack,
+  initialGroup = 'all',
+}: ExerciseGuidesV1Props) {
   const navigate = useNavigate()
   const appInstalled = useAppInstalled()
-  const [activeGroup, setActiveGroup] = useState<ExerciseGroup | 'all'>('all')
+  const [activeGroup, setActiveGroup] = useState<ExerciseGroup | 'all'>(initialGroup)
   const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    setActiveGroup(initialGroup)
+  }, [initialGroup])
+
+  function selectGroup(id: ExerciseGroup | 'all') {
+    setActiveGroup(id)
+    if (!embedded) return
+    navigate(
+      id === 'all' ? TRACKER_PATHS.exerciseLibrary : TRACKER_PATHS.exerciseLibraryGroup(id),
+    )
+  }
 
   const filtered = useMemo(() => {
     let list = exerciseGuides
@@ -124,7 +142,7 @@ export default function ExerciseGuidesV1({ embedded = false, onBack }: ExerciseG
             <button
               key={id}
               type="button"
-              onClick={() => setActiveGroup(id)}
+              onClick={() => selectGroup(id)}
               className={[
                 'shrink-0 rounded-full px-4 py-2 text-sm font-medium transition',
                 activeGroup === id
@@ -153,7 +171,7 @@ export default function ExerciseGuidesV1({ embedded = false, onBack }: ExerciseG
               <div className="mt-3 flex flex-col gap-1.5" data-tour="exercise-muscle-groups">
                 <button
                   type="button"
-                  onClick={() => setActiveGroup('all')}
+                  onClick={() => selectGroup('all')}
                   className={[
                     'w-full rounded-2xl px-4 py-3 text-left transition',
                     activeGroup === 'all'
@@ -168,7 +186,7 @@ export default function ExerciseGuidesV1({ embedded = false, onBack }: ExerciseG
                   <button
                     key={group.id}
                     type="button"
-                    onClick={() => setActiveGroup(group.id)}
+                    onClick={() => selectGroup(group.id)}
                     className={[
                       'w-full overflow-hidden rounded-2xl text-left transition',
                       activeGroup === group.id

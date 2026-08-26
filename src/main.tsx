@@ -8,6 +8,7 @@ import { StatusBar, Style } from '@capacitor/status-bar'
 import './index.css'
 import App from './App'
 import { AuthProvider } from './context/AuthContext'
+import { AdminAuthProvider } from './context/AdminAuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { initPwaInstallListener, registerServiceWorker } from './lib/pwaInstall'
 
@@ -51,7 +52,9 @@ createRoot(document.getElementById('root')!).render(
       <NativeShell>
         <ThemeProvider>
           <AuthProvider>
-            <App />
+            <AdminAuthProvider>
+              <App />
+            </AdminAuthProvider>
           </AuthProvider>
         </ThemeProvider>
       </NativeShell>

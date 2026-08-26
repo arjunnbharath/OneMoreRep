@@ -34,6 +34,7 @@ function formatUser(user) {
     username: user.username ?? null,
     avatarUrl: user.avatar_url ?? null,
     createdAt: user.created_at,
+    hasAdminAccess: Boolean(user.is_admin),
   }
 }
 
@@ -75,7 +76,7 @@ async function registerUser(name, username, email, password, avatar) {
   const passwordHash = await bcrypt.hash(password, 10)
   const avatarUrl = avatar && typeof avatar === 'string' && avatar.length > 0 ? avatar : null
   const result = await query(
-    'INSERT INTO users (name, username, email, password_hash, avatar_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, username, email, avatar_url, created_at',
+    'INSERT INTO users (name, username, email, password_hash, avatar_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, username, email, avatar_url, created_at, is_admin',
     [name.trim(), normalizedUsername, normalizedEmail, passwordHash, avatarUrl],
   )
 
@@ -99,11 +100,11 @@ async function loginUser(identifier, password) {
   const isEmail = trimmed.includes('@')
   const result = isEmail
     ? await query(
-        'SELECT id, name, username, email, password_hash, avatar_url, created_at FROM users WHERE email = $1',
+        'SELECT id, name, username, email, password_hash, avatar_url, created_at, is_admin FROM users WHERE email = $1',
         [trimmed.toLowerCase()],
       )
     : await query(
-        'SELECT id, name, username, email, password_hash, avatar_url, created_at FROM users WHERE LOWER(username) = $1',
+        'SELECT id, name, username, email, password_hash, avatar_url, created_at, is_admin FROM users WHERE LOWER(username) = $1',
         [normalizeUsername(trimmed)],
       )
 
@@ -131,7 +132,7 @@ async function getUserFromToken(token) {
 
   const payload = jwt.verify(token, JWT_SECRET)
   const result = await query(
-    'SELECT id, name, username, email, avatar_url, created_at FROM users WHERE id = $1',
+    'SELECT id, name, username, email, avatar_url, created_at, is_admin FROM users WHERE id = $1',
     [payload.userId],
   )
 
@@ -201,7 +202,7 @@ async function updateUserAvatar(token, avatar) {
   const avatarUrl = normalizeAvatar(avatar)
   const payload = jwt.verify(token, JWT_SECRET)
   const result = await query(
-    'UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING id, name, username, email, avatar_url, created_at',
+    'UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING id, name, username, email, avatar_url, created_at, is_admin',
     [avatarUrl, payload.userId],
   )
 

@@ -19,8 +19,10 @@ interface AuthContextValue {
   token: string | null
   isLoading: boolean
   login: (identifier: string, password: string) => Promise<void>
+  establishSession: (token: string, user: User) => void
   register: (name: string, username: string, email: string, password: string) => Promise<void>
   logout: () => void
+  refreshUser: () => Promise<void>
   deleteAccount: () => Promise<void>
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>
   updateAvatar: (avatar: string | null) => Promise<void>
@@ -52,6 +54,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }, [])
 
+  const refreshUser = useCallback(async () => {
+    if (!token) return
+    const { user: verifiedUser } = await getMe(token)
+    setUser(verifiedUser)
+    localStorage.setItem(USER_KEY, JSON.stringify(verifiedUser))
+  }, [token])
+
   useEffect(() => {
     if (!token) {
       setIsLoading(false)
@@ -78,10 +87,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('online', handleOnline)
   }, [user?.id, token])
 
+  useEffect(() => {
+    if (!token) return
+
+    function handleFocus() {
+      void refreshUser().catch(() => {
+        // Ignore transient refresh failures; session validation still runs on navigation.
+      })
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [token, refreshUser])
+
   const login = useCallback(
     async (identifier: string, password: string) => {
       const data = await apiLogin(identifier, password)
+      if (data.role !== 'user') {
+        throw new Error('Invalid credentials')
+      }
       persist(data.token, data.user)
+    },
+    [persist],
+  )
+
+  const establishSession = useCallback(
+    (newToken: string, newUser: User) => {
+      persist(newToken, newUser)
     },
     [persist],
   )
@@ -120,8 +152,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo(
-    () => ({ user, token, isLoading, login, register, logout, deleteAccount, changePassword, updateAvatar }),
-    [user, token, isLoading, login, register, logout, deleteAccount, changePassword, updateAvatar],
+    () => ({
+      user,
+      token,
+      isLoading,
+      login,
+      establishSession,
+      register,
+      logout,
+      refreshUser,
+      deleteAccount,
+      changePassword,
+      updateAvatar,
+    }),
+    [
+      user,
+      token,
+      isLoading,
+      login,
+      establishSession,
+      register,
+      logout,
+      refreshUser,
+      deleteAccount,
+      changePassword,
+      updateAvatar,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

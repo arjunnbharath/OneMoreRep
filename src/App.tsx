@@ -14,6 +14,8 @@ import { CalorieTrackerPage } from './pages/CalorieTracker'
 import Profile from './pages/Profile'
 import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
+import Admin from './pages/Admin'
 
 export default function App() {
   return (
@@ -24,6 +26,10 @@ export default function App() {
       <Route path="/" element={<Splash />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/admin/login" element={<Navigate to="/login" replace />} />
+      <Route element={<AdminRoute />}>
+        <Route path="/admin" element={<Admin />} />
+      </Route>
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/home" element={<Home />} />

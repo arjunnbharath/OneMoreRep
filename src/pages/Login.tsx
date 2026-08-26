@@ -6,11 +6,15 @@ import AuthPageShell from '../components/AuthPageShell'
 import AuthVideoBackground from '../components/AuthVideoBackground'
 import Button from '../components/Button'
 import Input from '../components/Input'
+import { useAdminAuth } from '../context/AdminAuthContext'
 import { useAuth } from '../context/AuthContext'
+import { login as apiLogin } from '../lib/api'
 
 export default function Login() {
   const navigate = useNavigate()
-  const { user, isLoading, login } = useAuth()
+  const { user, isLoading, establishSession: establishUserSession } = useAuth()
+  const { token: adminToken, isLoading: adminLoading, establishSession: establishAdminSession } =
+    useAdminAuth()
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -23,8 +27,14 @@ export default function Login() {
     setLoading(true)
 
     try {
-      await login(identifier, password)
-      navigate('/home')
+      const result = await apiLogin(identifier, password)
+      if (result.role === 'admin') {
+        establishAdminSession(result.token, result.username)
+        navigate('/admin', { replace: true })
+        return
+      }
+      establishUserSession(result.token, result.user)
+      navigate('/home', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
@@ -32,7 +42,7 @@ export default function Login() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading || adminLoading) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-background">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-foreground" />
@@ -40,8 +50,12 @@ export default function Login() {
     )
   }
 
+  if (adminToken) {
+    return <Navigate to="/admin" replace />
+  }
+
   if (user) {
-    return <Navigate to="/home" replace />
+    return <Navigate to={user.hasAdminAccess ? '/admin' : '/home'} replace />
   }
 
   return (

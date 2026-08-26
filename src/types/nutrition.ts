@@ -40,6 +40,7 @@ export interface FoodLogEntry {
   protein: number
   carbs: number
   fat: number
+  sugar?: number
 }
 
 export interface UserNutritionProfile {
