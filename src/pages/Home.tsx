@@ -1,10 +1,9 @@
 import { useMemo } from 'react'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
-import { useCalorieTracker } from '../hooks/useCalorieTracker'
 import { useWinterArc } from '../hooks/useWinterArc'
 import { toLocalDateKey } from '../lib/nutritionMath'
-import { loggedFoodDaysFromLogs } from '../lib/sugarCut'
+import { useCalorieTracker } from '../hooks/useCalorieTracker'
 import { computeWinterArcProgress, getDailyTasks, summarizeDailyTasks } from '../lib/winterArc'
 import HomeDesktop from './home/HomeDesktop'
 import HomeMobile from './home/HomeMobile'
@@ -12,20 +11,12 @@ import { useHomeStats } from './home/homeUtils'
 
 export default function Home() {
   const { sessions } = useWorkoutTracker()
-  const { caloriesByDay, sugarByDay, logs } = useCalorieTracker()
+  const { caloriesByDay } = useCalorieTracker()
   const { plan } = useWorkoutPlan()
   const { state: winterArcState } = useWinterArc()
 
   const stats = useHomeStats(sessions)
   const todayCalories = caloriesByDay[toLocalDateKey()] ?? 0
-
-  const sugarCutInput = useMemo(
-    () => ({
-      sugarByDay,
-      loggedDays: loggedFoodDaysFromLogs(logs),
-    }),
-    [sugarByDay, logs],
-  )
 
   const winterArcProgress = useMemo(
     () => computeWinterArcProgress(sessions, winterArcState),
@@ -34,8 +25,8 @@ export default function Home() {
 
   const winterArcTaskSummary = useMemo(() => {
     if (!winterArcState.enrolled) return { completed: 0, total: 0 }
-    return summarizeDailyTasks(getDailyTasks(winterArcState, sessions, plan, sugarCutInput))
-  }, [winterArcState, sessions, plan, sugarCutInput])
+    return summarizeDailyTasks(getDailyTasks(winterArcState, sessions, plan))
+  }, [winterArcState, sessions, plan])
 
   const showWinterArc =
     winterArcState.enrolled && winterArcState.showOnHome && winterArcProgress !== null

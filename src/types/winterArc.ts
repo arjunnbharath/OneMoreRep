@@ -39,12 +39,6 @@ export interface WinterArcProgress {
 export interface WinterArcDailyTask {
   id: string
   label: string
-  kind: 'workout' | 'sugar' | 'custom'
+  kind: 'workout' | 'sugar' | 'habit'
   completed: boolean
-  subtitle?: string
-}
-
-export interface SugarCutDayInput {
-  sugarByDay: Record<string, number>
-  loggedDays: Set<string>
 }

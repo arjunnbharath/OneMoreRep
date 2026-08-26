@@ -7,6 +7,7 @@ import {
   DEFAULT_WINTER_ARC_WEEKLY_TARGET,
   normalizeCompletedByDate,
   normalizeWinterArcTasks,
+  WORKOUT_TASK_ID,
 } from '../lib/winterArc'
 import {
   DEFAULT_WINTER_ARC_STATE,
@@ -115,6 +116,7 @@ export function useWinterArc() {
   }
 
   function toggleTask(taskId: string, dateKey = toDateKey(new Date())) {
+    if (taskId === WORKOUT_TASK_ID) return
     setState((current) => {
       const previous = current.completedByDate[dateKey] ?? []
       const next = previous.includes(taskId)

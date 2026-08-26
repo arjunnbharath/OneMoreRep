@@ -1,7 +1,6 @@
 import type { WorkoutSession } from '../types/tracker'
 import type { WeeklyPlan } from '../types/workoutPlan'
 import type {
-  SugarCutDayInput,
   WinterArcDailyTask,
   WinterArcProgress,
   WinterArcState,
@@ -14,7 +13,6 @@ import {
   muscleExerciseCount,
   WEEKDAY_LABELS,
 } from './workoutPlan'
-import { getSugarCutDayStatus } from './sugarCut'
 
 export const WINTER_ARC_DURATION_DAYS = 90
 export const DEFAULT_WINTER_ARC_WEEKLY_TARGET = 4
@@ -144,40 +142,34 @@ export function getDailyTasks(
   state: WinterArcState,
   sessions: WorkoutSession[],
   plan: WeeklyPlan,
-  sugarCut?: SugarCutDayInput,
   dateKey = toDateKey(new Date()),
 ): WinterArcDailyTask[] {
   const workoutSummary = getTodayWorkoutSummary(plan)
   const trainedToday = sessionOnDate(sessions, dateKey)
   const completedIds = state.completedByDate[dateKey] ?? []
-  const sugarStatus = sugarCut
-    ? getSugarCutDayStatus(sugarCut.sugarByDay, sugarCut.loggedDays, dateKey)
-    : null
 
   const workoutTask: WinterArcDailyTask = {
     id: WORKOUT_TASK_ID,
     kind: 'workout',
-    label: workoutSummary.title,
-    subtitle: trainedToday ? 'Logged from your sessions' : workoutSummary.subtitle,
+    label: trainedToday ? 'Workout done' : workoutSummary.title,
     completed: trainedToday,
   }
 
   const sugarTask: WinterArcDailyTask = {
     id: SUGAR_CUT_TASK_ID,
     kind: 'sugar',
-    label: sugarStatus?.title ?? 'Sugar cut',
-    subtitle: sugarStatus?.subtitle ?? 'Track in Calories',
-    completed: sugarStatus?.met ?? false,
+    label: 'Sugar cut',
+    completed: completedIds.includes(SUGAR_CUT_TASK_ID),
   }
 
-  const customTasks: WinterArcDailyTask[] = state.tasks.map((task) => ({
+  const habitTasks: WinterArcDailyTask[] = state.tasks.map((task) => ({
     id: task.id,
-    kind: 'custom',
+    kind: 'habit',
     label: task.label,
     completed: completedIds.includes(task.id),
   }))
 
-  return [workoutTask, sugarTask, ...customTasks]
+  return [workoutTask, sugarTask, ...habitTasks]
 }
 
 export function summarizeDailyTasks(tasks: WinterArcDailyTask[]) {
