@@ -13,22 +13,22 @@ interface HomeDesktopProps {
   stats: { streak: number; thisWeek: number }
   sessionCount: number
   todayCalories: number
-  sugarCutStreak?: number
   sessions: WorkoutSession[]
   plan: WeeklyPlan
   showWinterArc?: boolean
   winterArcProgress?: WinterArcProgress | null
+  winterArcTaskSummary?: { completed: number; total: number }
 }
 
 export default function HomeDesktop({
   stats,
   sessionCount,
   todayCalories,
-  sugarCutStreak,
   sessions,
   plan,
   showWinterArc,
   winterArcProgress,
+  winterArcTaskSummary,
 }: HomeDesktopProps) {
   const navigate = useNavigate()
   const recentSessions = sessions.slice(0, 5)
@@ -57,7 +57,6 @@ export default function HomeDesktop({
               stats={stats}
               sessionCount={sessionCount}
               todayCalories={todayCalories}
-              sugarCutStreak={sugarCutStreak}
             />
           </div>
         </div>
@@ -73,7 +72,9 @@ export default function HomeDesktop({
           {showWinterArc && winterArcProgress && (
             <WinterArcCard
               progress={winterArcProgress}
-              onOpenWorkout={() => navigate('/tracker/workout')}
+              tasksCompleted={winterArcTaskSummary?.completed ?? 0}
+              tasksTotal={winterArcTaskSummary?.total ?? 0}
+              onOpen={() => navigate('/winter-arc')}
             />
           )}
         </div>
@@ -92,7 +93,6 @@ export default function HomeDesktop({
                   stats={stats}
                   sessionCount={sessionCount}
                   todayCalories={todayCalories}
-                  sugarCutStreak={sugarCutStreak}
                 />
               </div>
             </div>

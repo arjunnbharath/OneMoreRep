@@ -11,7 +11,6 @@ import AccountSettings from '../components/profile/AccountSettings'
 import DataSettings from '../components/profile/DataSettings'
 import PermissionsSettings from '../components/profile/PermissionsSettings'
 import SettingsHub, { ProfileSettingsEntry } from '../components/profile/SettingsHub'
-import SugarCutHomeToggle from '../components/profile/SugarCutHomeToggle'
 import WinterArcPanel from '../components/profile/WinterArcPanel'
 import { useAuth } from '../context/AuthContext'
 import { clearAllUserData as apiClearAllUserData } from '../lib/api'
@@ -19,7 +18,6 @@ import { clearLocalUserData, clearUserDataCache } from '../lib/userDataSync'
 import { useTheme } from '../context/ThemeContext'
 import { useTour } from '../context/TourContext'
 import { useCalorieTracker } from '../hooks/useCalorieTracker'
-import { useHomePreferences } from '../hooks/useHomePreferences'
 import { useWinterArc } from '../hooks/useWinterArc'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
@@ -54,7 +52,6 @@ export default function Profile() {
   const { sessions } = useWorkoutTracker()
   const { plan } = useWorkoutPlan()
   const { profile: nutritionProfile, logs, ready: nutritionReady } = useCalorieTracker()
-  const { preferences: homePreferences, setShowSugarCutStreak } = useHomePreferences()
   const { state: winterArcState, enroll, leave, setShowOnHome } = useWinterArc()
   const view = getProfileView(location.pathname)
 
@@ -333,11 +330,6 @@ export default function Profile() {
           onEnroll={enroll}
           onLeave={leave}
           onShowOnHomeChange={setShowOnHome}
-        />
-
-        <SugarCutHomeToggle
-          enabled={homePreferences.showSugarCutStreak}
-          onChange={setShowSugarCutStreak}
         />
 
         <ProfileSettingsEntry onClick={() => navigate(PROFILE_PATHS.settings)} />

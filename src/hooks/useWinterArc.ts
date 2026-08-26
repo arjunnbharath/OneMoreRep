@@ -4,10 +4,14 @@ import { USER_DATA_KEYS } from '../lib/userDataKeys'
 import { loadUserDataValue, scheduleUserDataSave } from '../lib/userDataSync'
 import { toDateKey } from '../pages/home/homeUtils'
 import {
+  DEFAULT_WINTER_ARC_WEEKLY_TARGET,
+  normalizeCompletedByDate,
+  normalizeWinterArcTasks,
+} from '../lib/winterArc'
+import {
   DEFAULT_WINTER_ARC_STATE,
   type WinterArcState,
 } from '../types/winterArc'
-import { DEFAULT_WINTER_ARC_WEEKLY_TARGET } from '../lib/winterArc'
 
 function normalizeWinterArcState(raw: unknown): WinterArcState {
   if (!raw || typeof raw !== 'object') return DEFAULT_WINTER_ARC_STATE
@@ -22,6 +26,8 @@ function normalizeWinterArcState(raw: unknown): WinterArcState {
     enrolledAt: typeof record.enrolledAt === 'string' ? record.enrolledAt : null,
     workoutsPerWeek,
     showOnHome: record.showOnHome !== false,
+    tasks: normalizeWinterArcTasks(record.tasks),
+    completedByDate: normalizeCompletedByDate(record.completedByDate),
   }
 }
 
@@ -72,6 +78,8 @@ export function useWinterArc() {
       enrolledAt: toDateKey(new Date()),
       workoutsPerWeek: DEFAULT_WINTER_ARC_WEEKLY_TARGET,
       showOnHome: true,
+      tasks: [],
+      completedByDate: {},
     })
   }
 
@@ -83,11 +91,50 @@ export function useWinterArc() {
     setState((current) => ({ ...current, showOnHome: show }))
   }
 
+  function addTask(label: string) {
+    const trimmed = label.trim()
+    if (!trimmed) return
+    setState((current) => ({
+      ...current,
+      tasks: [...current.tasks, { id: `task_${Date.now()}`, label: trimmed }],
+    }))
+  }
+
+  function removeTask(taskId: string) {
+    setState((current) => {
+      const completedByDate: Record<string, string[]> = {}
+      for (const [dateKey, ids] of Object.entries(current.completedByDate)) {
+        completedByDate[dateKey] = ids.filter((id) => id !== taskId)
+      }
+      return {
+        ...current,
+        tasks: current.tasks.filter((task) => task.id !== taskId),
+        completedByDate,
+      }
+    })
+  }
+
+  function toggleTask(taskId: string, dateKey = toDateKey(new Date())) {
+    setState((current) => {
+      const previous = current.completedByDate[dateKey] ?? []
+      const next = previous.includes(taskId)
+        ? previous.filter((id) => id !== taskId)
+        : [...previous, taskId]
+      return {
+        ...current,
+        completedByDate: { ...current.completedByDate, [dateKey]: next },
+      }
+    })
+  }
+
   return {
     state,
     ready,
     enroll,
     leave,
     setShowOnHome,
+    addTask,
+    removeTask,
+    toggleTask,
   }
 }

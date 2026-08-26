@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Snowflake } from 'lucide-react'
 import {
-  DEFAULT_WINTER_ARC_WEEKLY_TARGET,
   WINTER_ARC_DURATION_DAYS,
   formatWinterArcEndDate,
 } from '../../lib/winterArc'
@@ -39,8 +38,8 @@ export default function WinterArcPanel({
             <div className="min-w-0 flex-1">
               <p className="text-base font-semibold text-white">Winter Arc</p>
               <p className="mt-1 text-sm leading-relaxed text-white/65">
-                {WINTER_ARC_DURATION_DAYS}-day push through the cold season. Hit{' '}
-                {DEFAULT_WINTER_ARC_WEEKLY_TARGET} workouts per week and build your streak.
+                {WINTER_ARC_DURATION_DAYS}-day push through the cold season. Daily workout and sugar
+                cut habits, plus your own tasks.
               </p>
               <button
                 type="button"

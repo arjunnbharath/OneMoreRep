@@ -46,3 +46,32 @@ export function computeSugarCutStreak(
 
   return streak
 }
+
+export function getSugarCutDayStatus(
+  sugarByDay: Record<string, number>,
+  loggedDays: Set<string>,
+  dateKey = toDateKey(new Date()),
+  limitG = DEFAULT_SUGAR_LIMIT_G,
+) {
+  const hasLogs = loggedDays.has(dateKey)
+  const sugarG = sugarByDay[dateKey] ?? 0
+  const met = hasLogs && sugarG <= limitG
+
+  let subtitle: string
+  if (!hasLogs) {
+    subtitle = `Log food in Calories · stay under ${limitG}g`
+  } else if (met) {
+    subtitle = `${Math.round(sugarG)}g today · under ${limitG}g limit`
+  } else {
+    subtitle = `${Math.round(sugarG)}g today · over ${limitG}g limit`
+  }
+
+  return {
+    met,
+    sugarG,
+    hasLogs,
+    limitG,
+    title: `Sugar cut · under ${limitG}g`,
+    subtitle,
+  }
+}

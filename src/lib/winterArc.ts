@@ -1,9 +1,25 @@
 import type { WorkoutSession } from '../types/tracker'
-import type { WinterArcProgress, WinterArcState } from '../types/winterArc'
+import type { WeeklyPlan } from '../types/workoutPlan'
+import type {
+  SugarCutDayInput,
+  WinterArcDailyTask,
+  WinterArcProgress,
+  WinterArcState,
+  WinterArcTask,
+} from '../types/winterArc'
 import { computeStreak, toDateKey } from '../pages/home/homeUtils'
+import { exerciseGroupLabels } from '../data/exerciseGuides'
+import {
+  getTodayWeekday,
+  muscleExerciseCount,
+  WEEKDAY_LABELS,
+} from './workoutPlan'
+import { getSugarCutDayStatus } from './sugarCut'
 
 export const WINTER_ARC_DURATION_DAYS = 90
 export const DEFAULT_WINTER_ARC_WEEKLY_TARGET = 4
+export const WORKOUT_TASK_ID = '__workout__'
+export const SUGAR_CUT_TASK_ID = '__sugar_cut__'
 
 function parseDateKey(key: string) {
   const [y, m, d] = key.split('-').map(Number)
@@ -86,4 +102,112 @@ export function formatWinterArcEndDate(endDateKey: string) {
     month: 'short',
     day: 'numeric',
   })
+}
+
+function sessionOnDate(sessions: WorkoutSession[], dateKey: string) {
+  return sessions.some((session) => toDateKey(new Date(session.date)) === dateKey)
+}
+
+export function getTodayWorkoutSummary(plan: WeeklyPlan) {
+  const today = getTodayWeekday()
+  const dayPlan = plan[today]
+  const muscles = dayPlan.muscles.filter((group) => muscleExerciseCount(dayPlan, group) > 0)
+  const exerciseTotal = muscles.reduce(
+    (sum, group) => sum + muscleExerciseCount(dayPlan, group),
+    0,
+  )
+
+  if (muscles.length === 0) {
+    return {
+      today,
+      muscles: [] as typeof muscles,
+      exerciseTotal: 0,
+      title: 'Open workout',
+      subtitle: 'No plan for today — train anyway or update your weekly plan',
+    }
+  }
+
+  const muscleLabels = muscles.map((group) => exerciseGroupLabels[group]).join(', ')
+  return {
+    today,
+    muscles,
+    exerciseTotal,
+    title: `${WEEKDAY_LABELS[today]} · ${muscleLabels}`,
+    subtitle:
+      exerciseTotal > 0
+        ? `${exerciseTotal} exercise${exerciseTotal === 1 ? '' : 's'} from your plan`
+        : 'From your weekly plan',
+  }
+}
+
+export function getDailyTasks(
+  state: WinterArcState,
+  sessions: WorkoutSession[],
+  plan: WeeklyPlan,
+  sugarCut?: SugarCutDayInput,
+  dateKey = toDateKey(new Date()),
+): WinterArcDailyTask[] {
+  const workoutSummary = getTodayWorkoutSummary(plan)
+  const trainedToday = sessionOnDate(sessions, dateKey)
+  const completedIds = state.completedByDate[dateKey] ?? []
+  const sugarStatus = sugarCut
+    ? getSugarCutDayStatus(sugarCut.sugarByDay, sugarCut.loggedDays, dateKey)
+    : null
+
+  const workoutTask: WinterArcDailyTask = {
+    id: WORKOUT_TASK_ID,
+    kind: 'workout',
+    label: workoutSummary.title,
+    subtitle: trainedToday ? 'Logged from your sessions' : workoutSummary.subtitle,
+    completed: trainedToday,
+  }
+
+  const sugarTask: WinterArcDailyTask = {
+    id: SUGAR_CUT_TASK_ID,
+    kind: 'sugar',
+    label: sugarStatus?.title ?? 'Sugar cut',
+    subtitle: sugarStatus?.subtitle ?? 'Track in Calories',
+    completed: sugarStatus?.met ?? false,
+  }
+
+  const customTasks: WinterArcDailyTask[] = state.tasks.map((task) => ({
+    id: task.id,
+    kind: 'custom',
+    label: task.label,
+    completed: completedIds.includes(task.id),
+  }))
+
+  return [workoutTask, sugarTask, ...customTasks]
+}
+
+export function summarizeDailyTasks(tasks: WinterArcDailyTask[]) {
+  const completed = tasks.filter((task) => task.completed).length
+  return { completed, total: tasks.length }
+}
+
+export function normalizeWinterArcTasks(raw: unknown): WinterArcTask[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .filter(
+      (item): item is WinterArcTask =>
+        !!item &&
+        typeof item === 'object' &&
+        typeof (item as WinterArcTask).id === 'string' &&
+        typeof (item as WinterArcTask).label === 'string',
+    )
+    .map((item) => ({
+      id: item.id,
+      label: item.label.trim(),
+    }))
+    .filter((item) => item.label.length > 0)
+}
+
+export function normalizeCompletedByDate(raw: unknown): Record<string, string[]> {
+  if (!raw || typeof raw !== 'object') return {}
+  const result: Record<string, string[]> = {}
+  for (const [dateKey, ids] of Object.entries(raw as Record<string, unknown>)) {
+    if (!Array.isArray(ids)) continue
+    result[dateKey] = ids.filter((id): id is string => typeof id === 'string')
+  }
+  return result
 }

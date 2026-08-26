@@ -1,13 +1,20 @@
-import { Snowflake } from 'lucide-react'
+import { ChevronRight, Snowflake } from 'lucide-react'
 import { formatWinterArcEndDate } from '../../lib/winterArc'
 import type { WinterArcProgress } from '../../types/winterArc'
 
 interface WinterArcCardProps {
   progress: WinterArcProgress
-  onOpenWorkout: () => void
+  tasksCompleted: number
+  tasksTotal: number
+  onOpen: () => void
 }
 
-export default function WinterArcCard({ progress, onOpenWorkout }: WinterArcCardProps) {
+export default function WinterArcCard({
+  progress,
+  tasksCompleted,
+  tasksTotal,
+  onOpen,
+}: WinterArcCardProps) {
   const {
     dayNumber,
     totalDays,
@@ -16,7 +23,6 @@ export default function WinterArcCard({ progress, onOpenWorkout }: WinterArcCard
     weeklyTarget,
     weeklyMet,
     streak,
-    trainedToday,
     arcComplete,
     progressPercent,
     endDateKey,
@@ -24,9 +30,11 @@ export default function WinterArcCard({ progress, onOpenWorkout }: WinterArcCard
   } = progress
 
   return (
-    <section
+    <button
+      type="button"
+      onClick={onOpen}
       data-tour="winter-arc"
-      className="overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-blue-950 ring-1 ring-white/10"
+      className="w-full overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-blue-950 text-left ring-1 ring-white/10 transition hover:ring-white/20"
     >
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
@@ -50,12 +58,16 @@ export default function WinterArcCard({ progress, onOpenWorkout }: WinterArcCard
                 : `${daysRemaining} days left · ends ${formatWinterArcEndDate(endDateKey)}`}
             </p>
           </div>
-          {streak > 0 && (
-            <div className="shrink-0 rounded-xl bg-white/10 px-3 py-2 text-center ring-1 ring-white/10">
-              <p className="text-lg font-bold tabular-nums leading-none text-white">{streak}</p>
-              <p className="mt-0.5 text-[10px] text-white/50">streak</p>
-            </div>
-          )}
+
+          <div className="flex shrink-0 items-center gap-2">
+            {streak > 0 && (
+              <div className="rounded-xl bg-white/10 px-3 py-2 text-center ring-1 ring-white/10">
+                <p className="text-lg font-bold tabular-nums leading-none text-white">{streak}</p>
+                <p className="mt-0.5 text-[10px] text-white/50">streak</p>
+              </div>
+            )}
+            <ChevronRight size={18} className="text-white/45" />
+          </div>
         </div>
 
         <div className="mt-4">
@@ -74,35 +86,44 @@ export default function WinterArcCard({ progress, onOpenWorkout }: WinterArcCard
         <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-white/8 px-3 py-2.5 ring-1 ring-white/10">
           <div>
             <p className="text-[10px] font-medium uppercase tracking-wide text-white/45">
-              This week
+              {!arcComplete ? "Today's tasks" : 'This week'}
             </p>
             <p className="mt-0.5 text-sm font-semibold tabular-nums text-white">
-              {workoutsThisWeek}
-              <span className="font-normal text-white/45"> / {weeklyTarget} workouts</span>
+              {!arcComplete ? (
+                <>
+                  {tasksCompleted}
+                  <span className="font-normal text-white/45"> / {tasksTotal} done</span>
+                </>
+              ) : (
+                <>
+                  {workoutsThisWeek}
+                  <span className="font-normal text-white/45"> / {weeklyTarget} workouts</span>
+                </>
+              )}
             </p>
           </div>
           <span
             className={[
               'rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide',
-              weeklyMet
-                ? 'bg-emerald-500/20 text-emerald-200'
-                : 'bg-white/10 text-white/60',
+              !arcComplete
+                ? tasksCompleted === tasksTotal && tasksTotal > 0
+                  ? 'bg-emerald-500/20 text-emerald-200'
+                  : 'bg-white/10 text-white/60'
+                : weeklyMet
+                  ? 'bg-emerald-500/20 text-emerald-200'
+                  : 'bg-white/10 text-white/60',
             ].join(' ')}
           >
-            {weeklyMet ? 'On track' : 'Keep going'}
+            {!arcComplete
+              ? tasksCompleted === tasksTotal && tasksTotal > 0
+                ? 'All done'
+                : 'View tasks'
+              : weeklyMet
+                ? 'On track'
+                : 'Keep going'}
           </span>
         </div>
-
-        {!arcComplete && !trainedToday && (
-          <button
-            type="button"
-            onClick={onOpenWorkout}
-            className="mt-4 w-full rounded-xl bg-white py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-white/90"
-          >
-            Log today&apos;s workout
-          </button>
-        )}
       </div>
-    </section>
+    </button>
   )
 }

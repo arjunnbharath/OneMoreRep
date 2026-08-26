@@ -12,22 +12,22 @@ interface HomeMobileProps {
   stats: { streak: number; thisWeek: number }
   sessionCount: number
   todayCalories: number
-  sugarCutStreak?: number
   sessions: import('../../types/tracker').WorkoutSession[]
   plan: WeeklyPlan
   showWinterArc?: boolean
   winterArcProgress?: WinterArcProgress | null
+  winterArcTaskSummary?: { completed: number; total: number }
 }
 
 export default function HomeMobile({
   stats,
   sessionCount,
   todayCalories,
-  sugarCutStreak,
   sessions,
   plan,
   showWinterArc,
   winterArcProgress,
+  winterArcTaskSummary,
 }: HomeMobileProps) {
   const navigate = useNavigate()
 
@@ -39,7 +39,6 @@ export default function HomeMobile({
           stats={stats}
           sessionCount={sessionCount}
           todayCalories={todayCalories}
-          sugarCutStreak={sugarCutStreak}
         />
 
         <div className="mt-5 space-y-4 overflow-x-hidden">
@@ -53,7 +52,9 @@ export default function HomeMobile({
           {showWinterArc && winterArcProgress && (
             <WinterArcCard
               progress={winterArcProgress}
-              onOpenWorkout={() => navigate('/tracker/workout')}
+              tasksCompleted={winterArcTaskSummary?.completed ?? 0}
+              tasksTotal={winterArcTaskSummary?.total ?? 0}
+              onOpen={() => navigate('/winter-arc')}
             />
           )}
         </div>

@@ -9,6 +9,7 @@ import ExerciseDetail from './pages/ExerciseDetail'
 import ExerciseGuides from './pages/ExerciseGuides'
 import MuscleGroupExercises from './pages/MuscleGroupExercises'
 import Home from './pages/Home'
+import WinterArc from './pages/WinterArc'
 import WorkoutDetail from './pages/WorkoutDetail'
 import TrackerRoute from './components/tracker/TrackerRoute'
 import Profile from './pages/Profile'
@@ -45,6 +46,7 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/home" element={<Home />} />
+          <Route path="/winter-arc" element={<WinterArc />} />
           <Route path="/muscle/:group" element={<MuscleGroupExercises />} />
           <Route path="/exercises" element={<ExerciseGuides />} />
           <Route path="/exercises/:id" element={<ExerciseDetail />} />
