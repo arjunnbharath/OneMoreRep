@@ -110,7 +110,6 @@ export default function Login() {
 
           <div className="lg:p-0">
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Sign in</h1>
-            <p className="mt-2 text-muted">Continue your fitness journey.</p>
 
             {error && (
               <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-200 dark:bg-red-950/50 dark:text-red-400 dark:ring-red-900/50">
@@ -132,14 +131,11 @@ export default function Login() {
                     <span className="block text-sm font-semibold">
                       Continue as {localProfile.name}
                     </span>
-                    <span className="mt-0.5 block text-xs text-muted">
-                      Account saved on this device · no password needed
-                    </span>
                   </span>
                 </button>
                 <div className="mt-4 flex items-center gap-3 text-xs text-muted">
                   <span className="h-px flex-1 bg-border" />
-                  or sign in to an online account
+                  or
                   <span className="h-px flex-1 bg-border" />
                 </div>
               </>

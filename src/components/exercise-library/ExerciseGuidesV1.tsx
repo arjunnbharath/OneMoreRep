@@ -89,7 +89,7 @@ export default function ExerciseGuidesV1({
         <header
           className={[
             'px-5 lg:desktop-page-header lg:px-10',
-            embedded ? 'pb-3 pt-1' : 'pt-[max(0.75rem,var(--sat))] lg:pt-6',
+            embedded ? 'pb-3 pt-1' : 'pt-3 lg:pt-6',
           ].join(' ')}
         >
           <div className="lg:desktop-page lg:mx-auto">

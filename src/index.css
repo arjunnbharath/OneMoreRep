@@ -51,18 +51,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-background);
   color: var(--color-foreground);
+}
+
+/* Scrolling stays; the bar itself never shows, on any container. */
+* {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-html {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
+*::-webkit-scrollbar {
   display: none;
+  width: 0;
+  height: 0;
 }
 
 :root:not(.dark) body {

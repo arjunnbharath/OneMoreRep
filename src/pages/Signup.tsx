@@ -120,7 +120,7 @@ export default function Signup() {
         </div>
       </div>
 
-      <div className="relative flex min-h-dvh flex-col justify-center px-6 py-12 sm:px-10 lg:px-16">
+      <div className="relative flex min-h-dvh flex-col justify-center px-6 pb-[max(3rem,var(--sab))] pt-[max(3rem,var(--sat))] sm:px-10 lg:px-16 lg:py-12">
         <AuthVideoBackground variant="auth" className="lg:hidden" />
         <div className="relative z-10 mx-auto w-full max-w-md">
           <div className="mb-8 flex items-center gap-2 lg:hidden">

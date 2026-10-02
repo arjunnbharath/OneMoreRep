@@ -471,7 +471,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+    <div className="flex min-h-dvh flex-col bg-background pt-[var(--sat)] text-foreground">
       <header className="sticky top-0 z-30 shrink-0 border-b border-border bg-surface/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-4 py-3 lg:px-8 lg:py-4">
           <Link

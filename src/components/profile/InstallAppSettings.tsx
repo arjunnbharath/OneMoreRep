@@ -1,7 +1,6 @@
-import { Download, Smartphone, Trash2 } from 'lucide-react'
+import { Download, Smartphone } from 'lucide-react'
 import { usePwaInstall } from '../../hooks/usePwaInstall'
 import { isNativeApp } from '../../lib/pwaInstall'
-import { uninstallNativeApp } from '../../lib/nativeAppActions'
 import { SettingsRow } from './SettingsUI'
 
 export default function InstallAppSettings({ embedded = false }: { embedded?: boolean }) {
@@ -17,17 +16,9 @@ export default function InstallAppSettings({ embedded = false }: { embedded?: bo
     downloadApk,
   } = usePwaInstall()
 
-  if (isNativeApp()) {
-    return (
-      <SettingsRow
-        icon={<Trash2 size={16} />}
-        label="Uninstall app"
-        value="Remove OneMoreRep from this phone"
-        destructive
-        onClick={() => void uninstallNativeApp()}
-      />
-    )
-  }
+  // Inside the installed Android app there is nothing to install; updates are
+  // handled by AppUpdateSettings.
+  if (isNativeApp()) return null
 
   if (!showInstallSection) {
     if (embedded) {
@@ -45,7 +36,6 @@ export default function InstallAppSettings({ embedded = false }: { embedded?: bo
       <SettingsRow
         icon={<Smartphone size={16} />}
         label="App installed"
-        value="OneMoreRep is on this device"
         success
       />
     )
@@ -59,14 +49,12 @@ export default function InstallAppSettings({ embedded = false }: { embedded?: bo
         <SettingsRow
           icon={<Download size={16} />}
           label="Install app"
-          value="Download the Android app (APK), then tap it to install"
           onClick={downloadApk}
         />
         {canInstall && (
           <SettingsRow
             icon={<Smartphone size={16} />}
             label={installing ? 'Adding…' : 'Add to home screen'}
-            value="Lightweight web version instead"
             onClick={installing ? undefined : () => void install()}
           />
         )}
@@ -88,8 +76,7 @@ export default function InstallAppSettings({ embedded = false }: { embedded?: bo
   const apkRow = (
     <SettingsRow
       icon={<Download size={16} />}
-      label="Android app (APK)"
-      value="Download to install on an Android phone"
+      label="Android app"
       onClick={downloadApk}
     />
   )
@@ -100,7 +87,6 @@ export default function InstallAppSettings({ embedded = false }: { embedded?: bo
         <SettingsRow
           icon={<Smartphone size={16} />}
           label={installing ? 'Installing…' : 'Install app'}
-          value="Add to your home screen"
           onClick={installing ? undefined : () => void install()}
         />
         {apkRow}
@@ -114,7 +100,6 @@ export default function InstallAppSettings({ embedded = false }: { embedded?: bo
         <SettingsRow
           icon={<Smartphone size={16} />}
           label="Install app"
-          value="Use your browser menu to install or add to home screen"
         />
         {apkRow}
       </>

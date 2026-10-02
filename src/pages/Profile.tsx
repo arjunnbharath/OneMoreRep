@@ -160,7 +160,6 @@ export default function Profile() {
         onOpenData={() => navigate(PROFILE_PATHS.data)}
         onOpenPermissions={() => navigate(PROFILE_PATHS.permissions)}
         onReplayTour={replayTour}
-        isLocal={isLocal}
         hasAdminAccess={user?.hasAdminAccess}
         onOpenAdmin={() => navigate('/admin')}
         onLogout={() => {
