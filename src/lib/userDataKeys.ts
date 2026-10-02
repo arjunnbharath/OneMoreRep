@@ -8,6 +8,7 @@ export const USER_DATA_KEYS = {
   workoutPlan: 'workout_plan',
   workoutPreferences: 'workout_preferences',
   winterArc: 'winter_arc',
+  bodyWeight: 'body_weight',
 } as const
 
 export type UserDataKey = (typeof USER_DATA_KEYS)[keyof typeof USER_DATA_KEYS]

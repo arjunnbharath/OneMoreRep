@@ -23,6 +23,8 @@ export interface User {
   avatarUrl?: string | null
   createdAt?: string
   hasAdminAccess?: boolean
+  /** Signed in without an account. Data stays on this device. */
+  isGuest?: boolean
 }
 
 export interface FriendUser {

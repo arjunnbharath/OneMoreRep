@@ -31,6 +31,7 @@ type WorkoutTrackerContextValue = {
   removeExercise: (exerciseId: string) => void
   addSetToExercise: (exerciseId: string, reps: number, weight?: number) => void
   updateSet: (exerciseId: string, setId: string, reps: number, weight?: number) => void
+  updateSetRir: (exerciseId: string, setId: string, rir?: number) => void
   toggleSetComplete: (exerciseId: string, setId: string) => void
   toggleSetWarmup: (exerciseId: string, setId: string) => void
   removeSet: (exerciseId: string, setId: string) => void
@@ -199,6 +200,24 @@ export function WorkoutTrackerProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  function updateSetRir(exerciseId: string, setId: string, rir?: number) {
+    const next = rir === undefined || Number.isNaN(rir) ? undefined : Math.min(10, Math.max(0, rir))
+    setActiveSession((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        exercises: prev.exercises.map((ex) =>
+          ex.id === exerciseId
+            ? {
+                ...ex,
+                sets: ex.sets.map((s) => (s.id === setId ? { ...s, rir: next } : s)),
+              }
+            : ex,
+        ),
+      }
+    })
+  }
+
   function updateSet(exerciseId: string, setId: string, reps: number, weight?: number) {
     setActiveSession((prev) => {
       if (!prev) return prev
@@ -303,6 +322,7 @@ export function WorkoutTrackerProvider({ children }: { children: ReactNode }) {
           id: createId(),
           reps: s.reps,
           weight: s.weight,
+          rir: s.rir,
           completed: false,
           isWarmup: s.isWarmup,
         })),
@@ -338,6 +358,7 @@ export function WorkoutTrackerProvider({ children }: { children: ReactNode }) {
     removeExercise,
     addSetToExercise,
     updateSet,
+    updateSetRir,
     toggleSetComplete,
     toggleSetWarmup,
     removeSet,

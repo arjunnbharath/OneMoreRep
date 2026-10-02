@@ -7,7 +7,21 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Splash() {
   const navigate = useNavigate()
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, localProfile, resumeLocalSession, continueAsGuest } = useAuth()
+
+  function handleGuest() {
+    continueAsGuest()
+    navigate('/home', { replace: true })
+  }
+
+  function handleContinueLocal() {
+    try {
+      resumeLocalSession()
+      navigate('/home', { replace: true })
+    } catch {
+      navigate('/login')
+    }
+  }
 
   if (isLoading) {
     return (
@@ -42,17 +56,49 @@ export default function Splash() {
           </p>
 
           <div className="mt-10 space-y-3">
-            <Button fullWidth className="py-4 text-base" onClick={() => navigate('/signup')}>
-              Get Started
-            </Button>
-            <Button
-              variant="outline"
-              fullWidth
-              className="py-4 text-base"
-              onClick={() => navigate('/login')}
-            >
-              I already have an account
-            </Button>
+            {localProfile ? (
+              <>
+                <Button fullWidth className="py-4 text-base" onClick={handleContinueLocal}>
+                  Continue as {localProfile.name}
+                </Button>
+                <Button
+                  variant="outline"
+                  fullWidth
+                  className="py-4 text-base"
+                  onClick={() => navigate('/login')}
+                >
+                  Sign in to an online account
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/signup')}
+                  className="w-full py-2 text-sm text-muted hover:text-foreground"
+                >
+                  Create a new account
+                </button>
+              </>
+            ) : (
+              <>
+                <Button fullWidth className="py-4 text-base" onClick={() => navigate('/signup')}>
+                  Get Started
+                </Button>
+                <Button
+                  variant="outline"
+                  fullWidth
+                  className="py-4 text-base"
+                  onClick={() => navigate('/login')}
+                >
+                  I already have an account
+                </Button>
+                <button
+                  type="button"
+                  onClick={handleGuest}
+                  className="w-full py-2 text-sm text-muted hover:text-foreground"
+                >
+                  Continue as guest
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

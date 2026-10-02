@@ -2,6 +2,8 @@ export interface WorkoutSet {
   id: string
   reps: number
   weight?: number
+  /** Reps in reserve. Lower means the set was closer to failure. */
+  rir?: number
   completed?: boolean
   isWarmup?: boolean
 }

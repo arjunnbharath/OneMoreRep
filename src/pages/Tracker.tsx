@@ -22,6 +22,7 @@ import StatsPanel from '../components/tracker/StatsPanel'
 import FriendsPanel from '../components/tracker/FriendsPanel'
 import AddExerciseForm from '../components/tracker/AddExerciseForm'
 import ExerciseSetTable from '../components/tracker/ExerciseSetTable'
+import RestTimerOverlay, { REST_DURATION_SECONDS } from '../components/tracker/RestTimerOverlay'
 import NextMuscleReady from '../components/tracker/NextMuscleReady'
 import ReadyToTrainPanel from '../components/tracker/ReadyToTrainPanel'
 import WorkoutHistoryWidget from '../components/tracker/WorkoutHistoryWidget'
@@ -62,6 +63,16 @@ import {
   type TrackerView,
 } from '../lib/trackerPaths'
 import { useTour } from '../context/TourContext'
+import { useAuth } from '../context/AuthContext'
+
+const TRACKER_TABS = [
+  { id: 'plan' as const, label: 'Plans', icon: Calendar, tourId: 'tracker-tab-plans' },
+  { id: 'workout' as const, label: 'Workout', icon: Dumbbell, tourId: 'tracker-tab-workout' },
+  { id: 'progress' as const, label: 'Stats', icon: BarChart3, tourId: 'tracker-tab-stats' },
+  { id: 'friends' as const, label: 'Friends', icon: Users, tourId: 'tracker-tab-friends' },
+] as const
+
+type TrackerTab = (typeof TRACKER_TABS)[number]
 
 type DayWorkoutFlow = {
   day: Weekday
@@ -122,6 +133,12 @@ export default function Tracker() {
   const planMuscle = route.kind === 'plan' ? route.muscle : undefined
   const isPlanMuscleView = view === 'plan' && Boolean(planMuscle)
   const appInstalled = useAppInstalled()
+  const { isLocal } = useAuth()
+  // Friends needs an online account; local-only accounts never see it.
+  const trackerTabs = useMemo<readonly TrackerTab[]>(
+    () => (isLocal ? TRACKER_TABS.filter((tab) => tab.id !== 'friends') : TRACKER_TABS),
+    [isLocal],
+  )
 
   const {
     sessions,
@@ -132,6 +149,7 @@ export default function Tracker() {
     removeExercise,
     addSetToExercise,
     updateSet,
+    updateSetRir,
     toggleSetComplete,
     removeSet,
     finishSession,
@@ -257,7 +275,7 @@ export default function Tracker() {
     if (wasCompleted) {
       setRestSeconds(null)
     } else {
-      setRestSeconds(90)
+      setRestSeconds(REST_DURATION_SECONDS)
     }
   }
 
@@ -430,6 +448,7 @@ export default function Tracker() {
           exercise={exercise}
           lastLog={lastLog}
           onUpdateSet={(setId, reps, weight) => updateSet(exercise.id, setId, reps, weight)}
+          onUpdateRir={(setId, rir) => updateSetRir(exercise.id, setId, rir)}
           onToggleComplete={(setId, completed) =>
             handleToggleSetComplete(exercise.id, setId, completed)
           }
@@ -464,14 +483,7 @@ export default function Tracker() {
             data-tour-nav="desktop"
             className="flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border"
           >
-            {(
-              [
-                { id: 'plan' as const, label: 'Plans', icon: Calendar, tourId: 'tracker-tab-plans' },
-                { id: 'workout' as const, label: 'Workout', icon: Dumbbell, tourId: 'tracker-tab-workout' },
-                { id: 'progress' as const, label: 'Stats', icon: BarChart3, tourId: 'tracker-tab-stats' },
-                { id: 'friends' as const, label: 'Friends', icon: Users, tourId: 'tracker-tab-friends' },
-              ] as const
-            ).map(({ id, label, icon: Icon, tourId }) => (
+            {trackerTabs.map(({ id, label, icon: Icon, tourId }) => (
               <button
                 key={id}
                 type="button"
@@ -498,14 +510,7 @@ export default function Tracker() {
         data-tour-nav="mobile"
         className="flex gap-1 rounded-2xl bg-surface p-1 shadow-sm ring-1 ring-border"
       >
-        {(
-          [
-            { id: 'plan' as const, label: 'Plans', icon: Calendar, tourId: 'tracker-tab-plans' },
-            { id: 'workout' as const, label: 'Workout', icon: Dumbbell, tourId: 'tracker-tab-workout' },
-            { id: 'progress' as const, label: 'Stats', icon: BarChart3, tourId: 'tracker-tab-stats' },
-            { id: 'friends' as const, label: 'Friends', icon: Users, tourId: 'tracker-tab-friends' },
-          ] as const
-        ).map(({ id, label, icon: Icon, tourId }) => (
+        {trackerTabs.map(({ id, label, icon: Icon, tourId }) => (
           <button
             key={id}
             type="button"
@@ -537,26 +542,11 @@ export default function Tracker() {
       >
 
       {isRestTimerRunning && (
-        <div className="mx-5 mb-4 flex items-center justify-between rounded-2xl bg-foreground/5 px-4 py-3 ring-1 ring-border lg:mx-10">
-          <span className="text-sm font-medium">Rest timer</span>
-          <span className="text-lg font-bold tabular-nums">{formatElapsed(restSeconds ?? 0)}</span>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setRestSeconds(90)}
-              className="text-xs font-medium text-muted hover:text-foreground"
-            >
-              Reset
-            </button>
-            <button
-              type="button"
-              onClick={() => setRestSeconds(null)}
-              className="text-xs font-medium text-muted hover:text-foreground"
-            >
-              Skip
-            </button>
-          </div>
-        </div>
+        <RestTimerOverlay
+          secondsLeft={restSeconds ?? 0}
+          onSkip={() => setRestSeconds(null)}
+          onReset={() => setRestSeconds(REST_DURATION_SECONDS)}
+        />
       )}
 
       {showFinishSummary && (
@@ -843,7 +833,7 @@ export default function Tracker() {
         </section>
       )}
 
-      {view === 'friends' && (
+      {view === 'friends' && !isLocal && (
         <section className="px-5 pb-8 lg:desktop-page-body lg:px-10">
           <FriendsPanel />
         </section>

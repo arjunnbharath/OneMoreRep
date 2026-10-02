@@ -17,7 +17,7 @@ const navItems = [
 
 export default function AppLayout() {
   const location = useLocation()
-  const { user } = useAuth()
+  const { user, isLocal } = useAuth()
   const isWorkoutDetail = location.pathname.startsWith('/workout/')
   const isTrackerRoute = location.pathname.startsWith('/tracker')
   const hideMobileNavSpacer = isTrackerRoute
@@ -73,7 +73,7 @@ export default function AppLayout() {
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{user.name}</p>
               <p className="truncate text-[11px] text-muted">
-                {user.username ? `@${user.username}` : user.email}
+                {isLocal ? 'On this device' : user.username ? `@${user.username}` : user.email}
               </p>
             </div>
           </div>

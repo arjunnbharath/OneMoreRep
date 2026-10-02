@@ -18,6 +18,7 @@ interface SettingsHubProps {
   onLogout: () => void
   onReplayTour?: () => void
   setTheme: (mode: 'light' | 'dark') => void
+  isLocal?: boolean
   hasAdminAccess?: boolean
   onOpenAdmin?: () => void
 }
@@ -31,6 +32,7 @@ export default function SettingsHub({
   onLogout,
   onReplayTour,
   setTheme,
+  isLocal = false,
   hasAdminAccess,
   onOpenAdmin,
 }: SettingsHubProps) {
@@ -90,14 +92,14 @@ export default function SettingsHub({
           <SettingsRow
             icon={<User size={16} />}
             label="Account"
-            value="Details, password, delete"
+            value={isLocal ? 'Stored on this device · details, delete' : 'Details, password, delete'}
             onClick={onOpenAccount}
             trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
           />
           <SettingsRow
             icon={<Database size={16} />}
             label="Data"
-            value="Export or clear your data"
+            value={isLocal ? 'Export a backup or clear your data' : 'Export or clear your data'}
             onClick={onOpenData}
             trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
           />

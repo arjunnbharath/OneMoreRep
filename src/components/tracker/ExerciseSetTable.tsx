@@ -12,6 +12,7 @@ interface ExerciseSetTableProps {
   exercise: TrackedExercise
   lastLog?: TrackedExercise | null
   onUpdateSet: (setId: string, reps: number, weight?: number) => void
+  onUpdateRir?: (setId: string, rir?: number) => void
   onToggleComplete: (setId: string, completed: boolean) => void
   onRemoveSet: (setId: string) => void
   onAddSet: () => void
@@ -23,6 +24,7 @@ function SetRow({
   previous,
   ghostWeight,
   onUpdateSet,
+  onUpdateRir,
   onToggleComplete,
   onRemoveSet,
   canRemove,
@@ -33,6 +35,7 @@ function SetRow({
   ghostWeight?: number
   canRemove: boolean
   onUpdateSet: (reps: number, weight?: number) => void
+  onUpdateRir?: (rir?: number) => void
   onToggleComplete: (completed: boolean) => void
   onRemoveSet: () => void
 }) {
@@ -41,7 +44,7 @@ function SetRow({
   return (
     <div
       className={[
-        'grid grid-cols-[28px_52px_1fr_52px_36px_28px] items-center gap-2 rounded-xl px-1 py-1',
+        'grid grid-cols-[22px_40px_minmax(0,1fr)_44px_40px_32px_22px] items-center gap-1.5 rounded-xl px-1 py-1',
         done ? 'bg-foreground/5 dark:bg-white/[0.04]' : '',
       ].join(' ')}
     >
@@ -72,6 +75,21 @@ function SetRow({
         value={set.reps}
         onChange={(e) => onUpdateSet(parseInt(e.target.value, 10) || 1, set.weight)}
         className="no-spinner w-full rounded-lg bg-surface-elevated px-2 py-2.5 text-center text-sm font-medium outline-none ring-1 ring-border focus:ring-foreground/30 dark:ring-white/10 dark:focus:ring-white/20"
+      />
+
+      <input
+        type="number"
+        inputMode="decimal"
+        min={0}
+        max={10}
+        step={0.5}
+        value={set.rir ?? ''}
+        placeholder="—"
+        aria-label={`Set ${setIndex + 1} reps in reserve`}
+        onChange={(e) =>
+          onUpdateRir?.(e.target.value === '' ? undefined : parseFloat(e.target.value))
+        }
+        className="no-spinner w-full rounded-lg bg-surface-elevated px-1 py-2.5 text-center text-sm font-medium outline-none ring-1 ring-border focus:ring-foreground/30 dark:ring-white/10 dark:focus:ring-white/20"
       />
 
       <button
@@ -109,6 +127,7 @@ export default function ExerciseSetTable({
   exercise,
   lastLog = null,
   onUpdateSet,
+  onUpdateRir,
   onToggleComplete,
   onRemoveSet,
   onAddSet,
@@ -117,11 +136,12 @@ export default function ExerciseSetTable({
 
   return (
     <div className="mt-3">
-      <div className="mb-1 grid grid-cols-[28px_52px_1fr_52px_36px_28px] gap-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+      <div className="mb-1 grid grid-cols-[22px_40px_minmax(0,1fr)_44px_40px_32px_22px] gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
         <span className="text-center">Set</span>
         <span className="text-center">Last</span>
         <span className="text-center">kg</span>
         <span className="text-center">Reps</span>
+        <span className="text-center">RIR</span>
         <span />
       </div>
 
@@ -136,6 +156,7 @@ export default function ExerciseSetTable({
               previous={previousForSet(lastLog ?? null, setIndex)}
               ghostWeight={last?.weight}
               onUpdateSet={(reps, weight) => onUpdateSet(set.id, reps, weight)}
+              onUpdateRir={(rir) => onUpdateRir?.(set.id, rir)}
               onToggleComplete={(completed) => onToggleComplete(set.id, completed)}
               onRemoveSet={() => onRemoveSet(set.id)}
               canRemove={canRemoveSet}

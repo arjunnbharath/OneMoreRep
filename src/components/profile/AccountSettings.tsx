@@ -1,5 +1,5 @@
 import { useState, useRef, type FormEvent, type ChangeEvent } from 'react'
-import { ArrowLeft, Camera, ChevronRight, KeyRound, Trash2 } from 'lucide-react'
+import { ArrowLeft, Camera, ChevronRight, KeyRound, Smartphone, Trash2 } from 'lucide-react'
 import Button from '../Button'
 import Input from '../Input'
 import UserAvatar from '../UserAvatar'
@@ -26,6 +26,8 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 interface AccountSettingsProps {
   user: User | null
+  /** Account lives only on this device: no email, password, or server. */
+  isLocal?: boolean
   onBack: () => void
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>
   onDeleteAccount: () => Promise<void>
@@ -33,6 +35,7 @@ interface AccountSettingsProps {
 
 export default function AccountSettings({
   user,
+  isLocal = false,
   onBack,
   onChangePassword,
   onDeleteAccount,
@@ -204,7 +207,9 @@ export default function AccountSettings({
             />
           </div>
           <p className="mt-4 text-lg font-semibold">{user?.name}</p>
-          <p className="mt-0.5 text-sm text-muted">{user?.email}</p>
+          <p className="mt-0.5 text-sm text-muted">
+            {isLocal ? 'Saved on this device' : user?.email}
+          </p>
           {avatarSuccess && (
             <p className="mt-3 text-sm text-emerald-600 dark:text-emerald-400">{avatarSuccess}</p>
           )}
@@ -258,13 +263,38 @@ export default function AccountSettings({
             Details
           </h2>
           <div className="divide-y divide-border overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
-            <DetailRow label="User ID" value={user?.username ? `@${user.username}` : '—'} />
+            <DetailRow
+              label="Storage"
+              value={isLocal ? 'This device only' : 'Online account'}
+            />
+            {!isLocal && (
+              <DetailRow label="User ID" value={user?.username ? `@${user.username}` : '—'} />
+            )}
             <DetailRow label="Name" value={user?.name ?? '—'} />
-            <DetailRow label="Email" value={user?.email ?? '—'} />
+            {!isLocal && <DetailRow label="Email" value={user?.email ?? '—'} />}
             <DetailRow label="Member since" value={formatMemberSince(user?.createdAt)} />
           </div>
         </section>
 
+        {isLocal && (
+          <section>
+            <div className="flex items-start gap-3 rounded-2xl bg-surface p-4 ring-1 ring-border">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
+                <Smartphone size={16} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">Your data never leaves this phone</p>
+                <p className="mt-1 text-xs text-muted">
+                  There is no password or online backup. Clearing the app&apos;s storage or
+                  uninstalling will erase everything, so export a backup from Settings → Data
+                  from time to time.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {!isLocal && (
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
             Security
@@ -339,6 +369,7 @@ export default function AccountSettings({
             )}
           </div>
         </section>
+        )}
 
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
@@ -364,7 +395,9 @@ export default function AccountSettings({
                   Permanently delete your account?
                 </p>
                 <p className="mt-1 text-xs text-muted">
-                  All workouts, calories, and progress will be erased.
+                  {isLocal
+                    ? 'All workouts, calories, and progress saved on this device will be erased.'
+                    : 'All workouts, calories, and progress will be erased.'}
                 </p>
                 {deleteError && (
                   <p className="mt-2 text-xs text-red-600 dark:text-red-400">{deleteError}</p>

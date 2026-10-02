@@ -13,6 +13,8 @@ interface DataSettingsProps {
   plan: WeeklyPlan
   nutritionProfile: UserNutritionProfile | null
   foodLogs: FoodLogEntry[]
+  /** Data lives only on this device (no server copy). */
+  isLocal?: boolean
   onBack: () => void
   onClearAllData: () => Promise<void>
 }
@@ -23,6 +25,7 @@ export default function DataSettings({
   plan,
   nutritionProfile,
   foodLogs,
+  isLocal = false,
   onBack,
   onClearAllData,
 }: DataSettingsProps) {
@@ -163,8 +166,9 @@ export default function DataSettings({
                   Clear all app data?
                 </p>
                 <p className="mt-1 text-xs text-muted">
-                  Your name, email, and password will stay. Everything else is removed from the
-                  database.
+                  {isLocal
+                    ? 'Your name will stay. Everything else is removed from this device.'
+                    : 'Your name, email, and password will stay. Everything else is removed from the database.'}
                 </p>
                 {clearError && (
                   <p className="mt-2 text-xs text-red-600 dark:text-red-400">{clearError}</p>

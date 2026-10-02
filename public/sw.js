@@ -1,4 +1,4 @@
-const CACHE_NAME = 'onemorerep-v4'
+const CACHE_NAME = 'onemorerep-v5'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(self.skipWaiting())
@@ -29,6 +29,9 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url)
   if (!isSameOrigin(url)) return
+
+  // Let file downloads (e.g. the Android APK) go straight to the network.
+  if (url.pathname.startsWith('/downloads/')) return
 
   if (isNavigationRequest(event.request)) {
     event.respondWith(

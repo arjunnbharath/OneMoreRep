@@ -11,6 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import AppTour from '../components/tour/AppTour'
 import { useWorkoutPreferences } from '../hooks/useWorkoutPreferences'
+import { useAuth } from './AuthContext'
 import { createAppTourSteps } from '../lib/appTour'
 import {
   clearTourSession,
@@ -32,13 +33,14 @@ const TourContext = createContext<TourContextValue | null>(null)
 
 export function TourProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
+  const { isLocal } = useAuth()
   const { preferences, ready: prefsReady, completeUiTour } = useWorkoutPreferences()
   const [isOpen, setIsOpen] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
   const [tourSession, setTourSession] = useState(0)
   const didBootstrapRef = useRef(false)
 
-  const steps = useMemo(() => createAppTourSteps({ navigate }), [navigate])
+  const steps = useMemo(() => createAppTourSteps({ navigate, isLocal }), [navigate, isLocal])
   const stepsRef = useRef(steps)
   stepsRef.current = steps
   const activeStepId = isOpen ? (steps[stepIndex]?.id ?? null) : null

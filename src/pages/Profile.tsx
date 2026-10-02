@@ -46,7 +46,7 @@ function getWeekKeys() {
 export default function Profile() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, token, logout, deleteAccount, changePassword, refreshUser } = useAuth()
+  const { user, token, isLocal, logout, deleteAccount, changePassword, refreshUser } = useAuth()
   const { isDark, setTheme } = useTheme()
   const { replayTour } = useTour()
   const { sessions } = useWorkoutTracker()
@@ -117,10 +117,13 @@ export default function Profile() {
         nutritionProfile={nutritionProfile}
         foodLogs={logs}
         onBack={() => navigate(PROFILE_PATHS.settings)}
+        isLocal={isLocal}
         onClearAllData={async () => {
           if (!token || !user?.id) throw new Error('Not signed in')
           clearUserDataCache()
-          await apiClearAllUserData(token)
+          if (!isLocal) {
+            await apiClearAllUserData(token)
+          }
           clearLocalUserData(user.id)
           window.location.reload()
         }}
@@ -132,6 +135,7 @@ export default function Profile() {
     return (
       <AccountSettings
         user={user}
+        isLocal={isLocal}
         onBack={() => navigate(PROFILE_PATHS.settings)}
         onChangePassword={changePassword}
         onDeleteAccount={async () => {
@@ -156,6 +160,7 @@ export default function Profile() {
         onOpenData={() => navigate(PROFILE_PATHS.data)}
         onOpenPermissions={() => navigate(PROFILE_PATHS.permissions)}
         onReplayTour={replayTour}
+        isLocal={isLocal}
         hasAdminAccess={user?.hasAdminAccess}
         onOpenAdmin={() => navigate('/admin')}
         onLogout={() => {
@@ -185,7 +190,9 @@ export default function Profile() {
           />
           <div className="mt-5 lg:mt-0">
             <h1 className="text-2xl font-semibold tracking-tight">{user?.name}</h1>
-            <p className="mt-1 text-sm text-white/55">{user?.email}</p>
+            <p className="mt-1 text-sm text-white/55">
+              {isLocal ? 'Saved on this device' : user?.email}
+            </p>
             {stats.streak > 0 && (
               <p className="mt-4 text-xs font-medium tracking-wide text-white/70">
                 {stats.streak} day streak · keep it going, {firstName}

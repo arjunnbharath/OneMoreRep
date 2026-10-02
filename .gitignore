@@ -31,3 +31,7 @@ dist-ssr
 flutter_app/.dart_tool/
 flutter_app/build/
 flutter_app/.flutter-plugins-dependencies
+
+# Android build artifacts (except the APK shipped with the website)
+*.apk
+!public/downloads/OneMoreRep.apk

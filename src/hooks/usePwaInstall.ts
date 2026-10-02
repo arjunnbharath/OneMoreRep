@@ -8,6 +8,7 @@ import {
   promptPwaInstall,
   subscribePwaInstall,
 } from '../lib/pwaInstall'
+import { downloadAndroidApk, isAndroidBrowser } from '../lib/androidApk'
 
 export function usePwaInstall() {
   const [installed, setInstalled] = useState(isPwaInstalled)
@@ -37,8 +38,10 @@ export function usePwaInstall() {
     installed,
     canInstall,
     isIosBrowser: isIosBrowser(),
+    isAndroidBrowser: isAndroidBrowser(),
     canShowBrowserInstall: canShowBrowserInstall(),
     installing,
     install,
+    downloadApk: downloadAndroidApk,
   }
 }

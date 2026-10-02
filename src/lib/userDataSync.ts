@@ -1,4 +1,5 @@
 import { getUserData, putUserData } from './api'
+import { isLocalToken } from './localAccount'
 import { USER_DATA_KEYS, type UserDataKey } from './userDataKeys'
 
 let cachedUserId: number | null = null
@@ -138,6 +139,19 @@ export async function loadUserDataValue<T>(
   const localKey = scopedLocalKey(userId, key)
   const localValue = readLocal<T>(localKey)
 
+  // Local-only accounts: the device is the database.
+  if (isLocalToken(token)) {
+    if (localValue !== null) return localValue
+    if (legacyLocalKey) {
+      const legacy = readLocal<T>(legacyLocalKey)
+      if (legacy !== null) {
+        localStorage.setItem(localKey, JSON.stringify(legacy))
+        return legacy
+      }
+    }
+    return fallback
+  }
+
   if (!isOnline()) {
     if (localValue !== null) return localValue
     return fallback
@@ -198,6 +212,9 @@ export function scheduleUserDataSave<T>(
   const localKey = scopedLocalKey(userId, key)
   localStorage.setItem(localKey, JSON.stringify(data))
 
+  // Local-only accounts never sync to the server.
+  if (isLocalToken(token)) return
+
   if (cachedStore) cachedStore[key] = data as unknown
 
   const pendingKey = `${userId}:${key}`
@@ -214,7 +231,7 @@ export function scheduleUserDataSave<T>(
 }
 
 export async function flushSyncQueue(userId: number, token: string) {
-  if (!isOnline()) return
+  if (isLocalToken(token) || !isOnline()) return
 
   const queue = readSyncQueue().filter((item) => item.userId === userId)
   if (queue.length === 0) return

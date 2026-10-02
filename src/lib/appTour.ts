@@ -6,6 +6,8 @@ import { TRACKER_PATHS } from './trackerPaths'
 
 interface AppTourActions {
   navigate: NavigateFunction
+  /** Local-only accounts have no Friends tab. */
+  isLocal?: boolean
 }
 
 const TOUR_PLAN_MUSCLE: ExerciseGroup = 'chest'
@@ -67,9 +69,12 @@ function getVisibleExerciseLibrarySelector(): string | undefined {
   return '[data-tour="exercise-library"]'
 }
 
-export function createAppTourSteps({ navigate }: AppTourActions): TourStep[] {
+export function createAppTourSteps({ navigate, isLocal = false }: AppTourActions): TourStep[] {
   const today = getTodayWeekday()
   const todayLabel = WEEKDAY_LABELS[today]
+  const trackerTabsBody = isLocal
+    ? 'Plans, Workout, and Stats live under Progress.'
+    : 'Plans, Workout, Stats, and Friends live under Progress.'
 
   return [
     {
@@ -106,7 +111,7 @@ export function createAppTourSteps({ navigate }: AppTourActions): TourStep[] {
     {
       id: 'tracker-tabs',
       title: 'Your training hub',
-      body: 'Plans, Workout, Stats, and Friends live under Progress.',
+      body: trackerTabsBody,
       getTarget: () => getVisibleTrackerNavSelector(),
       placement: 'bottom',
       onEnter: () => navigate(TRACKER_PATHS.plan),

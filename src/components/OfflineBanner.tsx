@@ -1,11 +1,15 @@
 import { WifiOff } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { useSyncStatus } from '../hooks/useSyncStatus'
 
 export default function OfflineBanner() {
   const online = useOnlineStatus()
   const { hasPendingSync } = useSyncStatus()
+  const { isLocal } = useAuth()
 
+  // Local-only accounts never sync, so connectivity is irrelevant.
+  if (isLocal) return null
   if (online && !hasPendingSync) return null
 
   return (

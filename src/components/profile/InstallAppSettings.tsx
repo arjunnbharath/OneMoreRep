@@ -1,4 +1,4 @@
-import { Smartphone } from 'lucide-react'
+import { Download, Smartphone } from 'lucide-react'
 import { usePwaInstall } from '../../hooks/usePwaInstall'
 import { SettingsRow } from './SettingsUI'
 
@@ -8,9 +8,11 @@ export default function InstallAppSettings({ embedded = false }: { embedded?: bo
     installed,
     canInstall,
     isIosBrowser,
+    isAndroidBrowser,
     canShowBrowserInstall,
     installing,
     install,
+    downloadApk,
   } = usePwaInstall()
 
   if (!showInstallSection) {
@@ -35,14 +37,26 @@ export default function InstallAppSettings({ embedded = false }: { embedded?: bo
     )
   }
 
-  if (canInstall) {
+  // Android phone in a browser: "Install app" downloads the APK, which hands
+  // off to the Android package installer.
+  if (isAndroidBrowser) {
     return (
-      <SettingsRow
-        icon={<Smartphone size={16} />}
-        label={installing ? 'Installing…' : 'Install app'}
-        value="Add to your home screen"
-        onClick={installing ? undefined : () => void install()}
-      />
+      <>
+        <SettingsRow
+          icon={<Download size={16} />}
+          label="Install app"
+          value="Download the Android app (APK), then tap it to install"
+          onClick={downloadApk}
+        />
+        {canInstall && (
+          <SettingsRow
+            icon={<Smartphone size={16} />}
+            label={installing ? 'Adding…' : 'Add to home screen'}
+            value="Lightweight web version instead"
+            onClick={installing ? undefined : () => void install()}
+          />
+        )}
+      </>
     )
   }
 
@@ -56,13 +70,40 @@ export default function InstallAppSettings({ embedded = false }: { embedded?: bo
     )
   }
 
+  // Desktop / other browsers: PWA install plus a link to grab the Android APK.
+  const apkRow = (
+    <SettingsRow
+      icon={<Download size={16} />}
+      label="Android app (APK)"
+      value="Download to install on an Android phone"
+      onClick={downloadApk}
+    />
+  )
+
+  if (canInstall) {
+    return (
+      <>
+        <SettingsRow
+          icon={<Smartphone size={16} />}
+          label={installing ? 'Installing…' : 'Install app'}
+          value="Add to your home screen"
+          onClick={installing ? undefined : () => void install()}
+        />
+        {apkRow}
+      </>
+    )
+  }
+
   if (canShowBrowserInstall) {
     return (
-      <SettingsRow
-        icon={<Smartphone size={16} />}
-        label="Install app"
-        value="Use your browser menu to install or add to home screen"
-      />
+      <>
+        <SettingsRow
+          icon={<Smartphone size={16} />}
+          label="Install app"
+          value="Use your browser menu to install or add to home screen"
+        />
+        {apkRow}
+      </>
     )
   }
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { Dumbbell, Eye, EyeOff, AtSign, Lock } from 'lucide-react'
+import { Dumbbell, Eye, EyeOff, AtSign, Lock, Smartphone } from 'lucide-react'
 import AuthPageShell from '../components/AuthPageShell'
 import AuthVideoBackground from '../components/AuthVideoBackground'
 import Button from '../components/Button'
@@ -12,7 +12,14 @@ import { login as apiLogin } from '../lib/api'
 
 export default function Login() {
   const navigate = useNavigate()
-  const { user, isLoading, establishSession: establishUserSession } = useAuth()
+  const {
+    user,
+    isLoading,
+    establishSession: establishUserSession,
+    localProfile,
+    resumeLocalSession,
+    continueAsGuest,
+  } = useAuth()
   const { token: adminToken, isLoading: adminLoading, establishSession: establishAdminSession } =
     useAdminAuth()
   const [identifier, setIdentifier] = useState('')
@@ -20,6 +27,22 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  function handleGuest() {
+    setError('')
+    continueAsGuest()
+    navigate('/home', { replace: true })
+  }
+
+  function handleContinueLocal() {
+    setError('')
+    try {
+      resumeLocalSession()
+      navigate('/home', { replace: true })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not open the account on this device')
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -95,7 +118,34 @@ export default function Login() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            {localProfile && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleContinueLocal}
+                  className="mt-8 flex w-full items-center gap-3 rounded-2xl bg-surface p-4 text-left ring-1 ring-border transition hover:ring-foreground/20"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
+                    <Smartphone size={18} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">
+                      Continue as {localProfile.name}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted">
+                      Account saved on this device · no password needed
+                    </span>
+                  </span>
+                </button>
+                <div className="mt-6 flex items-center gap-3 text-xs text-muted">
+                  <span className="h-px flex-1 bg-border" />
+                  or sign in to an online account
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+              </>
+            )}
+
+            <form onSubmit={handleSubmit} className={localProfile ? 'mt-6 space-y-4' : 'mt-8 space-y-4'}>
               <Input
                 label="User ID or email"
                 type="text"
@@ -131,6 +181,25 @@ export default function Login() {
                 {loading ? 'Signing in...' : 'Sign in'}
               </Button>
             </form>
+
+            <div className="mt-6 flex items-center gap-3 text-xs text-muted">
+              <span className="h-px flex-1 bg-border" />
+              or
+              <span className="h-px flex-1 bg-border" />
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              fullWidth
+              className="mt-4 py-4 text-base"
+              onClick={handleGuest}
+            >
+              Continue as guest
+            </Button>
+            <p className="mt-2 text-center text-xs text-muted">
+              No account needed. Look around, log workouts, and keep everything on this phone.
+            </p>
 
             <p className="mt-8 text-center text-sm text-muted">
               Don&apos;t have an account?{' '}

@@ -11,7 +11,10 @@ import {
 import { getVapidPublicKey } from '../lib/api'
 
 export function usePushNotifications() {
-  const { token } = useAuth()
+  const { token: sessionToken, isLocal } = useAuth()
+  // Push notifications (friend waves, reminders) are delivered by the server,
+  // so they are unavailable for accounts stored only on this device.
+  const token = isLocal ? null : sessionToken
   const [permission, setPermission] = useState(getNotificationPermission())
   const [subscribed, setSubscribed] = useState(false)
   const [available, setAvailable] = useState(false)
@@ -29,7 +32,7 @@ export function usePushNotifications() {
   }, [])
 
   useEffect(() => {
-    if (!isPushSupported()) {
+    if (!isPushSupported() || isLocal) {
       setAvailable(false)
       return
     }
@@ -37,7 +40,7 @@ export function usePushNotifications() {
     void getVapidPublicKey()
       .then(({ publicKey }) => setAvailable(Boolean(publicKey)))
       .catch(() => setAvailable(false))
-  }, [])
+  }, [isLocal])
 
   useEffect(() => {
     void refreshState()
@@ -95,7 +98,7 @@ export function usePushNotifications() {
   const enabled = permission === 'granted' && subscribed
 
   return {
-    supported: isPushSupported(),
+    supported: isPushSupported() && !isLocal,
     available,
     permission,
     subscribed,

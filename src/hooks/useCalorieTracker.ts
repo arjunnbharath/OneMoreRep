@@ -34,8 +34,10 @@ function createId() {
 }
 
 export function useCalorieTracker() {
-  const { user, token } = useAuth()
+  const { user, token, isLocal } = useAuth()
   const userId = user?.id
+  // Online food lookups need a server session; local accounts use the built-in food list only.
+  const onlineLookupToken = isLocal ? null : token
 
   const [profile, setProfile] = useState<UserNutritionProfile | null>(null)
   const [logs, setLogs] = useState<FoodLogEntry[]>([])
@@ -240,15 +242,15 @@ export function useCalorieTracker() {
 
   const lookupFoodByBarcode = useCallback(
     async (scanValue: string) => {
-      if (!token) return null
-
       const normalized = extractBarcodeFromScan(scanValue)
       if (!normalized) return null
 
       const existing = allFoods.find((food) => food.barcode === normalized)
       if (existing) return existing
 
-      const scanned = await lookupBarcodeFood(token, scanValue)
+      if (!onlineLookupToken) return null
+
+      const scanned = await lookupBarcodeFood(onlineLookupToken, scanValue)
       if (!scanned) return null
 
       const item: FoodItem = {
@@ -277,14 +279,14 @@ export function useCalorieTracker() {
 
       return item
     },
-    [token, allFoods],
+    [onlineLookupToken, allFoods],
   )
 
   const searchFoodOnline = useCallback(
     async (query: string) => {
-      if (!token) return []
+      if (!onlineLookupToken) return []
 
-      const foods = await searchFoodOnlineApi(token, query)
+      const foods = await searchFoodOnlineApi(onlineLookupToken, query)
       const newItems: FoodItem[] = []
 
       for (const food of foods) {
@@ -308,7 +310,7 @@ export function useCalorieTracker() {
 
       return newItems
     },
-    [token, allFoods],
+    [onlineLookupToken, allFoods],
   )
 
   const caloriesByDay = useMemo(() => {
