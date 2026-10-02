@@ -1,5 +1,56 @@
 import type { ReactNode } from 'react'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Check } from 'lucide-react'
+
+/**
+ * Android-style (Material 3) settings header: a round back button on the
+ * top app bar, then a large page title. The status-bar inset is included.
+ */
+export function SettingsHeader({
+  title,
+  subtitle,
+  onBack,
+}: {
+  title: string
+  subtitle?: string
+  onBack: () => void
+}) {
+  return (
+    <header className="shrink-0 px-2 pt-[calc(var(--sat)+0.25rem)] lg:desktop-page-header lg:px-10 lg:py-6">
+      <div className="flex h-14 items-center lg:hidden">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Back"
+          className="flex h-12 w-12 items-center justify-center rounded-full text-foreground transition active:bg-foreground/10"
+        >
+          <ArrowLeft size={24} strokeWidth={2} />
+        </button>
+      </div>
+      <h1 className="px-4 pb-4 pt-2 text-[2rem] font-normal leading-tight tracking-tight lg:hidden">
+        {title}
+      </h1>
+
+      <div className="hidden items-center gap-3 lg:flex">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Back"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-foreground"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <div>
+          {subtitle && (
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+              {subtitle}
+            </p>
+          )}
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        </div>
+      </div>
+    </header>
+  )
+}
 
 interface SettingsPageLayoutProps {
   title: string
@@ -18,29 +69,12 @@ export function SettingsPageLayout({
 }: SettingsPageLayoutProps) {
   return (
     <div className="flex min-h-full flex-col bg-background text-foreground lg:mx-auto lg:max-w-3xl">
-      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 pb-3 pt-[calc(var(--sat)+1.25rem)] backdrop-blur-sm lg:desktop-page-header lg:static lg:px-10 lg:py-6">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Back"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-muted transition hover:bg-surface hover:text-foreground"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          {subtitle && (
-            <p className="hidden text-[11px] font-semibold uppercase tracking-[0.16em] text-muted lg:block">
-              {subtitle}
-            </p>
-          )}
-          <h1 className="text-lg font-semibold lg:text-2xl lg:tracking-tight">{title}</h1>
-        </div>
-      </header>
+      <SettingsHeader title={title} subtitle={subtitle} onBack={onBack} />
 
-      <div className="desktop-page-body mx-auto flex w-full max-w-lg flex-1 flex-col space-y-6 px-5 py-6 lg:max-w-none lg:px-10 lg:pb-10">
+      <div className="desktop-page-body mx-auto flex w-full max-w-lg flex-1 flex-col space-y-3 px-3 pb-6 lg:max-w-none lg:space-y-6 lg:px-10 lg:pb-10">
         {children}
         {footer ?? (
-          <p className="mt-auto pt-6 text-center text-[11px] font-medium tracking-[0.24em] text-muted/80">
+          <p className="mt-auto pt-8 text-center text-[11px] font-medium tracking-[0.24em] text-muted/70">
             ONEMOREREP
           </p>
         )}
@@ -59,21 +93,19 @@ export function SettingsSection({
   return (
     <section>
       {title && (
-        <h2 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-          {title}
-        </h2>
+        <h2 className="px-4 pb-2 pt-3 text-sm font-medium text-foreground/80">{title}</h2>
       )}
       {children}
     </section>
   )
 }
 
+/** Rounded Material 3 list group. */
 export function SettingsCard({ children }: { children: ReactNode }) {
-  return (
-    <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">{children}</div>
-  )
+  return <div className="overflow-hidden rounded-[1.5rem] bg-surface">{children}</div>
 }
 
+/** Material 3 switch: outlined track when off, filled track + check thumb when on. */
 export function SettingsToggle({
   checked,
   disabled,
@@ -94,20 +126,27 @@ export function SettingsToggle({
       disabled={disabled}
       onClick={onChange}
       className={[
-        'relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50',
-        checked ? 'bg-foreground' : 'bg-border',
+        'relative h-8 w-[3.25rem] shrink-0 rounded-full transition-colors duration-200 disabled:opacity-40',
+        checked
+          ? 'bg-foreground'
+          : 'bg-surface-elevated ring-2 ring-inset ring-muted/60',
       ].join(' ')}
     >
       <span
         className={[
-          'absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-background shadow transition',
-          checked ? 'translate-x-5' : 'translate-x-0',
+          'absolute top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full transition-all duration-200',
+          checked
+            ? 'left-[calc(100%-1.75rem)] h-6 w-6 bg-background text-foreground'
+            : 'left-2 h-4 w-4 bg-muted',
         ].join(' ')}
-      />
+      >
+        {checked && <Check size={14} strokeWidth={3} />}
+      </span>
     </button>
   )
 }
 
+/** Two-line Material list item with a tinted leading icon. */
 export function SettingsRow({
   icon,
   label,
@@ -131,18 +170,19 @@ export function SettingsRow({
       type={onClick ? 'button' : undefined}
       onClick={onClick}
       className={[
-        'flex w-full items-center gap-3 border-b border-border px-4 py-3.5 text-left transition last:border-b-0',
-        onClick ? 'hover:bg-surface-elevated/80 active:bg-surface-elevated' : '',
+        'flex w-full items-center gap-4 px-4 text-left transition-colors',
+        value ? 'min-h-[4.5rem] py-3' : 'min-h-14 py-2.5',
+        onClick ? 'hover:bg-foreground/[0.04] active:bg-foreground/[0.08]' : '',
       ].join(' ')}
     >
       <span
         className={[
-          'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-full [&>svg]:h-5 [&>svg]:w-5',
           destructive
-            ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+            ? 'bg-red-500/12 text-red-600 dark:text-red-400'
             : success
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-              : 'bg-surface-elevated text-muted',
+              ? 'bg-emerald-500/12 text-emerald-600 dark:text-emerald-400'
+              : 'bg-foreground/[0.07] text-foreground',
         ].join(' ')}
       >
         {icon}
@@ -150,13 +190,13 @@ export function SettingsRow({
       <span className="min-w-0 flex-1">
         <span
           className={[
-            'block text-sm font-medium',
-            destructive ? 'text-red-600 dark:text-red-400' : '',
+            'block text-base leading-6',
+            destructive ? 'text-red-600 dark:text-red-400' : 'text-foreground',
           ].join(' ')}
         >
           {label}
         </span>
-        {value && <span className="block truncate text-xs text-muted">{value}</span>}
+        {value && <span className="block text-sm leading-5 text-muted">{value}</span>}
       </span>
       {trailing}
     </Tag>

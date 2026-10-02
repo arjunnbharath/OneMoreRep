@@ -26,6 +26,6 @@
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api?route=$1" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|downloads/).*)", "destination": "/index.html" }
   ]
 }

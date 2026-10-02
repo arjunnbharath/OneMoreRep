@@ -68,6 +68,7 @@ export default function AppUpdateSettings() {
           icon={<RefreshCw size={16} />}
           label="Check for updates"
           value={current}
+          onClick={() => void check()}
         />
       )
     case 'error':

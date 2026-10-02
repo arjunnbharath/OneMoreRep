@@ -105,7 +105,16 @@ public class AppActionsPlugin extends Plugin {
                 pendingInstallCall = null;
                 if (saved == null) return;
 
-                if (!target.exists()) {
+                DownloadManager dm = (DownloadManager) ctx.getSystemService(Context.DOWNLOAD_SERVICE);
+                android.database.Cursor cursor = dm.query(new DownloadManager.Query().setFilterById(id));
+                int status = -1;
+                if (cursor != null) {
+                    if (cursor.moveToFirst()) {
+                        status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+                    }
+                    cursor.close();
+                }
+                if (status != DownloadManager.STATUS_SUCCESSFUL || !target.exists() || target.length() == 0) {
                     saved.reject("download-failed");
                     return;
                 }

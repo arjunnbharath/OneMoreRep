@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Download, Eraser, FileSpreadsheet, FileText } from 'lucide-react'
+import { Download, Eraser, FileSpreadsheet, FileText } from 'lucide-react'
 import Button from '../Button'
+import { SettingsHeader, SettingsRow } from './SettingsUI'
 import { exportUserData } from '../../lib/exportUserData'
 import type { FoodLogEntry, UserNutritionProfile } from '../../types/nutrition'
 import type { WorkoutSession } from '../../types/tracker'
@@ -95,66 +96,38 @@ export default function DataSettings({
 
   return (
     <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-3xl">
-      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 pb-3 pt-[calc(var(--sat)+1.25rem)] backdrop-blur-sm lg:desktop-page-header lg:static lg:px-10 lg:py-6">
-        <button
-          type="button"
-          onClick={handleBack}
-          aria-label="Back"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-muted transition hover:bg-surface hover:text-foreground"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <p className="hidden text-[11px] font-semibold uppercase tracking-[0.16em] text-muted lg:block">
-            Settings
-          </p>
-          <h1 className="text-lg font-semibold lg:text-2xl lg:tracking-tight">Data</h1>
-        </div>
-      </header>
+      <SettingsHeader title="Data" subtitle="Settings" onBack={handleBack} />
 
-      <div className="mx-auto max-w-lg space-y-6 px-5 pb-8 lg:max-w-none lg:px-10 lg:pb-10">
+      <div className="mx-auto max-w-lg space-y-3 px-3 pb-8 lg:max-w-none lg:space-y-6 lg:px-10 lg:pb-10">
         <section>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+          <h2 className="px-4 pb-2 pt-3 text-sm font-medium text-foreground/80">
             Export
           </h2>
-          <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
-            <button
-              type="button"
+          <div className="overflow-hidden rounded-[1.5rem] bg-surface">
+            <SettingsRow
+              icon={<Download />}
+              label="Export data"
+              value="Excel or PDF"
               onClick={() => {
                 setExportError('')
                 setShowExport(true)
               }}
-              className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-elevated/80"
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
-                <Download size={16} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">Export data</span>
-                <span className="block text-xs text-muted">Excel or PDF</span>
-              </div>
-            </button>
+            />
           </div>
         </section>
 
         <section>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+          <h2 className="px-4 pb-2 pt-3 text-sm font-medium text-foreground/80">
             Manage
           </h2>
-          <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+          <div className="overflow-hidden rounded-[1.5rem] bg-surface">
             {!showClearConfirm ? (
-              <button
-                type="button"
+              <SettingsRow
+                icon={<Eraser />}
+                label="Clear all data"
+                destructive
                 onClick={() => setShowClearConfirm(true)}
-                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-elevated/80"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                  <Eraser size={16} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">Clear all data</span>
-                </div>
-              </button>
+              />
             ) : (
               <div className="bg-amber-50/80 p-4 dark:bg-amber-950/20">
                 <p className="text-sm font-medium text-amber-800 dark:text-amber-300">

@@ -16,10 +16,14 @@ export interface UpdateManifest {
  * Base URL of the deployed website, used by the installed app to look for
  * updates. Falls back to the API URL since both live on the same deployment.
  */
+/** Public copy of public/downloads, used when no deploy URL is configured. */
+const DEFAULT_UPDATE_BASE =
+  'https://github.com/arjunnbharath/OneMoreRep/raw/main/public'
+
 export function updateBaseUrl(): string {
   const explicit = import.meta.env.VITE_APP_UPDATE_URL as string | undefined
   const api = import.meta.env.VITE_API_URL as string | undefined
-  return (explicit || api || '').replace(/\/$/, '')
+  return (explicit || api || DEFAULT_UPDATE_BASE).replace(/\/$/, '')
 }
 
 export function resolveUpdateUrl(path: string): string {

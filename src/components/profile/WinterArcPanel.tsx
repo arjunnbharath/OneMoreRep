@@ -27,10 +27,8 @@ export default function WinterArcPanel({
   if (!state.enrolled) {
     return (
       <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-          Challenges
-        </h2>
-        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-blue-950 p-5 ring-1 ring-border">
+        <h2 className="px-4 pb-2 pt-3 text-sm font-medium text-foreground/80">Challenges</h2>
+        <div className="overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-slate-800 via-slate-900 to-blue-950 p-5">
           <div className="flex items-start gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
               <Snowflake size={18} className="text-sky-200" />
@@ -56,9 +54,7 @@ export default function WinterArcPanel({
 
   return (
     <section>
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-        Challenges
-      </h2>
+      <h2 className="px-4 pb-2 pt-3 text-sm font-medium text-foreground/80">Challenges</h2>
       <SettingsCard>
         <div className="border-b border-border px-4 py-4">
           <div className="flex items-start gap-3">

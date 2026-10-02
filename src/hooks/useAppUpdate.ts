@@ -38,7 +38,14 @@ export function useAppUpdate(options: { checkOnMount?: boolean } = {}) {
       const [current, manifest] = await Promise.all([getInstalledAppVersion(), fetchUpdateManifest()])
       setInstalled(current)
       setLatest(manifest)
-      setStatus(current && manifest.versionCode > current.versionCode ? 'available' : 'up-to-date')
+      if (!current) {
+        setError('Could not read the installed version')
+        setStatus('error')
+        return
+      }
+      const installedCode = Number(current.versionCode)
+      const latestCode = Number(manifest.versionCode)
+      setStatus(latestCode > installedCode ? 'available' : 'up-to-date')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not check for updates')
       setStatus('error')

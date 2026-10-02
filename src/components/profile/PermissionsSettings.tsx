@@ -1,41 +1,7 @@
 import { Bell, Camera } from 'lucide-react'
-import { SettingsCard, SettingsPageLayout, SettingsRow } from './SettingsUI'
+import { SettingsCard, SettingsPageLayout, SettingsRow, SettingsToggle } from './SettingsUI'
 import { useCameraPermission } from '../../hooks/useCameraPermission'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
-
-function Toggle({
-  checked,
-  disabled,
-  onChange,
-  label,
-}: {
-  checked: boolean
-  disabled?: boolean
-  onChange: () => void
-  label: string
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      disabled={disabled}
-      onClick={onChange}
-      className={[
-        'relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50',
-        checked ? 'bg-foreground' : 'bg-border',
-      ].join(' ')}
-    >
-      <span
-        className={[
-          'absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-background shadow transition',
-          checked ? 'translate-x-5' : 'translate-x-0',
-        ].join(' ')}
-      />
-    </button>
-  )
-}
 
 interface PermissionsSettingsProps {
   onBack: () => void
@@ -97,7 +63,7 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
 
   return (
     <SettingsPageLayout title="Permissions" subtitle="Settings" onBack={onBack}>
-      <p className="px-1 text-sm text-muted">{summary}</p>
+      <p className="px-4 pb-1 text-sm text-muted">{summary}</p>
 
       {!anySupported ? (
         <SettingsCard>
@@ -110,7 +76,7 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
           {notificationAvailable && (
             <>
               <SettingsRow
-                icon={<Bell size={16} />}
+                icon={<Bell />}
                 label="Notifications"
                 value={
                   notificationsUnavailable
@@ -120,7 +86,7 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
                       : undefined
                 }
                 trailing={
-                  <Toggle
+                  <SettingsToggle
                     checked={enabled}
                     disabled={enabling || notificationsBlocked || notificationsUnavailable}
                     onChange={() => void handleNotificationsToggle()}
@@ -129,12 +95,12 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
                 }
               />
               {error && (
-                <p className="border-t border-border px-4 py-2.5 text-xs text-red-600 dark:text-red-400">
+                <p className="px-4 pb-3 pl-[4.5rem] text-xs text-red-600 dark:text-red-400">
                   {error}
                 </p>
               )}
               {notificationsBlocked && (
-                <p className="border-t border-border px-4 py-2.5 text-xs text-muted">
+                <p className="px-4 pb-3 pl-[4.5rem] text-xs text-muted">
                   To turn notifications back on, allow them in your browser&apos;s site settings.
                 </p>
               )}
@@ -144,7 +110,7 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
           {cameraSupported && (
             <>
               <SettingsRow
-                icon={<Camera size={16} />}
+                icon={<Camera />}
                 label="Camera"
                 value={
                   cameraDenied
@@ -154,7 +120,7 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
                       : undefined
                 }
                 trailing={
-                  <Toggle
+                  <SettingsToggle
                     checked={cameraEnabled}
                     disabled={cameraRequesting || (cameraDenied && !cameraEnabled)}
                     onChange={() => void handleCameraToggle()}
@@ -163,7 +129,7 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
                 }
               />
               {cameraDenied && (
-                <p className="border-t border-border px-4 py-2.5 text-xs text-muted">
+                <p className="px-4 pb-3 pl-[4.5rem] text-xs text-muted">
                   Camera is blocked by your browser. Allow it in site settings, then turn it on here.
                 </p>
               )}

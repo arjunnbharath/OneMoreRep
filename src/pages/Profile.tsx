@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import StatGrid from '../components/ui/StatGrid'
 import UserAvatar from '../components/UserAvatar'
+import { SettingsCard, SettingsRow, SettingsSection } from '../components/profile/SettingsUI'
 import AccountSettings from '../components/profile/AccountSettings'
 import DataSettings from '../components/profile/DataSettings'
 import PermissionsSettings from '../components/profile/PermissionsSettings'
@@ -173,8 +174,30 @@ export default function Profile() {
 
   return (
     <div className="min-h-full bg-background text-foreground lg:desktop-page lg:mx-auto lg:max-w-6xl">
-      {/* Hero */}
-      <section className="relative overflow-hidden px-5 pb-16 pt-[calc(var(--sat)+3rem)] text-white lg:desktop-page-header lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pb-12 lg:pt-12">
+      <header className="px-4 pt-[calc(var(--sat)+1.25rem)] lg:hidden">
+        <h1 className="text-[2rem] font-normal leading-tight tracking-tight">Profile</h1>
+        <div className="mt-5 flex items-center gap-4">
+          <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} size="lg" />
+          <div className="min-w-0">
+            <p className="truncate text-xl font-medium">{user?.name}</p>
+            <p className="truncate text-sm text-muted">
+              {isLocal ? 'Saved on this device' : user?.email}
+            </p>
+            {stats.streak > 0 && (
+              <p className="mt-1 text-sm text-muted">{stats.streak} day streak</p>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto mt-5 max-w-lg px-3 lg:hidden">
+        <div className="overflow-hidden rounded-[1.5rem] bg-surface">
+          <StatGrid items={profileStatItems} className="rounded-[1.5rem] !ring-0" />
+        </div>
+      </div>
+
+      {/* Desktop hero */}
+      <section className="relative hidden overflow-hidden text-white lg:desktop-page-header lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pb-12 lg:pt-12">
         <img
           src="/images/gym_background/gym-pic.jpg"
           alt=""
@@ -206,19 +229,11 @@ export default function Profile() {
         </div>
       </section>
 
-      {/* Floating stats — mobile */}
-      <div className="relative z-10 mx-auto -mt-10 max-w-lg px-5 lg:hidden">
-        <StatGrid items={profileStatItems} className="shadow-lg" />
-      </div>
-
-      <div className="desktop-page-body desktop-page mx-auto max-w-lg space-y-6 px-5 pb-4 pt-8 lg:grid lg:max-w-none lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8 lg:px-10 lg:pb-10 lg:pt-10">
-        <div className="space-y-6">
-        {/* This week */}
+      <div className="desktop-page-body desktop-page mx-auto max-w-lg space-y-3 px-3 pb-4 pt-2 lg:grid lg:max-w-none lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8 lg:space-y-0 lg:px-10 lg:pb-10 lg:pt-10">
+        <div className="space-y-3 lg:space-y-6">
         <section>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-            This week
-          </h2>
-          <div className="flex justify-between gap-1 rounded-2xl bg-surface px-4 py-4 ring-1 ring-border">
+          <h2 className="px-4 pb-2 pt-3 text-sm font-medium text-foreground/80">This week</h2>
+          <div className="flex justify-between gap-1 rounded-[1.5rem] bg-surface px-4 py-4">
             {weekKeys.map((key) => {
               const [, , d] = key.split('-').map(Number)
               const active = workoutDays.has(key)
@@ -249,15 +264,13 @@ export default function Profile() {
 
         {/* Recent */}
         <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-              Recent
-            </h2>
+          <div className="flex items-center justify-between px-4 pb-2 pt-3">
+            <h2 className="text-sm font-medium text-foreground/80">Recent</h2>
             {sessions.length > 0 && (
               <button
                 type="button"
                 onClick={() => navigate('/tracker')}
-                className="text-xs font-medium text-muted hover:text-foreground"
+                className="text-sm font-medium text-foreground/70"
               >
                 See all
               </button>
@@ -265,70 +278,52 @@ export default function Profile() {
           </div>
 
           {recentSessions.length === 0 ? (
-            <button
-              type="button"
-              onClick={() => navigate('/tracker')}
-              className="flex w-full items-center gap-3 rounded-2xl bg-surface p-4 text-left ring-1 ring-border transition hover:ring-foreground/15"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-foreground text-background">
-                <Activity size={18} />
-              </span>
-              <span>
-                <span className="block text-sm font-semibold">Start your first workout</span>
-                <span className="mt-0.5 block text-xs text-muted">Log sets and track progress</span>
-              </span>
-              <ChevronRight size={16} className="ml-auto text-muted" />
-            </button>
+            <SettingsCard>
+              <SettingsRow
+                icon={<Activity />}
+                label="Start your first workout"
+                value="Log sets and track progress"
+                onClick={() => navigate('/tracker')}
+                trailing={<ChevronRight size={20} className="shrink-0 text-muted" />}
+              />
+            </SettingsCard>
           ) : (
-            <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
-              {recentSessions.map((session, i) => {
+            <SettingsCard>
+              {recentSessions.map((session) => {
                 const vol = sessionVolume(session)
                 return (
-                  <button
+                  <SettingsRow
                     key={session.id}
-                    type="button"
-                    onClick={() => navigate('/tracker')}
-                    className={[
-                      'flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-elevated/60',
-                      i > 0 ? 'border-t border-border' : '',
-                    ].join(' ')}
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-xs font-bold ring-1 ring-border">
-                      {session.exercises.length}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{session.name}</span>
-                      <span className="block text-xs text-muted">
-                        {formatShortDate(session.date)}
-                        {vol > 0 ? ` · ${vol.toLocaleString()} kg` : ''}
+                    icon={
+                      <span className="text-sm font-medium tabular-nums">
+                        {session.exercises.length}
                       </span>
-                    </span>
-                    <ChevronRight size={14} className="shrink-0 text-muted" />
-                  </button>
+                    }
+                    label={session.name}
+                    value={`${formatShortDate(session.date)}${vol > 0 ? ` · ${vol.toLocaleString()} kg` : ''}`}
+                    onClick={() => navigate('/tracker')}
+                    trailing={<ChevronRight size={20} className="shrink-0 text-muted" />}
+                  />
                 )
               })}
-            </div>
+            </SettingsCard>
           )}
         </section>
         </div>
 
-        <div className="space-y-6 lg:sticky lg:top-8 lg:self-start">
-        {/* Nutrition nudge */}
+        <div className="space-y-3 lg:sticky lg:top-8 lg:space-y-6 lg:self-start">
         {nutritionReady && !nutritionProfile?.onboarded && (
-          <button
-            type="button"
-            onClick={() => navigate('/calories')}
-            className="flex w-full items-center gap-3 rounded-2xl bg-surface p-4 text-left ring-1 ring-border transition hover:ring-foreground/15"
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-background ring-1 ring-border">
-              <Flame size={18} />
-            </span>
-            <span className="flex-1">
-              <span className="block text-sm font-semibold">Set up calorie tracking</span>
-              <span className="mt-0.5 block text-xs text-muted">Goals, macros, and daily logs</span>
-            </span>
-            <ChevronRight size={16} className="text-muted" />
-          </button>
+          <SettingsSection title="Nutrition">
+            <SettingsCard>
+              <SettingsRow
+                icon={<Flame />}
+                label="Set up calorie tracking"
+                value="Goals, macros, and daily logs"
+                onClick={() => navigate('/calories')}
+                trailing={<ChevronRight size={20} className="shrink-0 text-muted" />}
+              />
+            </SettingsCard>
+          </SettingsSection>
         )}
 
         <WinterArcPanel

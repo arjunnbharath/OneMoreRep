@@ -1,6 +1,7 @@
 import { useState, useRef, type FormEvent, type ChangeEvent } from 'react'
-import { ArrowLeft, Camera, ChevronRight, KeyRound, Smartphone, Trash2 } from 'lucide-react'
+import { Camera, ChevronRight, KeyRound, Smartphone, Trash2 } from 'lucide-react'
 import Button from '../Button'
+import { SettingsHeader, SettingsRow } from './SettingsUI'
 import Input from '../Input'
 import UserAvatar from '../UserAvatar'
 import { useAuth } from '../../context/AuthContext'
@@ -17,9 +18,9 @@ function formatMemberSince(iso?: string) {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 px-4 py-3.5">
-      <span className="text-sm text-muted">{label}</span>
-      <span className="max-w-[60%] text-right text-sm font-medium">{value}</span>
+    <div className="flex min-h-14 items-center justify-between gap-4 px-4 py-3">
+      <span className="text-base text-foreground">{label}</span>
+      <span className="max-w-[60%] text-right text-sm text-muted">{value}</span>
     </div>
   )
 }
@@ -168,25 +169,10 @@ export default function AccountSettings({
 
   return (
     <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-3xl">
-      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 pb-3 pt-[calc(var(--sat)+1.25rem)] backdrop-blur-sm lg:desktop-page-header lg:static lg:px-10 lg:py-6">
-        <button
-          type="button"
-          onClick={handleBack}
-          aria-label="Back"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-muted transition hover:bg-surface hover:text-foreground"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <p className="hidden text-[11px] font-semibold uppercase tracking-[0.16em] text-muted lg:block">
-            Settings
-          </p>
-          <h1 className="text-lg font-semibold lg:text-2xl lg:tracking-tight">Account</h1>
-        </div>
-      </header>
+      <SettingsHeader title="Account" subtitle="Settings" onBack={handleBack} />
 
-      <div className="mx-auto max-w-lg space-y-6 px-5 pb-8 lg:max-w-none lg:px-10 lg:pb-10">
-        <div className="flex flex-col items-center rounded-2xl bg-surface px-4 py-6 ring-1 ring-border">
+      <div className="mx-auto max-w-lg space-y-3 px-3 pb-8 lg:max-w-none lg:space-y-6 lg:px-10 lg:pb-10">
+        <div className="flex flex-col items-center rounded-[1.5rem] bg-surface px-4 py-6">
           <div className="relative">
             <UserAvatar name={user?.name} avatarUrl={displayAvatarUrl} size="lg" />
             <button
@@ -219,50 +205,36 @@ export default function AccountSettings({
         </div>
 
         <section>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+          <h2 className="px-4 pb-2 pt-3 text-sm font-medium text-foreground/80">
             Profile
           </h2>
-          <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={updatingAvatar}
-              className="flex w-full items-center gap-3 border-b border-border px-4 py-3.5 text-left transition hover:bg-surface-elevated/80 disabled:opacity-50"
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
-                <Camera size={16} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">
-                  {updatingAvatar ? 'Updating picture…' : 'Set profile picture'}
-                </span>
-                <span className="block text-xs text-muted">Choose a photo from your device</span>
-              </div>
-              <ChevronRight size={16} className="shrink-0 text-muted" />
-            </button>
+          <div className="overflow-hidden rounded-[1.5rem] bg-surface">
+            <SettingsRow
+              icon={<Camera />}
+              label={updatingAvatar ? 'Updating picture…' : 'Profile picture'}
+              onClick={() => {
+                if (!updatingAvatar) fileInputRef.current?.click()
+              }}
+              trailing={<ChevronRight size={20} className="shrink-0 text-muted" />}
+            />
             {displayAvatarUrl && (
-              <button
-                type="button"
-                onClick={handleRemoveAvatar}
-                disabled={updatingAvatar}
-                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-elevated/80 disabled:opacity-50"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
-                  <Trash2 size={16} />
-                </span>
-                <span className="text-sm font-medium text-red-600 dark:text-red-400">
-                  Remove profile picture
-                </span>
-              </button>
+              <SettingsRow
+                icon={<Trash2 />}
+                label="Remove profile picture"
+                destructive
+                onClick={() => {
+                  if (!updatingAvatar) void handleRemoveAvatar()
+                }}
+              />
             )}
           </div>
         </section>
 
         <section>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+          <h2 className="px-4 pb-2 pt-3 text-sm font-medium text-foreground/80">
             Details
           </h2>
-          <div className="divide-y divide-border overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+          <div className="divide-y divide-border overflow-hidden rounded-[1.5rem] bg-surface">
             <DetailRow
               label="Storage"
               value={isLocal ? 'This device only' : 'Online account'}
@@ -278,9 +250,9 @@ export default function AccountSettings({
 
         {isLocal && (
           <section>
-            <div className="flex items-start gap-3 rounded-2xl bg-surface p-4 ring-1 ring-border">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
-                <Smartphone size={16} />
+            <div className="flex items-start gap-4 rounded-[1.5rem] bg-surface p-4">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground/[0.07] text-foreground">
+                <Smartphone size={20} />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">Your data never leaves this phone</p>
@@ -296,10 +268,10 @@ export default function AccountSettings({
 
         {!isLocal && (
         <section>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+          <h2 className="px-4 pb-2 pt-3 text-sm font-medium text-foreground/80">
             Security
           </h2>
-          <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+          <div className="overflow-hidden rounded-[1.5rem] bg-surface">
             {!showChangePassword ? (
               <>
                 {passwordSuccess && (
@@ -307,20 +279,15 @@ export default function AccountSettings({
                     {passwordSuccess}
                   </p>
                 )}
-                <button
-                  type="button"
+                <SettingsRow
+                  icon={<KeyRound />}
+                  label="Change password"
                   onClick={() => {
                     setPasswordSuccess('')
                     setShowChangePassword(true)
                   }}
-                  className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-elevated/80"
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
-                    <KeyRound size={16} />
-                  </span>
-                  <span className="flex-1 text-sm font-medium">Change password</span>
-                  <ChevronRight size={16} className="shrink-0 text-muted" />
-                </button>
+                  trailing={<ChevronRight size={20} className="shrink-0 text-muted" />}
+                />
               </>
             ) : (
               <form onSubmit={handleChangePassword} className="space-y-3 p-4">
@@ -372,23 +339,17 @@ export default function AccountSettings({
         )}
 
         <section>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+          <h2 className="px-4 pb-2 pt-3 text-sm font-medium text-foreground/80">
             Danger zone
           </h2>
-          <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+          <div className="overflow-hidden rounded-[1.5rem] bg-surface">
             {!showDeleteConfirm ? (
-              <button
-                type="button"
+              <SettingsRow
+                icon={<Trash2 />}
+                label="Delete account"
+                destructive
                 onClick={() => setShowDeleteConfirm(true)}
-                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-elevated/80"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
-                  <Trash2 size={16} />
-                </span>
-                <span className="text-sm font-medium text-red-600 dark:text-red-400">
-                  Delete account
-                </span>
-              </button>
+              />
             ) : (
               <div className="bg-red-50/80 p-4 dark:bg-red-950/20">
                 <p className="text-sm font-medium text-red-600 dark:text-red-400">

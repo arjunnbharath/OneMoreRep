@@ -6,6 +6,7 @@ import {
   SettingsPageLayout,
   SettingsRow,
   SettingsSection,
+  SettingsToggle,
 } from './SettingsUI'
 import { useCameraPermission } from '../../hooks/useCameraPermission'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
@@ -48,34 +49,21 @@ export default function SettingsHub({
 
   return (
     <SettingsPageLayout title="Settings" subtitle="Profile" onBack={onBack}>
-      <div className="h-4 lg:hidden" aria-hidden />
-      <SettingsSection title="General">
+      <SettingsSection title="Display">
         <SettingsCard>
-          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3.5 last:border-b-0">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
-                {isDark ? <Moon size={16} /> : <Sun size={16} />}
-              </span>
-              <span className="block text-sm font-medium">Appearance</span>
-            </div>
-            <div className="flex shrink-0 rounded-xl bg-background p-0.5 ring-1 ring-border">
-              {(['light', 'dark'] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setTheme(mode)}
-                  className={[
-                    'rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition',
-                    (mode === 'dark') === isDark
-                      ? 'bg-foreground text-background'
-                      : 'text-muted',
-                  ].join(' ')}
-                >
-                  {mode}
-                </button>
-              ))}
-            </div>
-          </div>
+          <SettingsRow
+            icon={isDark ? <Moon /> : <Sun />}
+            label="Dark theme"
+            value={isDark ? 'On' : 'Off'}
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            trailing={
+              <SettingsToggle
+                checked={isDark}
+                onChange={() => setTheme(isDark ? 'light' : 'dark')}
+                label="Dark theme"
+              />
+            }
+          />
         </SettingsCard>
       </SettingsSection>
 
@@ -86,27 +74,27 @@ export default function SettingsHub({
               icon={<ShieldCheck size={16} className="text-green-600 dark:text-green-400" />}
               label="Admin panel"
               onClick={onOpenAdmin}
-              trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
+              trailing={<ChevronRight size={20} className="shrink-0 text-muted" />}
             />
           )}
           <SettingsRow
             icon={<User size={16} />}
             label="Account"
             onClick={onOpenAccount}
-            trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
+            trailing={<ChevronRight size={20} className="shrink-0 text-muted" />}
           />
           <SettingsRow
             icon={<Database size={16} />}
             label="Data"
             onClick={onOpenData}
-            trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
+            trailing={<ChevronRight size={20} className="shrink-0 text-muted" />}
           />
           <SettingsRow
             icon={<Bell size={16} />}
             label="Permissions"
             value={permissionsSummary}
             onClick={onOpenPermissions}
-            trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
+            trailing={<ChevronRight size={20} className="shrink-0 text-muted" />}
           />
         </SettingsCard>
       </SettingsSection>
@@ -118,7 +106,7 @@ export default function SettingsHub({
               icon={<Map size={16} />}
               label="Replay app tour"
               onClick={onReplayTour}
-              trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
+              trailing={<ChevronRight size={20} className="shrink-0 text-muted" />}
             />
           )}
           <AppUpdateSettings />
@@ -142,23 +130,15 @@ export default function SettingsHub({
 
 export function ProfileSettingsEntry({ onClick }: { onClick: () => void }) {
   return (
-    <section>
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-        Settings
-      </h2>
-      <button
-        type="button"
-        onClick={onClick}
-        className="flex w-full items-center gap-3 rounded-2xl bg-surface px-4 py-3.5 text-left ring-1 ring-border transition hover:ring-foreground/15"
-      >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-muted">
-          <Settings size={16} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-medium">Settings</span>
-        </span>
-        <ChevronRight size={16} className="shrink-0 text-muted" />
-      </button>
-    </section>
+    <SettingsSection title="Settings">
+      <SettingsCard>
+        <SettingsRow
+          icon={<Settings />}
+          label="Settings"
+          onClick={onClick}
+          trailing={<ChevronRight size={20} className="shrink-0 text-muted" />}
+        />
+      </SettingsCard>
+    </SettingsSection>
   )
 }
