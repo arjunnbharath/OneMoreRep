@@ -48,6 +48,7 @@ export default function SettingsHub({
 
   return (
     <SettingsPageLayout title="Settings" subtitle="Profile" onBack={onBack}>
+      <div className="h-4 lg:hidden" aria-hidden />
       <SettingsSection title="General">
         <SettingsCard>
           <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3.5 last:border-b-0">

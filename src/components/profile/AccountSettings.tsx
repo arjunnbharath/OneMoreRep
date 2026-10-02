@@ -168,7 +168,7 @@ export default function AccountSettings({
 
   return (
     <div className="min-h-full bg-background text-foreground lg:mx-auto lg:max-w-3xl">
-      <header className="flex items-center gap-3 px-5 py-4 lg:border-b lg:border-border lg:px-10 lg:py-6">
+      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 pb-3 pt-[calc(var(--sat)+1.25rem)] backdrop-blur-sm lg:desktop-page-header lg:static lg:px-10 lg:py-6">
         <button
           type="button"
           onClick={handleBack}
