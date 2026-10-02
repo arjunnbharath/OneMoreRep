@@ -5,9 +5,10 @@ import { isNativeApp, isPwaInstalled } from './pwaInstall'
  * with the web build (public/downloads/OneMoreRep.apk); override with
  * VITE_ANDROID_APK_URL to point at a release host (GitHub Releases, etc.).
  */
+/** Latest APK on GitHub. The site download redirects here too. */
 export const ANDROID_APK_URL: string =
   (import.meta.env.VITE_ANDROID_APK_URL as string | undefined) ||
-  `${import.meta.env.BASE_URL}downloads/OneMoreRep.apk`
+  'https://github.com/arjunnbharath/OneMoreRep/raw/main/public/downloads/OneMoreRep.apk'
 
 export const ANDROID_APK_FILENAME = 'OneMoreRep.apk'
 
