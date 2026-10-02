@@ -16,9 +16,10 @@ interface StatsPanelProps {
 export default function StatsPanel({ sessions, activeSession, onOpenWorkout }: StatsPanelProps) {
   if (sessions.length === 0) {
     return (
-      <section className="overflow-x-hidden space-y-6 px-5 pb-8 pt-4 lg:desktop-page-body lg:px-10 lg:pt-6">
+      <section className="overflow-x-hidden space-y-3 px-3 pb-8 pt-2 lg:desktop-page-body lg:px-10 lg:pt-6">
+        <h1 className="px-1 text-[2rem] font-normal leading-tight tracking-tight lg:hidden">Stats</h1>
         <div className="desktop-page mx-auto max-w-lg lg:max-w-2xl">
-          <div className="overflow-hidden rounded-3xl bg-surface ring-1 ring-border" data-tour="stats-overview">
+          <div className="overflow-hidden rounded-[1.5rem] bg-surface" data-tour="stats-overview">
             <div className="relative px-6 pb-8 pt-10 text-center">
               <div
                 className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-br from-emerald-500/15 via-transparent to-sky-500/10"
@@ -36,7 +37,7 @@ export default function StatsPanel({ sessions, activeSession, onOpenWorkout }: S
               <button
                 type="button"
                 onClick={onOpenWorkout}
-                className="relative mt-6 inline-flex items-center gap-2 rounded-2xl bg-foreground px-5 py-3 text-sm font-semibold text-background transition hover:opacity-90"
+                className="relative mt-6 inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background transition hover:opacity-90"
               >
                 <Dumbbell size={16} />
                 Start a workout
@@ -49,24 +50,23 @@ export default function StatsPanel({ sessions, activeSession, onOpenWorkout }: S
   }
 
   return (
-    <section className="overflow-x-hidden space-y-4 px-5 pb-8 pt-4 lg:desktop-page-body lg:px-10 lg:pt-6">
-      <div className="desktop-page mx-auto max-w-lg space-y-4 lg:max-w-3xl" data-tour="stats-overview">
+    <section className="overflow-x-hidden space-y-3 px-3 pb-8 pt-2 lg:desktop-page-body lg:space-y-4 lg:px-10 lg:pt-6">
+      <h1 className="px-1 text-[2rem] font-normal leading-tight tracking-tight lg:hidden">Stats</h1>
+      <div className="desktop-page mx-auto max-w-lg space-y-3 lg:max-w-3xl lg:space-y-4" data-tour="stats-overview">
         {activeSession && (
           <button
             type="button"
             onClick={onOpenWorkout}
-            className="group flex w-full items-center gap-4 overflow-hidden rounded-2xl bg-foreground p-4 text-left text-background transition hover:opacity-95"
+            className="flex w-full items-center gap-4 rounded-[1.5rem] bg-surface px-4 py-3 text-left transition hover:bg-foreground/[0.04]"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-background/15 ring-1 ring-background/20">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground text-background">
               <Dumbbell size={18} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-background/60">
-                Active session
-              </span>
-              <span className="mt-0.5 block truncate text-sm font-semibold">{activeSession.name}</span>
+              <span className="block text-base leading-6">{activeSession.name}</span>
+              <span className="block text-sm leading-5 text-muted">In progress</span>
             </span>
-            <ChevronRight size={18} className="shrink-0 text-background/70" />
+            <ChevronRight size={20} className="shrink-0 text-muted" />
           </button>
         )}
 

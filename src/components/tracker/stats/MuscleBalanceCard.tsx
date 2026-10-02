@@ -55,7 +55,7 @@ export default function MuscleBalanceCard({ sessions }: MuscleBalanceCardProps) 
 
   return (
     <StatsCard>
-      <div className="flex gap-1 rounded-2xl bg-black/40 p-1 ring-1 ring-white/10">
+      <div className="flex gap-1 rounded-full bg-background p-1">
         {(
           [
             ['balance', 'Muscle balance'],
@@ -68,8 +68,8 @@ export default function MuscleBalanceCard({ sessions }: MuscleBalanceCardProps) 
             type="button"
             onClick={() => setTab(id)}
             className={[
-              'flex-1 rounded-xl px-2 py-2 text-xs font-semibold transition sm:text-sm',
-              tab === id ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-zinc-300',
+              'flex-1 rounded-full px-2 py-2 text-xs font-medium transition sm:text-sm',
+              tab === id ? 'bg-foreground text-background' : 'text-muted',
             ].join(' ')}
           >
             {label}
@@ -77,7 +77,7 @@ export default function MuscleBalanceCard({ sessions }: MuscleBalanceCardProps) 
         ))}
       </div>
 
-      <p className="mt-4 text-xs text-zinc-400">{subtitle}</p>
+      <p className="mt-4 text-xs text-muted">{subtitle}</p>
 
       <div className="mt-3">
         <StatsPills value={range} options={RANGES} onChange={setRange} ariaLabel="Muscle period" />
@@ -97,7 +97,7 @@ export default function MuscleBalanceCard({ sessions }: MuscleBalanceCardProps) 
       </div>
 
       {ranked.length === 0 ? (
-        <p className="mt-2 text-center text-sm text-zinc-500">No sets in this period yet.</p>
+        <p className="mt-2 text-center text-sm text-muted">No sets in this period yet.</p>
       ) : (
         <ul className="mt-2 space-y-3">
           {ranked.slice(0, 6).map((stat) => {
@@ -111,9 +111,9 @@ export default function MuscleBalanceCard({ sessions }: MuscleBalanceCardProps) 
               <li key={stat.muscle}>
                 <div className="flex items-center justify-between gap-3 text-sm">
                   <span className="font-medium">{STAT_MUSCLE_LABELS[stat.muscle]}</span>
-                  <span className="text-xs text-zinc-400">{label}</span>
+                  <span className="text-xs text-muted">{label}</span>
                 </div>
-                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/10">
+                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-foreground/10">
                   <div
                     className={[
                       'h-full rounded-full',
@@ -130,12 +130,12 @@ export default function MuscleBalanceCard({ sessions }: MuscleBalanceCardProps) 
 
       {quiet.length > 0 && (
         <div className="mt-5">
-          <p className="text-xs text-zinc-500">Not trained in this period</p>
+          <p className="text-xs text-muted">Not trained in this period</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {quiet.map((stat) => (
               <span
                 key={stat.muscle}
-                className="rounded-full px-2.5 py-1 text-[11px] font-medium text-amber-200/80 ring-1 ring-amber-700/50"
+                className="rounded-full bg-foreground/[0.06] px-2.5 py-1 text-[11px] font-medium text-muted"
               >
                 {STAT_MUSCLE_LABELS[stat.muscle]}
               </span>

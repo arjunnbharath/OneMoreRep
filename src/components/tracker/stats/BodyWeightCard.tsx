@@ -42,7 +42,7 @@ export default function BodyWeightCard() {
         <h2 className="text-sm font-semibold">Body weight</h2>
         <div className="flex items-center gap-3">
           {latest && (
-            <span className="flex items-center gap-1 text-sm font-semibold text-emerald-300">
+            <span className="flex items-center gap-1 text-sm font-medium text-foreground">
               <Target size={14} />
               {trimNumber(latest.kg)}
             </span>
@@ -50,7 +50,7 @@ export default function BodyWeightCard() {
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="flex items-center gap-1 text-sm font-semibold text-emerald-400"
+            className="flex items-center gap-1 text-sm font-medium text-foreground"
           >
             <Plus size={14} />
             Log
@@ -70,11 +70,11 @@ export default function BodyWeightCard() {
             value={kg}
             onChange={(event) => setKg(event.target.value)}
             placeholder="kg"
-            className="no-spinner w-full rounded-xl bg-black/40 px-3 py-2.5 text-sm outline-none ring-1 ring-white/15 placeholder:text-zinc-500 focus:ring-emerald-400/60"
+            className="no-spinner w-full rounded-xl bg-background px-3 py-2.5 text-sm outline-none ring-1 ring-border placeholder:text-muted focus:ring-foreground/40"
           />
           <button
             type="submit"
-            className="rounded-xl bg-emerald-400 px-4 text-sm font-semibold text-black"
+            className="rounded-full bg-foreground px-4 text-sm font-medium text-background"
           >
             Save
           </button>
@@ -86,7 +86,7 @@ export default function BodyWeightCard() {
       </div>
 
       {visible.length === 0 ? (
-        <p className="mt-6 text-sm text-zinc-500">
+        <p className="mt-6 text-sm text-muted">
 No weigh-ins yet
         </p>
       ) : (
@@ -127,17 +127,17 @@ No weigh-ins yet
           <button
             type="button"
             onClick={() => setShowAll((value) => !value)}
-            className="mt-2 flex w-full items-center justify-end gap-1 text-sm font-medium text-emerald-400"
+            className="mt-2 flex w-full items-center justify-end gap-1 text-sm font-medium text-foreground"
           >
             All weigh-ins
             <ChevronRight size={14} className={showAll ? 'rotate-90' : ''} />
           </button>
 
           {showAll && (
-            <ul className="mt-2 divide-y divide-white/10">
+            <ul className="mt-2 divide-y divide-border">
               {[...entries].reverse().map((entry) => (
                 <li key={entry.id} className="flex items-center justify-between py-2 text-sm">
-                  <span className="text-zinc-400">{formatWeighIn(entry)}</span>
+                  <span className="text-muted">{formatWeighIn(entry)}</span>
                   <span className="font-medium tabular-nums">{trimNumber(entry.kg)} kg</span>
                 </li>
               ))}

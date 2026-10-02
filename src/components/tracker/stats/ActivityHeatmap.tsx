@@ -4,7 +4,7 @@ import type { WorkoutSession } from '../../../types/tracker'
 import { StatsCard } from './StatsChrome'
 
 const LEVELS = [
-  'bg-white/10',
+  'bg-foreground/10',
   'bg-emerald-900',
   'bg-emerald-700',
   'bg-emerald-500',
@@ -25,7 +25,7 @@ export default function ActivityHeatmap({ sessions }: ActivityHeatmapProps) {
         <h2 className="text-sm font-semibold">Activity — last 12 months</h2>
       </div>
 
-      <div className="mt-3 inline-flex rounded-full bg-black/40 p-1 ring-1 ring-white/10">
+      <div className="mt-3 inline-flex rounded-full bg-background p-1">
         {(['time', 'volume'] as const).map((id) => (
           <button
             key={id}
@@ -33,7 +33,7 @@ export default function ActivityHeatmap({ sessions }: ActivityHeatmapProps) {
             onClick={() => setMetric(id)}
             className={[
               'rounded-full px-4 py-1.5 text-xs font-semibold capitalize transition',
-              metric === id ? 'bg-white/15 text-white' : 'text-zinc-500 hover:text-zinc-300',
+              metric === id ? 'bg-foreground text-background' : 'text-muted',
             ].join(' ')}
           >
             {id}
@@ -47,7 +47,7 @@ export default function ActivityHeatmap({ sessions }: ActivityHeatmapProps) {
             {grid.weeks.map((week, index) => (
               <div key={index} className="relative h-4 w-3">
                 {week.month && (
-                  <span className="absolute left-0 top-0 whitespace-nowrap text-[10px] text-zinc-500">
+                  <span className="absolute left-0 top-0 whitespace-nowrap text-[10px] text-muted">
                     {week.month}
                   </span>
                 )}
@@ -64,7 +64,7 @@ export default function ActivityHeatmap({ sessions }: ActivityHeatmapProps) {
                     className={[
                       'block h-3 w-3 rounded-[3px]',
                       day.inFuture ? 'bg-transparent' : LEVELS[heatLevel(day.value, grid.max)],
-                      day.isToday ? 'ring-1 ring-white' : '',
+                      day.isToday ? 'ring-1 ring-foreground' : '',
                     ].join(' ')}
                   />
                 ))}
@@ -74,7 +74,7 @@ export default function ActivityHeatmap({ sessions }: ActivityHeatmapProps) {
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-zinc-500">
+      <div className="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-muted">
         <span>{metric === 'time' ? 'Less time' : 'Less volume'}</span>
         {LEVELS.map((level) => (
           <span key={level} className={`h-2.5 w-2.5 rounded-[3px] ${level}`} />

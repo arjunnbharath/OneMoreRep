@@ -27,7 +27,7 @@ export default function EffortCard({ sessions }: EffortCardProps) {
       {summary.rated === 0 ? (
         <div className="mt-5">
           <p className="text-sm font-medium">Effort shows up once you rate sets</p>
-          <p className="mt-1 text-xs leading-relaxed text-zinc-400">
+          <p className="mt-1 text-xs leading-relaxed text-muted">
             Add RIR (reps left in the tank) on a finished set. A 0 means you could not have done
             another rep. A 3 means three reps were still there.
           </p>
@@ -36,20 +36,20 @@ export default function EffortCard({ sessions }: EffortCardProps) {
         <>
           <div className="mt-4 flex items-end justify-between gap-4">
             <div>
-              <p className="text-3xl font-semibold tracking-tight text-amber-300">
+              <p className="text-3xl font-medium tracking-tight">
                 {summary.averageRir?.toFixed(1)}{' '}
-                <span className="text-lg font-medium text-amber-200/80">RIR</span>
+                <span className="text-lg font-medium text-muted">RIR</span>
               </p>
-              <p className="text-xs text-zinc-500">average effort</p>
+              <p className="text-xs text-muted">average effort</p>
             </div>
             <div className="text-right">
-              <p className="text-3xl font-semibold tracking-tight text-amber-300">
+              <p className="text-3xl font-medium tracking-tight">
                 {summary.hardPercent}%
               </p>
-              <p className="text-xs text-zinc-500">at RIR 3 or harder</p>
+              <p className="text-xs text-muted">at RIR 3 or harder</p>
             </div>
           </div>
-          <p className="mt-2 text-xs text-zinc-500">
+          <p className="mt-2 text-xs text-muted">
             {summary.rated} of {summary.finished} finished sets rated
           </p>
 
@@ -77,20 +77,20 @@ export default function EffortCard({ sessions }: EffortCardProps) {
             <ul className="mt-3 space-y-2.5">
               {summary.buckets.map((bucket) => (
                 <li key={bucket.label} className="grid grid-cols-[64px_1fr_auto] items-center gap-3">
-                  <span className="text-xs text-zinc-400">{bucket.label}</span>
-                  <span className="h-2 overflow-hidden rounded-full bg-white/10">
+                  <span className="text-xs text-muted">{bucket.label}</span>
+                  <span className="h-2 overflow-hidden rounded-full bg-foreground/10">
                     <span
                       className="block h-full rounded-full bg-amber-300"
                       style={{ width: `${bucket.percent}%` }}
                     />
                   </span>
-                  <span className="text-xs tabular-nums text-zinc-400">
+                  <span className="text-xs tabular-nums text-muted">
                     {bucket.count} · {bucket.percent}%
                   </span>
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-[11px] leading-relaxed text-zinc-500">
+            <p className="mt-3 text-[11px] leading-relaxed text-muted">
               Most working sets belong close to failure without living there — a mix of hard and
               moderate sets is a healthy middle.
             </p>

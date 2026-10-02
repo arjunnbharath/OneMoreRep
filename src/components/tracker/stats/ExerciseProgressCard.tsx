@@ -33,20 +33,20 @@ export default function ExerciseProgressCard({ sessions }: ExerciseProgressCardP
   return (
     <StatsCard>
       <div className="relative">
-        <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+        <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search an exercise"
-          className="w-full rounded-xl bg-black/40 py-2.5 pl-9 pr-9 text-sm outline-none ring-1 ring-white/10 placeholder:text-zinc-500 focus:ring-white/30"
+          className="w-full rounded-xl bg-background py-2.5 pl-9 pr-9 text-sm outline-none ring-1 ring-border placeholder:text-muted focus:ring-foreground/30"
         />
         {query && (
           <button
             type="button"
             onClick={() => setQuery('')}
             aria-label="Clear search"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted"
           >
             <X size={14} />
           </button>
@@ -61,7 +61,7 @@ export default function ExerciseProgressCard({ sessions }: ExerciseProgressCardP
             onClick={() => setSelected(name)}
             className={[
               'shrink-0 rounded-full px-3 py-1.5 text-xs font-medium',
-              exercise === name ? 'bg-white text-black' : 'bg-white/10 text-zinc-300',
+              exercise === name ? 'bg-foreground text-background' : 'bg-foreground/10 text-foreground/80',
             ].join(' ')}
           >
             {name}
@@ -86,19 +86,19 @@ export default function ExerciseProgressCard({ sessions }: ExerciseProgressCardP
           ))}
         </svg>
       ) : (
-        <p className="mt-4 text-sm text-zinc-500">No weighted sets yet</p>
+        <p className="mt-4 text-sm text-muted">No weighted sets yet</p>
       )}
 
       <ul className="mt-2 space-y-3">
         {logs.slice(0, 6).map((log) => (
           <li key={log.id} className="flex gap-3">
             <div className="w-14 shrink-0">
-              <p className="text-xs font-medium text-zinc-200">
+              <p className="text-xs font-medium text-foreground">
                 {log.weekday} {log.day}
               </p>
-              <p className="text-xs text-zinc-500">{log.month}</p>
+              <p className="text-xs text-muted">{log.month}</p>
             </div>
-            <p className="text-sm leading-snug text-zinc-200">
+            <p className="text-sm leading-snug text-foreground">
               {log.sets.map((set) => formatSetLine(set)).join(' ')}
             </p>
           </li>
@@ -106,11 +106,11 @@ export default function ExerciseProgressCard({ sessions }: ExerciseProgressCardP
       </ul>
 
       {best > 0 && (
-        <p className="mt-4 text-xs text-zinc-400">
+        <p className="mt-4 text-xs text-muted">
           Best set weight per workout · Best: {trimNumber(best)} kg
         </p>
       )}
-      <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">
+      <p className="mt-1 text-[11px] leading-relaxed text-muted">
         A fuller dot means less left in the tank — the same weight at a lower RIR is progress the
         line alone does not show.
       </p>

@@ -23,6 +23,7 @@ import FriendsPanel from '../components/tracker/FriendsPanel'
 import AddExerciseForm from '../components/tracker/AddExerciseForm'
 import ExerciseSetTable from '../components/tracker/ExerciseSetTable'
 import RestTimerOverlay, { REST_DURATION_SECONDS } from '../components/tracker/RestTimerOverlay'
+import { finishRestAlert, primeRestAlert, warnRestEnding } from '../lib/restAlert'
 import NextMuscleReady from '../components/tracker/NextMuscleReady'
 import ReadyToTrainPanel from '../components/tracker/ReadyToTrainPanel'
 import WorkoutHistoryWidget from '../components/tracker/WorkoutHistoryWidget'
@@ -200,6 +201,8 @@ export default function Tracker() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [showFinishSummary, setShowFinishSummary] = useState<WorkoutSession | null>(null)
   const [restSeconds, setRestSeconds] = useState<number | null>(null)
+  const restSecondsRef = useRef(restSeconds)
+  restSecondsRef.current = restSeconds
   const [selectedHistoryDay, setSelectedHistoryDay] = useState<string | null>(null)
   const [selectedExercise, setSelectedExercise] = useState('')
   const [exerciseQuery, setExerciseQuery] = useState('')
@@ -243,10 +246,13 @@ export default function Tracker() {
     if (!isRestTimerRunning) return
 
     const id = window.setInterval(() => {
-      setRestSeconds((current) => {
-        if (current === null || current <= 1) return null
-        return current - 1
-      })
+      const current = restSecondsRef.current
+      if (current === null) return
+      if (current === 11) warnRestEnding()
+      const next = current <= 1 ? null : current - 1
+      if (next === null) finishRestAlert()
+      restSecondsRef.current = next
+      setRestSeconds(next)
     }, 1000)
 
     return () => window.clearInterval(id)
@@ -275,6 +281,7 @@ export default function Tracker() {
     if (wasCompleted) {
       setRestSeconds(null)
     } else {
+      primeRestAlert()
       setRestSeconds(REST_DURATION_SECONDS)
     }
   }
@@ -414,10 +421,7 @@ export default function Tracker() {
     const lastPerf = lastLog ? formatLastPerformance(lastLog) : null
 
     return (
-      <li
-        key={exercise.id}
-        className="rounded-2xl bg-surface p-4 ring-1 ring-border"
-      >
+      <li key={exercise.id} className="rounded-[1.5rem] bg-surface p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <button
@@ -426,21 +430,19 @@ export default function Tracker() {
                 setSelectedExercise(exercise.name)
                 goToView('progress')
               }}
-              className="text-left text-base font-semibold leading-snug hover:underline"
+              className="text-left text-lg font-medium leading-snug"
             >
               {exercise.name}
             </button>
-            {lastPerf && (
-              <p className="mt-1 text-xs text-muted">Last · {lastPerf}</p>
-            )}
+            {lastPerf && <p className="mt-0.5 text-sm text-muted">Last {lastPerf}</p>}
           </div>
           <button
             type="button"
             onClick={() => removeExercise(exercise.id)}
-            className="shrink-0 rounded-lg px-2 py-1 text-xs text-muted transition hover:bg-red-500/10 hover:text-red-500"
+            className="-mr-2 -mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted transition active:bg-red-500/10 active:text-red-500"
             aria-label={`Remove ${exercise.name}`}
           >
-            Remove
+            <Trash2 size={18} />
           </button>
         </div>
 

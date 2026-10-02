@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 
+/** Material 3 surface card used by every stats block. */
 export function StatsCard({
   children,
   className = '',
@@ -8,17 +9,13 @@ export function StatsCard({
   className?: string
 }) {
   return (
-    <section
-      className={[
-        'rounded-3xl bg-[#141416] p-4 text-white shadow-sm ring-1 ring-white/10 sm:p-5',
-        className,
-      ].join(' ')}
-    >
+    <section className={['rounded-[1.5rem] bg-surface p-4 text-foreground sm:p-5', className].join(' ')}>
       {children}
     </section>
   )
 }
 
+/** Material segmented control: filled pill for the selected range. */
 export function StatsPills<T extends string>({
   value,
   options,
@@ -34,7 +31,7 @@ export function StatsPills<T extends string>({
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className="inline-flex rounded-full bg-black/40 p-1 ring-1 ring-white/10"
+      className="inline-flex rounded-full bg-background p-1"
     >
       {options.map((option) => {
         const selected = option.id === value
@@ -46,8 +43,8 @@ export function StatsPills<T extends string>({
             aria-selected={selected}
             onClick={() => onChange(option.id)}
             className={[
-              'rounded-full px-3 py-1 text-xs font-semibold transition',
-              selected ? 'bg-white/15 text-white' : 'text-zinc-500 hover:text-zinc-300',
+              'rounded-full px-3.5 py-1.5 text-xs font-medium transition',
+              selected ? 'bg-foreground text-background' : 'text-muted',
             ].join(' ')}
           >
             {option.label}
