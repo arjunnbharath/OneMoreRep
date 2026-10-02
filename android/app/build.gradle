@@ -13,8 +13,8 @@ android {
         applicationId "com.onemorerep.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 7
-        versionName "1.6"
+        versionCode 8
+        versionName "1.6.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -50,6 +50,36 @@ dependencies {
 }
 
 apply from: 'capacitor.build.gradle'
+
+// OneDrive hands Gradle placeholder files and stale snapshots, so the web
+// assets are copied outside OneDrive on every build and packaged from there.
+if (localAppData) {
+    def sourceAssets = file("src/main/assets")
+    def mirroredAssets = new File(localAppData, "onemorerep-android-build/assets")
+    android.sourceSets.main.assets.srcDirs = [mirroredAssets]
+
+    tasks.register("mirrorAssetsOutsideOneDrive") {
+        doNotTrackState("Reads OneDrive files that Gradle cannot snapshot reliably")
+        doLast {
+            project.delete(mirroredAssets)
+            mirroredAssets.mkdirs()
+            def root = sourceAssets.toPath()
+            java.nio.file.Files.walk(root).forEach { path ->
+                def rel = root.relativize(path).toString().replace('\\', '/')
+                if (rel.isEmpty() || rel.startsWith("public/downloads")) return
+                def target = new File(mirroredAssets, rel)
+                if (java.nio.file.Files.isDirectory(path)) {
+                    target.mkdirs()
+                } else {
+                    target.parentFile.mkdirs()
+                    java.nio.file.Files.copy(path, target.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                }
+            }
+        }
+    }
+    preBuild.dependsOn("mirrorAssetsOutsideOneDrive")
+}
 
 try {
     def servicesJSON = file('google-services.json')

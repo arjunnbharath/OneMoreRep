@@ -1,7 +1,7 @@
 {
-  "versionCode": 7,
-  "versionName": "1.6",
-  "apkUrl": "/downloads/OneMoreRep.apk",
-  "notes": "Android-style settings, profile, and stats. Rest timer vibrates and rings when it ends.",
-  "publishedAt": "2026-10-02T16:17:30.080Z"
+    "apkUrl":  "/downloads/OneMoreRep.apk",
+    "publishedAt":  "2026-10-02T16:59:04.816Z",
+    "versionCode":  8,
+    "versionName":  "1.6.1",
+    "notes":  "Rebuilt with the latest web assets: Android-style settings, profile and stats, RIR on exercise cards, rest timer vibration and tone."
 }
