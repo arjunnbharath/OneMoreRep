@@ -259,10 +259,6 @@ export default function FoodPhotoScanner({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted">
-        Snap a photo of your food. Recognition runs on your device; nutrition comes from Open Food Facts (free, no API key).
-      </p>
-
       <div className="relative overflow-hidden rounded-xl bg-black ring-1 ring-border">
         {cameraSupported && active && !cameraError ? (
           <video ref={videoRef} playsInline muted className="aspect-[4/3] w-full object-cover" />

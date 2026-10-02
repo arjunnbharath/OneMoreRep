@@ -198,7 +198,7 @@ function DailyLog() {
       </header>
 
       <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10 lg:px-10 lg:py-8">
-        <div className="px-5 py-6 lg:px-0 lg:py-0">
+        <div className="px-5 pb-6 pt-[calc(var(--sat)+2rem)] lg:px-0 lg:py-0">
           <header className="flex items-start justify-between lg:hidden">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">

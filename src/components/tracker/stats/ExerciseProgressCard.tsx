@@ -86,7 +86,7 @@ export default function ExerciseProgressCard({ sessions }: ExerciseProgressCardP
           ))}
         </svg>
       ) : (
-        <p className="mt-4 text-sm text-zinc-500">Complete a weighted set to draw this chart.</p>
+        <p className="mt-4 text-sm text-zinc-500">No weighted sets yet</p>
       )}
 
       <ul className="mt-2 space-y-3">

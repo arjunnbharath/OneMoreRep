@@ -13,8 +13,8 @@ android {
         applicationId "com.onemorerep.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 5
-        versionName "1.4"
+        versionCode 6
+        versionName "1.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -50,35 +50,6 @@ dependencies {
 }
 
 apply from: 'capacitor.build.gradle'
-
-// OneDrive leaves freshly synced web assets as placeholders that Gradle cannot
-// snapshot ("not a regular file"). Mirror them outside OneDrive before building
-// and point the asset source set at the mirror.
-if (localAppData) {
-    def mirroredAssets = new File(localAppData, "onemorerep-android-build/assets")
-    android.sourceSets.main.assets.srcDirs = [mirroredAssets]
-
-    tasks.register("mirrorAssetsOutsideOneDrive") {
-        doNotTrackState("Reads OneDrive placeholder files that Gradle cannot snapshot")
-        doLast {
-            def source = file("src/main/assets").toPath()
-            def target = mirroredAssets.toPath()
-            if (mirroredAssets.exists()) mirroredAssets.deleteDir()
-            java.nio.file.Files.createDirectories(target)
-            java.nio.file.Files.walk(source).forEach { path ->
-                def relative = source.relativize(path).toString()
-                if (relative.replace('\\', '/').startsWith("public/downloads")) return
-                def dest = target.resolve(relative)
-                if (java.nio.file.Files.isDirectory(path)) {
-                    java.nio.file.Files.createDirectories(dest)
-                } else {
-                    java.nio.file.Files.copy(path, dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
-                }
-            }
-        }
-    }
-    preBuild.dependsOn("mirrorAssetsOutsideOneDrive")
-}
 
 try {
     def servicesJSON = file('google-services.json')

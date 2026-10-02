@@ -87,7 +87,7 @@ export default function BodyWeightCard() {
 
       {visible.length === 0 ? (
         <p className="mt-6 text-sm text-zinc-500">
-          Log a weigh-in to see how your weight moves alongside training.
+No weigh-ins yet
         </p>
       ) : (
         <>

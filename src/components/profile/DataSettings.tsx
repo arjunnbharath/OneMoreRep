@@ -131,9 +131,7 @@ export default function DataSettings({
               </span>
               <div className="min-w-0 flex-1">
                 <span className="block text-sm font-medium">Export data</span>
-                <span className="block text-xs text-muted">
-                  Download workouts and calories as Excel or PDF
-                </span>
+                <span className="block text-xs text-muted">Excel or PDF</span>
               </div>
             </button>
           </div>
@@ -155,9 +153,6 @@ export default function DataSettings({
                 </span>
                 <div className="min-w-0 flex-1">
                   <span className="block text-sm font-medium">Clear all data</span>
-                  <span className="block text-xs text-muted">
-                    Erase workouts, plans, calories & bookmarks
-                  </span>
                 </div>
               </button>
             ) : (

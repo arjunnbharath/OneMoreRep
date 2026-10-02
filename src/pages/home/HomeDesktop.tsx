@@ -49,9 +49,6 @@ export default function HomeDesktop({
               Dashboard
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">{todayLabel}</h1>
-            <p className="mt-2 max-w-xl text-sm text-muted">
-              Your training hub — plan workouts and track progress.
-            </p>
           </div>
 
           <div className="hidden min-w-[28rem] xl:block">
@@ -129,7 +126,7 @@ export default function HomeDesktop({
                   ))}
                 </ul>
               ) : (
-                <p className="mt-3 text-sm text-muted">No sessions yet. Start your first workout.</p>
+                <p className="mt-3 text-sm text-muted">No workouts yet</p>
               )}
               <button
                 type="button"

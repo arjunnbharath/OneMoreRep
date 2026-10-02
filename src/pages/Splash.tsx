@@ -39,21 +39,17 @@ export default function Splash() {
     <AuthPageShell className="relative">
       <AuthVideoBackground variant="splash" className="fixed" />
 
-      <div className="relative flex h-dvh flex-col overflow-hidden px-6 pb-[max(3rem,var(--sab))] pt-[max(3.5rem,var(--sat))] sm:px-10">
+      <div className="relative flex h-dvh flex-col overflow-hidden px-6 pb-[max(3rem,var(--sab))] pt-[calc(var(--sat)+4rem)] sm:px-10">
         <div className="flex items-center gap-2">
           <Dumbbell size={24} className="text-foreground" />
           <span className="text-sm font-bold tracking-[0.2em]">ONEMOREREP</span>
         </div>
 
         <div className="mt-auto">
-          <p className="text-sm font-medium text-muted">Train smarter. Lift harder.</p>
-          <h1 className="mt-3 text-4xl font-bold leading-[1.1] sm:text-5xl lg:text-6xl">
+          <h1 className="text-4xl font-bold leading-[1.1] sm:text-5xl lg:text-6xl">
             One more rep.<br />
             Every day.
           </h1>
-          <p className="mt-4 max-w-md text-base text-muted sm:text-lg">
-            Track workouts, watch exercise demos, and build unstoppable momentum.
-          </p>
 
           <div className="mt-10 space-y-3">
             {localProfile ? (
@@ -67,7 +63,7 @@ export default function Splash() {
                   className="py-4 text-base"
                   onClick={() => navigate('/login')}
                 >
-                  Sign in to an online account
+                  Sign in
                 </Button>
                 <button
                   type="button"

@@ -130,7 +130,7 @@ export default function WinterArc() {
           aria-hidden
         />
 
-        <div className="relative mx-auto max-w-2xl px-5 pb-10 pt-5 lg:px-8 lg:pt-8">
+        <div className="relative mx-auto max-w-2xl px-5 pb-10 pt-[max(1.25rem,var(--sat))] lg:px-8 lg:pt-8">
           <button
             type="button"
             onClick={() => navigate('/home')}

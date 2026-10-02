@@ -1,6 +1,7 @@
-import { Download, Smartphone } from 'lucide-react'
+import { Download, Smartphone, Trash2 } from 'lucide-react'
 import { usePwaInstall } from '../../hooks/usePwaInstall'
 import { isNativeApp } from '../../lib/pwaInstall'
+import { uninstallNativeApp } from '../../lib/nativeAppActions'
 import { SettingsRow } from './SettingsUI'
 
 export default function InstallAppSettings({ embedded = false }: { embedded?: boolean }) {
@@ -16,9 +17,16 @@ export default function InstallAppSettings({ embedded = false }: { embedded?: bo
     downloadApk,
   } = usePwaInstall()
 
-  // Inside the installed Android app there is nothing to install; updates are
-  // handled by AppUpdateSettings.
-  if (isNativeApp()) return null
+  if (isNativeApp()) {
+    return (
+      <SettingsRow
+        icon={<Trash2 size={16} />}
+        label="Uninstall app"
+        destructive
+        onClick={() => void uninstallNativeApp()}
+      />
+    )
+  }
 
   if (!showInstallSection) {
     if (embedded) {

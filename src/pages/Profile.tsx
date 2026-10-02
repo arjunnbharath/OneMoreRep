@@ -174,7 +174,7 @@ export default function Profile() {
   return (
     <div className="min-h-full bg-background text-foreground lg:desktop-page lg:mx-auto lg:max-w-6xl">
       {/* Hero */}
-      <section className="relative overflow-hidden px-5 pb-16 pt-10 text-white lg:desktop-page-header lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pb-12 lg:pt-12">
+      <section className="relative overflow-hidden px-5 pb-16 pt-[calc(var(--sat)+3rem)] text-white lg:desktop-page-header lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pb-12 lg:pt-12">
         <img
           src="/images/gym_background/gym-pic.jpg"
           alt=""

@@ -49,8 +49,15 @@ console.log(`Version → ${versionName} (code ${versionCode})`)
 // 2. Build web + sync + gradle
 run('npm run build')
 run('npx cap sync android')
-// Note: android/app/build.gradle mirrors the synced assets outside OneDrive
-// before building, since OneDrive placeholders can't be read by Gradle.
+if (process.platform === 'win32') {
+  // OneDrive turns freshly copied files into placeholders, which Gradle can't read.
+  // Mark the synced assets as "always keep on this device".
+  try {
+    execSync(`attrib +P -U "${join(root, 'android', 'app', 'src', 'main', 'assets')}" /S /D`, { stdio: 'ignore', shell: true })
+  } catch {
+    // best effort
+  }
+}
 const gradlew = process.platform === 'win32' ? 'gradlew.bat' : './gradlew'
 // Clean the app module first: incremental packaging leaves stale bytes in the APK.
 run(`${gradlew} :app:clean :app:assembleDebug -q`, join(root, 'android'))

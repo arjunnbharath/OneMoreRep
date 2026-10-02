@@ -110,17 +110,12 @@ export default function Signup() {
             <span className="text-sm font-bold tracking-widest">ONEMOREREP</span>
           </div>
           <h2 className="mt-6 text-4xl font-bold leading-tight">
-            Start tracking.<br />
-            Start improving.
+            Start tracking.
           </h2>
-          <p className="mt-4 max-w-md text-lg text-white/70">
-            Keep your data on your phone, or create an online account to sync and share progress
-            with training partners.
-          </p>
         </div>
       </div>
 
-      <div className="relative flex min-h-dvh flex-col justify-center px-6 py-12 sm:px-10 lg:px-16">
+      <div className="relative flex min-h-dvh flex-col justify-center px-6 pb-[max(3rem,var(--sab))] pt-[calc(var(--sat)+3.5rem)] sm:px-10 lg:px-16 lg:py-12">
         <AuthVideoBackground variant="auth" className="lg:hidden" />
         <div className="relative z-10 mx-auto w-full max-w-md">
           <div className="mb-8 flex items-center gap-2 lg:hidden">
@@ -133,10 +128,7 @@ export default function Signup() {
               <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
                 Where should your data live?
               </h1>
-              <p className="mt-2 text-sm text-muted">
-                Choose how OneMoreRep saves your workouts, plans, and calories. You can&apos;t change
-                this later without creating a new account.
-              </p>
+              <p className="mt-2 text-sm text-muted">This can&apos;t be changed later.</p>
 
               {error && (
                 <div className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-200 dark:bg-red-950/50 dark:text-red-400 dark:ring-red-900/50">

@@ -55,7 +55,6 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
 
   const {
     supported: cameraSupported,
-    permission: cameraPermission,
     enabled: cameraEnabled,
     active: cameraActive,
     denied: cameraDenied,
@@ -118,7 +117,7 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
                     ? 'Not configured on server'
                     : notificationsBlocked
                       ? 'Blocked in browser settings'
-                      : 'Friend waves and workout reminders'
+                      : undefined
                 }
                 trailing={
                   <Toggle
@@ -150,11 +149,9 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
                 value={
                   cameraDenied
                     ? 'Blocked in browser settings'
-                    : cameraActive
-                      ? 'Scan barcodes and QR codes for food lookup'
-                      : cameraEnabled
-                        ? 'Waiting for browser camera access'
-                        : 'Off — turn on to scan product barcodes'
+                    : cameraEnabled && !cameraActive
+                      ? 'Waiting for browser access'
+                      : undefined
                 }
                 trailing={
                   <Toggle
@@ -168,16 +165,6 @@ export default function PermissionsSettings({ onBack }: PermissionsSettingsProps
               {cameraDenied && (
                 <p className="border-t border-border px-4 py-2.5 text-xs text-muted">
                   Camera is blocked by your browser. Allow it in site settings, then turn it on here.
-                </p>
-              )}
-              {cameraPermission === 'prompt' && !cameraActive && cameraEnabled && (
-                <p className="border-t border-border px-4 py-2.5 text-xs text-muted">
-                  Camera is on in the app. Allow access when your browser asks.
-                </p>
-              )}
-              {!cameraEnabled && !cameraDenied && (
-                <p className="border-t border-border px-4 py-2.5 text-xs text-muted">
-                  Turn on camera to scan products in Calories. You can turn it off anytime.
                 </p>
               )}
             </>

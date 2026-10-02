@@ -69,9 +69,6 @@ export default function EffortCard({ sessions }: EffortCardProps) {
                   <circle key={dot.key} cx={dot.x} cy={dot.y} r="3.5" fill="#facc15" />
                 ))}
               </svg>
-              <p className="text-[11px] text-zinc-500">
-                Lower on the chart means more reps left. Harder weeks sit higher.
-              </p>
             </div>
           )}
 

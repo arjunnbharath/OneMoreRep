@@ -91,16 +91,12 @@ export default function Login() {
             <span className="text-sm font-bold tracking-widest">ONEMOREREP</span>
           </div>
           <h2 className="mt-6 text-4xl font-bold leading-tight">
-            Welcome back,<br />
-            champion.
+            Welcome back.
           </h2>
-          <p className="mt-4 max-w-md text-lg text-white/70">
-            Your workouts, progress, and exercise guides — all in one place.
-          </p>
         </div>
       </div>
 
-      <div className="relative flex h-dvh flex-col justify-center overflow-hidden px-6 pb-[max(1rem,var(--sab))] pt-[max(1rem,var(--sat))] sm:px-10 lg:px-16 lg:py-10">
+      <div className="relative flex h-dvh flex-col justify-center overflow-hidden px-6 pb-[max(1rem,var(--sab))] pt-[calc(var(--sat)+3rem)] sm:px-10 lg:px-16 lg:py-10">
         <AuthVideoBackground variant="auth" className="fixed lg:hidden" />
         <div className="relative z-10 mx-auto w-full max-w-md">
           <div className="mb-5 flex items-center gap-2 lg:hidden">
@@ -110,7 +106,6 @@ export default function Login() {
 
           <div className="lg:p-0">
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Sign in</h1>
-            <p className="mt-2 text-muted">Continue your fitness journey.</p>
 
             {error && (
               <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-200 dark:bg-red-950/50 dark:text-red-400 dark:ring-red-900/50">

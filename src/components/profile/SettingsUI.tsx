@@ -18,7 +18,7 @@ export function SettingsPageLayout({
 }: SettingsPageLayoutProps) {
   return (
     <div className="flex min-h-full flex-col bg-background text-foreground lg:mx-auto lg:max-w-3xl">
-      <header className="sticky top-[var(--sat)] z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm lg:desktop-page-header lg:static lg:px-10 lg:py-6">
+      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 pb-3 pt-[calc(var(--sat)+1.25rem)] backdrop-blur-sm lg:desktop-page-header lg:static lg:px-10 lg:py-6">
         <button
           type="button"
           onClick={onBack}

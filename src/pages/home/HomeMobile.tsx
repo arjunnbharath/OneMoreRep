@@ -35,7 +35,7 @@ export default function HomeMobile({
 
   return (
     <div className="min-h-full bg-background text-foreground lg:hidden">
-      <header className="px-5 pb-6 pt-8">
+      <header className="px-5 pb-6 pt-[max(2rem,var(--sat))]">
         <AppWordmark className="mb-4" />
         <HomeStatsStrip
           stats={stats}

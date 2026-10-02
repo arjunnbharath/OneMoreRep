@@ -752,9 +752,6 @@ export default function Tracker() {
                 <div className="mb-4 flex items-end justify-between gap-3">
                   <div>
                     <h2 className="text-base font-semibold lg:text-lg">Exercise library</h2>
-                    <p className="mt-0.5 text-xs text-muted lg:text-sm">
-                      Tap a muscle to browse exercises
-                    </p>
                   </div>
                   <button
                     type="button"
@@ -1029,14 +1026,11 @@ export default function Tracker() {
                   )}
                   height={300}
                 />
-                <p className="mt-2 text-xs text-muted">
-                  Est. 1RM uses the Epley formula. Warmup sets are excluded from volume.
-                </p>
               </div>
             ) : (
               <div className="rounded-2xl bg-surface p-6 text-center text-sm text-muted ring-1 ring-border">
                 <Dumbbell size={20} className="mx-auto mb-2 opacity-50" />
-                Add an exercise to see your progress chart.
+Add an exercise to see progress
               </div>
             )}
           </aside>

@@ -28,10 +28,10 @@ export default function StatsPanel({ sessions, activeSession, onOpenWorkout }: S
                 <BarChartPlaceholder />
               </div>
               <h2 className="relative mt-5 text-xl font-semibold tracking-tight">
-                Your stats will live here
+                No stats yet
               </h2>
               <p className="relative mx-auto mt-2 max-w-xs text-sm text-muted">
-                Finish a workout to unlock muscle balance, effort, activity, and exercise progress.
+                Finish a workout to see them here.
               </p>
               <button
                 type="button"

@@ -56,7 +56,7 @@ export default function WorkoutHistoryWidget({
 
       <div className="bg-surface px-4 py-3">
         {recent.length === 0 ? (
-          <p className="py-2 text-center text-sm text-muted">No workouts yet — finish one to see it here.</p>
+          <p className="py-2 text-center text-sm text-muted">No workouts yet</p>
         ) : (
           <ul className="divide-y divide-border/70">
             {recent.map((session) => {
