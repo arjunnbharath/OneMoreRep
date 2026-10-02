@@ -4,7 +4,7 @@ import type { TrackedExercise, WorkoutSet } from '../../types/tracker'
 function previousForSet(lastExercise: TrackedExercise | null, setIndex: number) {
   const last = lastExercise?.sets[setIndex]
   if (!last) return null
-  if (last.weight) return `${last.weight} kg × ${last.reps}`
+  if (last.weight) return `${last.weight} kg Ã— ${last.reps}`
   return `${last.reps} reps`
 }
 
@@ -100,7 +100,7 @@ function SetRow({
           max={10}
           step={0.5}
           value={set.rir ?? ''}
-          placeholder="�"
+          placeholder="–"
           aria-label={`Set ${setIndex + 1} reps in reserve`}
           onChange={(e) =>
             onUpdateRir?.(e.target.value === '' ? undefined : parseFloat(e.target.value))
