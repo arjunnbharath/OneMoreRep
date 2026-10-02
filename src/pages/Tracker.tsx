@@ -504,7 +504,7 @@ export default function Tracker() {
         </div>
       </header>
 
-      <div className="px-5 pb-3 pt-6 lg:hidden">
+      <div className="px-5 pb-3 pt-[max(1.5rem,var(--sat))] lg:hidden">
       <nav
         data-tour="tracker-nav"
         data-tour-nav="mobile"

@@ -82,8 +82,7 @@ export default function AppLayout() {
 
       <div
         className={[
-          // Keep page content clear of the phone's status bar (see --sat in index.css)
-          'flex min-w-0 flex-1 flex-col overflow-x-hidden pt-[var(--sat)] lg:pt-0',
+          'flex min-w-0 flex-1 flex-col overflow-x-hidden',
           hideMobileNavSpacer ? 'h-dvh overflow-hidden lg:h-auto lg:overflow-visible' : 'min-h-dvh',
         ].join(' ')}
       >
@@ -93,7 +92,7 @@ export default function AppLayout() {
               className={[
                 'desktop-main-scroll flex-1 overflow-x-hidden lg:pb-10',
                 hideMobileNavSpacer
-                  ? 'flex h-[calc(100dvh-var(--mobile-nav-height)-var(--sat))] min-h-0 flex-col overflow-hidden lg:h-auto lg:overflow-visible'
+                  ? 'flex h-[calc(100dvh-var(--mobile-nav-height))] min-h-0 flex-col overflow-hidden lg:h-auto lg:overflow-visible'
                   : '',
               ].join(' ')}
             >

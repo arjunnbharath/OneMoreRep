@@ -19,6 +19,7 @@ interface SettingsHubProps {
   onLogout: () => void
   onReplayTour?: () => void
   setTheme: (mode: 'light' | 'dark') => void
+  isLocal?: boolean
   hasAdminAccess?: boolean
   onOpenAdmin?: () => void
 }
@@ -32,6 +33,7 @@ export default function SettingsHub({
   onLogout,
   onReplayTour,
   setTheme,
+  isLocal = false,
   hasAdminAccess,
   onOpenAdmin,
 }: SettingsHubProps) {
@@ -83,19 +85,22 @@ export default function SettingsHub({
             <SettingsRow
               icon={<ShieldCheck size={16} className="text-green-600 dark:text-green-400" />}
               label="Admin panel"
+              value="Manage users and app data"
               onClick={onOpenAdmin}
               trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
             />
           )}
-            <SettingsRow
+          <SettingsRow
             icon={<User size={16} />}
             label="Account"
+            value={isLocal ? 'Stored on this device · details, delete' : 'Details, password, delete'}
             onClick={onOpenAccount}
             trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
           />
           <SettingsRow
             icon={<Database size={16} />}
             label="Data"
+            value={isLocal ? 'Export a backup or clear your data' : 'Export or clear your data'}
             onClick={onOpenData}
             trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
           />
@@ -115,6 +120,7 @@ export default function SettingsHub({
             <SettingsRow
               icon={<Map size={16} />}
               label="Replay app tour"
+              value="Walk through plans, workouts, and stats"
               onClick={onReplayTour}
               trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
             />
@@ -154,6 +160,7 @@ export function ProfileSettingsEntry({ onClick }: { onClick: () => void }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium">Settings</span>
+          <span className="block text-xs text-muted">Account, data, permissions</span>
         </span>
         <ChevronRight size={16} className="shrink-0 text-muted" />
       </button>
