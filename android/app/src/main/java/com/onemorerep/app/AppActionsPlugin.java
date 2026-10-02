@@ -10,6 +10,9 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.os.VibratorManager;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import com.getcapacitor.JSObject;
@@ -40,6 +43,46 @@ public class AppActionsPlugin extends Plugin {
         } catch (PackageManager.NameNotFoundException e) {
             call.reject("Could not read app version");
         }
+    }
+
+    /** Buzz the phone. `pattern` is comma-separated milliseconds: pause, buzz, pause, buzz… */
+    @PluginMethod
+    public void vibrate(PluginCall call) {
+        String raw = call.getString("pattern", "0,400,120,400,120,700");
+        String[] parts = raw == null ? new String[0] : raw.split(",");
+        long[] pattern = new long[Math.max(parts.length, 2)];
+        if (parts.length < 2) {
+            pattern = new long[] { 0, 400, 120, 400, 120, 700 };
+        } else {
+            for (int i = 0; i < parts.length; i++) {
+                try {
+                    pattern[i] = Long.parseLong(parts[i].trim());
+                } catch (NumberFormatException ignored) {
+                    pattern[i] = 0;
+                }
+            }
+        }
+
+        Vibrator vibrator = vibrator();
+        if (vibrator == null || !vibrator.hasVibrator()) {
+            call.resolve();
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1));
+        } else {
+            vibrator.vibrate(pattern, -1);
+        }
+        call.resolve();
+    }
+
+    private Vibrator vibrator() {
+        Context context = getContext();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            VibratorManager manager = (VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+            return manager == null ? null : manager.getDefaultVibrator();
+        }
+        return (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     @PluginMethod

@@ -4,6 +4,8 @@
  * Android VIBRATE permission.
  */
 
+import { vibratePhone } from './nativeAppActions'
+
 let audio: AudioContext | null = null
 
 function context(): AudioContext | null {
@@ -37,11 +39,7 @@ function tone(ctx: AudioContext, start: number, frequency: number) {
 }
 
 function buzz(pattern: number[]) {
-  try {
-    navigator.vibrate?.(pattern)
-  } catch {
-    // Vibration is unavailable (desktop, or permission missing).
-  }
+  void vibratePhone(pattern)
 }
 
 /** One short buzz as the last 10 seconds begin. */
@@ -51,7 +49,7 @@ export function warnRestEnding() {
 
 /** Two tones and a longer buzz when the rest is over. */
 export function finishRestAlert() {
-  buzz([180, 90, 180, 90, 360])
+  buzz([0, 400, 120, 400, 120, 700])
   const ctx = context()
   if (!ctx) return
   void ctx.resume().then(() => {

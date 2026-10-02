@@ -1,7 +1,7 @@
 {
-    "versionCode":  6,
-    "versionName":  "1.5",
-    "apkUrl":  "/downloads/OneMoreRep.apk",
-    "notes":  "Cleaner copy across the app",
-    "publishedAt":  "2026-10-02T15:16:40.4854142Z"
+  "versionCode": 7,
+  "versionName": "1.6",
+  "apkUrl": "/downloads/OneMoreRep.apk",
+  "notes": "Android-style settings, profile, and stats. Rest timer vibrates and rings when it ends.",
+  "publishedAt": "2026-10-02T16:17:30.080Z"
 }

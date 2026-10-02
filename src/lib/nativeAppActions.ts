@@ -5,6 +5,7 @@ interface AppActionsPlugin {
   getVersion: () => Promise<{ versionName: string; versionCode: number }>
   uninstall: () => Promise<void>
   installUpdate: (options: { url: string }) => Promise<void>
+  vibrate: (options: { pattern: string }) => Promise<void>
 }
 
 const AppActions = registerPlugin<AppActionsPlugin>('AppActions')
@@ -35,6 +36,24 @@ export async function uninstallNativeApp() {
  * Rejects with "permission-required" when the user first has to allow
  * "Install unknown apps" for OneMoreRep (the settings page is opened for them).
  */
+/** Native vibration in the installed app. Falls back to the browser API. */
+export async function vibratePhone(pattern: number[]) {
+  const waveform = pattern.join(',')
+  if (isNativeApp()) {
+    try {
+      await AppActions.vibrate({ pattern: waveform })
+      return
+    } catch {
+      // WebView fallback below.
+    }
+  }
+  try {
+    navigator.vibrate?.(pattern)
+  } catch {
+    // Vibration is unavailable.
+  }
+}
+
 export async function installNativeUpdate(url: string) {
   if (!isNativeApp()) return
   await AppActions.installUpdate({ url })
