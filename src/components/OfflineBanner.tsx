@@ -15,7 +15,7 @@ export default function OfflineBanner() {
   return (
     <div
       className={[
-        'fixed inset-x-0 top-0 z-[190] px-4 pt-[max(0.5rem,env(safe-area-inset-top))]',
+        'fixed inset-x-0 top-0 z-[190] px-4 pt-[max(0.5rem,var(--sat))]',
         'pointer-events-none',
       ].join(' ')}
     >

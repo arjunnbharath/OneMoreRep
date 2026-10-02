@@ -1,7 +1,7 @@
 {
-  "versionCode": 2,
-  "versionName": "1.1",
-  "apkUrl": "/downloads/OneMoreRep.apk",
-  "notes": "Full-screen layout, rest timer, in-app updates",
-  "publishedAt": "2026-10-02T14:09:47.348Z"
+    "versionCode":  3,
+    "versionName":  "1.2",
+    "apkUrl":  "/downloads/OneMoreRep.apk",
+    "notes":  "Edge-to-edge screen, sign-in fits without scrolling",
+    "publishedAt":  "2026-10-02T14:23:21.1372716Z"
 }

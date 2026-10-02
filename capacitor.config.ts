@@ -22,7 +22,8 @@ const config: CapacitorConfig = {
       backgroundColor: '#00000000',
     },
     SystemBars: {
-      insetsHandling: 'css',
+      // MainActivity publishes --safe-area-inset-* itself and never pads the WebView.
+      insetsHandling: 'disable',
     },
   },
 }

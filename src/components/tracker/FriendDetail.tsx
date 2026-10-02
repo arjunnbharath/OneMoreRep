@@ -217,7 +217,7 @@ export default function FriendDetail({ friendId }: { friendId: number }) {
       </header>
 
       <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(var(--mobile-nav-height)+0.5rem)] lg:overflow-visible lg:pb-0">
-      <div className="desktop-page-body mx-auto max-w-lg space-y-6 px-5 pb-6 pt-[max(1rem,env(safe-area-inset-top))] lg:max-w-none lg:px-10 lg:py-6 lg:pb-10">
+      <div className="desktop-page-body mx-auto max-w-lg space-y-6 px-5 pb-6 pt-[max(1rem,var(--sat))] lg:max-w-none lg:px-10 lg:py-6 lg:pb-10">
         {loading ? (
           <div className="space-y-4">
             <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">

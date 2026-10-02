@@ -55,8 +55,8 @@ export default function RestTimerOverlay({
       aria-label="Rest timer"
       className="fixed inset-0 z-[70] flex flex-col items-center justify-center bg-black text-white"
       style={{
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingTop: 'var(--sat)',
+        paddingBottom: 'var(--sab)',
       }}
     >
       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/50">Rest</p>

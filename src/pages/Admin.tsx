@@ -821,7 +821,7 @@ export default function Admin() {
       </main>
 
       {selectedCount > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 p-4 backdrop-blur-md lg:hidden pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 p-4 backdrop-blur-md lg:hidden pb-[max(1rem,var(--sab))]">
           <div className="mx-auto flex max-w-lg items-center gap-2">
             <span className="text-sm font-medium">{selectedCount} selected</span>
             {confirmDeleteSelected ? (
@@ -845,7 +845,7 @@ export default function Admin() {
       {showBulkMenu && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button type="button" aria-label="Close actions" onClick={() => setShowBulkMenu(false)} className="absolute inset-0 bg-black/50" />
-          <div className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] ring-1 ring-border">
+          <div className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-surface p-5 pb-[max(1.25rem,var(--sab))] ring-1 ring-border">
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
             <p className="text-base font-semibold">Bulk actions</p>
             <p className="mt-1 text-sm text-muted">Manage all accounts at once</p>

@@ -72,7 +72,7 @@ export default function ExerciseDetail() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="absolute left-5 top-[max(1.5rem,env(safe-area-inset-top))] flex h-10 w-10 items-center justify-center rounded-xl bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
+            className="absolute left-5 top-[max(1.5rem,var(--sat))] flex h-10 w-10 items-center justify-center rounded-xl bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
           >
             <ArrowLeft size={20} />
           </button>

@@ -100,10 +100,10 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="relative flex h-dvh flex-col justify-center overflow-y-auto overscroll-none px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-10 lg:px-16 lg:py-10">
+      <div className="relative flex h-dvh flex-col justify-center overflow-hidden px-6 pb-[max(1rem,var(--sab))] pt-[max(1rem,var(--sat))] sm:px-10 lg:px-16 lg:py-10">
         <AuthVideoBackground variant="auth" className="fixed lg:hidden" />
         <div className="relative z-10 mx-auto w-full max-w-md">
-          <div className="mb-8 flex items-center gap-2 lg:hidden">
+          <div className="mb-5 flex items-center gap-2 lg:hidden">
             <Dumbbell size={20} />
             <span className="text-sm font-bold tracking-widest text-white">ONEMOREREP</span>
           </div>
@@ -123,7 +123,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={handleContinueLocal}
-                  className="mt-8 flex w-full items-center gap-3 rounded-2xl bg-surface p-4 text-left ring-1 ring-border transition hover:ring-foreground/20"
+                  className="mt-5 flex w-full items-center gap-3 rounded-2xl bg-surface p-4 text-left ring-1 ring-border transition hover:ring-foreground/20"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
                     <Smartphone size={18} />
@@ -137,7 +137,7 @@ export default function Login() {
                     </span>
                   </span>
                 </button>
-                <div className="mt-6 flex items-center gap-3 text-xs text-muted">
+                <div className="mt-4 flex items-center gap-3 text-xs text-muted">
                   <span className="h-px flex-1 bg-border" />
                   or sign in to an online account
                   <span className="h-px flex-1 bg-border" />
@@ -145,7 +145,7 @@ export default function Login() {
               </>
             )}
 
-            <form onSubmit={handleSubmit} className={localProfile ? 'mt-6 space-y-4' : 'mt-8 space-y-4'}>
+            <form onSubmit={handleSubmit} className={localProfile ? 'mt-4 space-y-3' : 'mt-6 space-y-3'}>
               <Input
                 label="User ID or email"
                 type="text"
@@ -177,14 +177,14 @@ export default function Login() {
                 </button>
               </div>
 
-              <Button type="submit" fullWidth className="mt-2 py-4 text-base" disabled={loading}>
+              <Button type="submit" fullWidth className="mt-1 py-3.5 text-base" disabled={loading}>
                 {loading ? 'Signing in...' : 'Sign in'}
               </Button>
             </form>
 
             {!localProfile?.isGuest && (
               <>
-                <div className="mt-6 flex items-center gap-3 text-xs text-muted">
+                <div className="mt-4 flex items-center gap-3 text-xs text-muted">
                   <span className="h-px flex-1 bg-border" />
                   or
                   <span className="h-px flex-1 bg-border" />
@@ -194,7 +194,7 @@ export default function Login() {
                   type="button"
                   variant="outline"
                   fullWidth
-                  className="mt-4 py-4 text-base"
+                  className="mt-3 py-3.5 text-base"
                   onClick={handleGuest}
                 >
                   Continue as guest
@@ -202,14 +202,14 @@ export default function Login() {
               </>
             )}
 
-            <p className="mt-8 text-center text-sm text-muted">
+            <p className="mt-5 text-center text-sm text-muted">
               Don&apos;t have an account?{' '}
               <Link to="/signup" className="font-semibold text-foreground underline-offset-2 hover:underline">
                 Create one
               </Link>
             </p>
 
-            <p className="mt-4 text-center">
+            <p className="mt-2 text-center">
               <Link to="/" className="text-sm text-muted hover:text-foreground">
                 ← Back to welcome
               </Link>
