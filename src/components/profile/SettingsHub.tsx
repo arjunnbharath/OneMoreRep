@@ -1,4 +1,5 @@
 import { Bell, ChevronRight, Database, LogOut, Map, Moon, Settings, ShieldCheck, Sun, User } from 'lucide-react'
+import AppUpdateSettings from './AppUpdateSettings'
 import InstallAppSettings from './InstallAppSettings'
 import {
   SettingsCard,
@@ -124,6 +125,7 @@ export default function SettingsHub({
               trailing={<ChevronRight size={16} className="shrink-0 text-muted" />}
             />
           )}
+          <AppUpdateSettings />
           <InstallAppSettings embedded />
         </SettingsCard>
       </SettingsSection>

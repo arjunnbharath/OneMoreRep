@@ -16,6 +16,7 @@
     "android:sync": "npx cap sync android",
     "android:open": "npx cap open android",
     "android:run": "npm run build:android && npx cap run android",
+    "apk:publish": "node scripts/publish-apk.mjs",
     "lint": "oxlint",
     "preview": "vite preview"
   },

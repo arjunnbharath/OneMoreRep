@@ -24,7 +24,9 @@ function NativeShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isNative) return
 
-    void StatusBar.setStyle({ style: Style.Default })
+    void StatusBar.setOverlaysWebView({ overlay: true })
+    void StatusBar.setStyle({ style: Style.Dark })
+    void StatusBar.setBackgroundColor({ color: '#00000000' })
     void SplashScreen.hide()
 
     document.documentElement.classList.add('native-app')

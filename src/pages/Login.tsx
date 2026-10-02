@@ -82,7 +82,7 @@ export default function Login() {
   }
 
   return (
-    <AuthPageShell className="lg:grid lg:grid-cols-2">
+    <AuthPageShell className="h-dvh overflow-hidden lg:grid lg:grid-cols-2">
       <div className="relative hidden min-h-dvh lg:block">
         <AuthVideoBackground variant="auth" />
         <div className="absolute bottom-16 left-12 right-12 z-10 text-white">
@@ -100,8 +100,8 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="relative flex min-h-dvh flex-col justify-center px-6 py-10 sm:px-10 lg:px-16">
-        <AuthVideoBackground variant="auth" className="lg:hidden" />
+      <div className="relative flex h-dvh flex-col justify-center overflow-y-auto overscroll-none px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-10 lg:px-16 lg:py-10">
+        <AuthVideoBackground variant="auth" className="fixed lg:hidden" />
         <div className="relative z-10 mx-auto w-full max-w-md">
           <div className="mb-8 flex items-center gap-2 lg:hidden">
             <Dumbbell size={20} />
@@ -182,24 +182,25 @@ export default function Login() {
               </Button>
             </form>
 
-            <div className="mt-6 flex items-center gap-3 text-xs text-muted">
-              <span className="h-px flex-1 bg-border" />
-              or
-              <span className="h-px flex-1 bg-border" />
-            </div>
+            {!localProfile?.isGuest && (
+              <>
+                <div className="mt-6 flex items-center gap-3 text-xs text-muted">
+                  <span className="h-px flex-1 bg-border" />
+                  or
+                  <span className="h-px flex-1 bg-border" />
+                </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              fullWidth
-              className="mt-4 py-4 text-base"
-              onClick={handleGuest}
-            >
-              Continue as guest
-            </Button>
-            <p className="mt-2 text-center text-xs text-muted">
-              No account needed. Look around, log workouts, and keep everything on this phone.
-            </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  fullWidth
+                  className="mt-4 py-4 text-base"
+                  onClick={handleGuest}
+                >
+                  Continue as guest
+                </Button>
+              </>
+            )}
 
             <p className="mt-8 text-center text-sm text-muted">
               Don&apos;t have an account?{' '}

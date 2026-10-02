@@ -1,5 +1,7 @@
-import { Download, Smartphone } from 'lucide-react'
+import { Download, Smartphone, Trash2 } from 'lucide-react'
 import { usePwaInstall } from '../../hooks/usePwaInstall'
+import { isNativeApp } from '../../lib/pwaInstall'
+import { uninstallNativeApp } from '../../lib/nativeAppActions'
 import { SettingsRow } from './SettingsUI'
 
 export default function InstallAppSettings({ embedded = false }: { embedded?: boolean }) {
@@ -14,6 +16,18 @@ export default function InstallAppSettings({ embedded = false }: { embedded?: bo
     install,
     downloadApk,
   } = usePwaInstall()
+
+  if (isNativeApp()) {
+    return (
+      <SettingsRow
+        icon={<Trash2 size={16} />}
+        label="Uninstall app"
+        value="Remove OneMoreRep from this phone"
+        destructive
+        onClick={() => void uninstallNativeApp()}
+      />
+    )
+  }
 
   if (!showInstallSection) {
     if (embedded) {

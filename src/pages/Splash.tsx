@@ -37,9 +37,9 @@ export default function Splash() {
 
   return (
     <AuthPageShell className="relative">
-      <AuthVideoBackground variant="splash" />
+      <AuthVideoBackground variant="splash" className="fixed" />
 
-      <div className="relative flex min-h-dvh flex-col px-6 pb-12 pt-14 sm:px-10">
+      <div className="relative flex h-dvh flex-col overflow-hidden px-6 pb-[max(3rem,env(safe-area-inset-bottom))] pt-[max(3.5rem,env(safe-area-inset-top))] sm:px-10">
         <div className="flex items-center gap-2">
           <Dumbbell size={24} className="text-foreground" />
           <span className="text-sm font-bold tracking-[0.2em]">ONEMOREREP</span>
