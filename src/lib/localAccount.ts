@@ -16,6 +16,13 @@ export function isLocalToken(token: string | null | undefined): boolean {
   return token === LOCAL_TOKEN
 }
 
+/** A saved device profile that is the guest account, including older profiles named Guest. */
+export function isGuestProfile(profile: User | null | undefined): boolean {
+  if (!profile) return false
+  if (profile.isGuest) return true
+  return profile.name.trim().toLowerCase() === 'guest'
+}
+
 export function readLocalProfile(): User | null {
   try {
     const raw = localStorage.getItem(LOCAL_PROFILE_KEY)

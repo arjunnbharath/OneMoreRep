@@ -9,6 +9,7 @@ import Input from '../components/Input'
 import { useAdminAuth } from '../context/AdminAuthContext'
 import { useAuth } from '../context/AuthContext'
 import { login as apiLogin } from '../lib/api'
+import { isGuestProfile } from '../lib/localAccount'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -27,6 +28,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const savedGuest = isGuestProfile(localProfile)
 
   function handleGuest() {
     setError('')
@@ -117,7 +119,7 @@ export default function Login() {
               <>
                 <button
                   type="button"
-                  onClick={handleContinueLocal}
+                  onClick={savedGuest ? handleGuest : handleContinueLocal}
                   className="mt-5 flex w-full items-center gap-3 rounded-2xl bg-surface p-4 text-left ring-1 ring-border transition hover:ring-foreground/20"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
@@ -125,7 +127,7 @@ export default function Login() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">
-                      Continue as {localProfile.name}
+                      Continue as {savedGuest ? 'guest' : localProfile.name}
                     </span>
                     <span className="mt-0.5 block text-xs text-muted">
                       Account saved on this device · no password needed
@@ -177,7 +179,7 @@ export default function Login() {
               </Button>
             </form>
 
-            {!localProfile?.isGuest && (
+            {!localProfile && (
               <>
                 <div className="mt-4 flex items-center gap-3 text-xs text-muted">
                   <span className="h-px flex-1 bg-border" />

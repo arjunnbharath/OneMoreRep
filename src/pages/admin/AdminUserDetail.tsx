@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import {
+  ArrowLeft,
   CheckCircle2,
   ChevronRight,
   ClipboardCopy,
@@ -14,6 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import type { AdminDataSummaryItem, AdminUser } from '../../lib/api'
+import { SettingsToggle } from '../../components/profile/SettingsUI'
 import {
   formatBytes,
   formatDate,
@@ -63,68 +65,88 @@ const TABS: { id: DetailTab; label: string }[] = [
   { id: 'actions', label: 'Actions' },
 ]
 
+const PILL_PRIMARY =
+  'flex h-12 items-center justify-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition active:scale-[0.98] disabled:opacity-40'
+const PILL_TONAL =
+  'flex h-12 items-center justify-center rounded-full bg-foreground/[0.07] px-5 text-sm font-medium text-foreground transition active:scale-[0.98] disabled:opacity-40'
+const PILL_DANGER =
+  'flex h-12 items-center justify-center rounded-full bg-red-600 px-5 text-sm font-medium text-white transition active:scale-[0.98] disabled:opacity-40'
+
 function SectionLabel({ children }: { children: ReactNode }) {
+  return <h3 className="px-4 pb-2 pt-3 text-sm font-medium text-foreground/80">{children}</h3>
+}
+
+function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">{children}</p>
+    <div className={['overflow-hidden rounded-[1.5rem] bg-surface', className].join(' ')}>
+      {children}
+    </div>
   )
 }
 
 function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-border py-3 last:border-b-0">
-      <dt className="shrink-0 text-sm text-muted">{label}</dt>
-      <dd className="min-w-0 text-right text-sm font-medium">{value}</dd>
+    <div className="flex min-h-14 flex-col justify-center px-4 py-2.5">
+      <dt className="text-sm leading-5 text-muted">{label}</dt>
+      <dd className="text-base leading-6 text-foreground">{value}</dd>
     </div>
+  )
+}
+
+function Avatar({ user, size = 'md' }: { user: AdminUser; size?: 'md' | 'lg' }) {
+  return (
+    <div
+      className={[
+        'flex shrink-0 items-center justify-center rounded-full bg-foreground/[0.07] font-medium text-foreground',
+        size === 'lg' ? 'h-16 w-16 text-xl' : 'h-10 w-10 text-sm',
+      ].join(' ')}
+    >
+      {userInitials(user.name)}
+    </div>
+  )
+}
+
+function AdminBadge() {
+  return (
+    <span className="shrink-0 rounded-full bg-foreground/[0.07] px-2 py-0.5 text-[11px] font-medium text-foreground">
+      Admin
+    </span>
   )
 }
 
 function OverviewSection({ selectedUser }: { selectedUser: AdminUser }) {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4 rounded-2xl bg-surface-elevated/70 p-4 ring-1 ring-border">
-        <div
-          className={[
-            'flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-base font-semibold',
-            selectedUser.hasAdminAccess
-              ? 'bg-green-500/15 text-green-700 dark:text-green-400'
-              : 'bg-background text-foreground ring-1 ring-border',
-          ].join(' ')}
-        >
-          {userInitials(selectedUser.name)}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="truncate text-lg font-semibold tracking-tight">{selectedUser.name}</h2>
-            {selectedUser.hasAdminAccess && (
-              <span className="rounded-full bg-green-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700 dark:text-green-400">
-                Admin
-              </span>
-            )}
+    <div className="space-y-3">
+      <Card>
+        <div className="flex items-center gap-4 p-4">
+          <Avatar user={selectedUser} size="lg" />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="truncate text-xl font-normal tracking-tight">{selectedUser.name}</h2>
+              {selectedUser.hasAdminAccess && <AdminBadge />}
+            </div>
+            <p className="mt-0.5 truncate text-sm text-muted">{selectedUser.email}</p>
           </div>
-          <p className="mt-0.5 truncate text-sm text-muted">{selectedUser.email}</p>
         </div>
-      </div>
+      </Card>
 
-      <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
-        <dl className="px-4">
-          <InfoRow label="User ID" value={selectedUser.id} />
-          <InfoRow
-            label="Username"
-            value={selectedUser.username ? `@${selectedUser.username}` : '—'}
-          />
-          <InfoRow label="Joined" value={formatShortDate(selectedUser.createdAt)} />
-          <InfoRow
-            label="Admin access"
-            value={
-              selectedUser.hasAdminAccess ? (
-                <span className="text-green-600 dark:text-green-400">Enabled</span>
-              ) : (
-                'Disabled'
-              )
-            }
-          />
-        </dl>
-      </div>
+      <section>
+        <SectionLabel>Account</SectionLabel>
+        <Card>
+          <dl className="py-1">
+            <InfoRow label="User ID" value={selectedUser.id} />
+            <InfoRow
+              label="Username"
+              value={selectedUser.username ? `@${selectedUser.username}` : '—'}
+            />
+            <InfoRow label="Joined" value={formatShortDate(selectedUser.createdAt)} />
+            <InfoRow
+              label="Admin access"
+              value={selectedUser.hasAdminAccess ? 'Enabled' : 'Disabled'}
+            />
+          </dl>
+        </Card>
+      </section>
     </div>
   )
 }
@@ -166,138 +188,124 @@ function SecuritySection({
   if (!selectedUser) return null
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-2xl bg-surface p-4 ring-1 ring-border">
-        <div className="flex items-center gap-2">
-          <KeyRound size={16} className="text-muted" />
-          <p className="text-sm font-semibold">Reset password</p>
-        </div>
-        <p className="mt-1 text-xs leading-relaxed text-muted">
-          User signs in with their user ID or email and this new password.
-        </p>
-        <form
-          className="mt-4 space-y-3"
-          onSubmit={(event) => {
-            event.preventDefault()
-            onResetPassword()
-          }}
-        >
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={passwordDraft}
-              onChange={(e) => setPasswordDraft(e.target.value)}
-              placeholder="Minimum 6 characters"
-              autoComplete="new-password"
-              className="w-full rounded-xl border border-border bg-background py-3 pl-3 pr-20 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/10"
-            />
-            <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
-              {passwordDraft && (
-                <button
-                  type="button"
-                  onClick={onCopyPassword}
-                  className="rounded-lg p-2 text-muted hover:bg-surface-elevated hover:text-foreground"
-                  aria-label="Copy password"
-                >
-                  {passwordCopied ? (
-                    <CheckCircle2 size={16} className="text-green-600 dark:text-green-400" />
-                  ) : (
-                    <ClipboardCopy size={16} />
-                  )}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="rounded-lg p-2 text-muted hover:bg-surface-elevated hover:text-foreground"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+    <div className="space-y-3">
+      <section>
+        <SectionLabel>Password</SectionLabel>
+        <Card>
+          <div className="flex items-center gap-4 px-4 pt-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground/[0.07] text-foreground">
+              <KeyRound size={20} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-base leading-6">Reset password</p>
+              <p className="text-sm leading-5 text-muted">
+                The user signs in with their ID or email and this new password.
+              </p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={onGeneratePassword}
-              disabled={passwordLoading}
-              className="rounded-xl border border-border bg-background py-3 text-sm font-medium transition active:scale-[0.98] disabled:opacity-50"
-            >
-              Generate
-            </button>
-            <button
-              type="submit"
-              disabled={passwordLoading || passwordDraft.length < 6}
-              className="rounded-xl bg-foreground py-3 text-sm font-semibold text-background transition active:scale-[0.98] disabled:opacity-40"
-            >
-              {passwordLoading ? 'Saving…' : 'Update'}
-            </button>
-          </div>
-        </form>
-        {passwordError && (
-          <p className="mt-2 text-xs text-red-600 dark:text-red-400">{passwordError}</p>
-        )}
-        {passwordMessage && (
-          <div className="mt-3 rounded-xl border border-green-500/20 bg-green-500/5 px-3 py-2.5">
-            <p className="flex items-center gap-1.5 text-xs font-medium text-green-700 dark:text-green-400">
-              <CheckCircle2 size={14} />
-              {passwordMessage}
-            </p>
-            {passwordDraft && (
-              <p className="mt-1 break-all font-mono text-xs text-green-800 dark:text-green-300">
-                {passwordDraft}
-              </p>
+          <form
+            className="space-y-3 p-4"
+            onSubmit={(event) => {
+              event.preventDefault()
+              onResetPassword()
+            }}
+          >
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={passwordDraft}
+                onChange={(e) => setPasswordDraft(e.target.value)}
+                placeholder="Minimum 6 characters"
+                autoComplete="new-password"
+                className="h-14 w-full rounded-2xl bg-background px-4 pr-24 text-base outline-none ring-1 ring-transparent transition focus:ring-foreground/30"
+              />
+              <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center">
+                {passwordDraft && (
+                  <button
+                    type="button"
+                    onClick={onCopyPassword}
+                    className="flex h-11 w-11 items-center justify-center rounded-full text-muted transition active:bg-foreground/10"
+                    aria-label="Copy password"
+                  >
+                    {passwordCopied ? (
+                      <CheckCircle2 size={20} className="text-foreground" />
+                    ) : (
+                      <ClipboardCopy size={20} />
+                    )}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="flex h-11 w-11 items-center justify-center rounded-full text-muted transition active:bg-foreground/10"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={onGeneratePassword}
+                disabled={passwordLoading}
+                className={PILL_TONAL}
+              >
+                Generate
+              </button>
+              <button
+                type="submit"
+                disabled={passwordLoading || passwordDraft.length < 6}
+                className={PILL_PRIMARY}
+              >
+                {passwordLoading ? 'Saving…' : 'Update'}
+              </button>
+            </div>
+            {passwordError && (
+              <p className="px-1 text-sm text-red-600 dark:text-red-400">{passwordError}</p>
             )}
-          </div>
-        )}
-      </div>
+            {passwordMessage && (
+              <div className="rounded-2xl bg-foreground/[0.05] px-4 py-3">
+                <p className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 size={16} className="shrink-0" />
+                  {passwordMessage}
+                </p>
+                {passwordDraft && (
+                  <p className="mt-1 break-all font-mono text-sm text-muted">{passwordDraft}</p>
+                )}
+              </div>
+            )}
+          </form>
+        </Card>
+      </section>
 
-      <div className="rounded-2xl bg-surface p-4 ring-1 ring-border">
-        <div className="flex items-center gap-2">
-          <ShieldCheck size={16} className="text-green-600 dark:text-green-400" />
-          <p className="text-sm font-semibold">Admin panel access</p>
-        </div>
-        <p className="mt-1 text-xs leading-relaxed text-muted">
-          {selectedUser.hasAdminAccess
-            ? 'This user sees Admin panel in Settings and can manage accounts.'
-            : 'Grant access to show Admin panel in their Settings.'}
-        </p>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span
-            className={[
-              'rounded-full px-3 py-1 text-xs font-semibold',
-              selectedUser.hasAdminAccess
-                ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                : 'bg-surface-elevated text-muted ring-1 ring-border',
-            ].join(' ')}
-          >
-            {selectedUser.hasAdminAccess ? 'Access granted' : 'No access'}
-          </span>
-          <button
-            type="button"
-            onClick={onToggleAdminAccess}
-            disabled={adminAccessLoading}
-            className={[
-              'ml-auto rounded-xl px-4 py-2.5 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-40',
-              selectedUser.hasAdminAccess
-                ? 'border border-border bg-background'
-                : 'bg-green-600 text-white',
-            ].join(' ')}
-          >
-            {adminAccessLoading
-              ? 'Saving…'
-              : selectedUser.hasAdminAccess
-                ? 'Revoke'
-                : 'Grant access'}
-          </button>
-        </div>
-        {adminAccessMessage && (
-          <p className="mt-2 flex items-center gap-1.5 text-xs text-green-700 dark:text-green-400">
-            <CheckCircle2 size={14} />
-            {adminAccessMessage}
-          </p>
-        )}
-      </div>
+      <section>
+        <SectionLabel>Permissions</SectionLabel>
+        <Card>
+          <div className="flex min-h-[4.5rem] items-center gap-4 px-4 py-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground/[0.07] text-foreground">
+              <ShieldCheck size={20} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-base leading-6">Admin panel access</p>
+              <p className="text-sm leading-5 text-muted">
+                {selectedUser.hasAdminAccess
+                  ? 'Can open the admin panel from Settings and manage accounts.'
+                  : 'Show the admin panel in this user’s Settings.'}
+              </p>
+            </div>
+            <SettingsToggle
+              label="Admin panel access"
+              checked={Boolean(selectedUser.hasAdminAccess)}
+              disabled={adminAccessLoading}
+              onChange={onToggleAdminAccess}
+            />
+          </div>
+          {adminAccessMessage && (
+            <p className="px-4 pb-3 pl-[4.5rem] text-xs text-muted">{adminAccessMessage}</p>
+          )}
+        </Card>
+      </section>
     </div>
   )
 }
@@ -312,37 +320,44 @@ function DataSection({
   'dataSummary' | 'userData' | 'expandedKey' | 'setExpandedKey'
 >) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
+    <section>
+      <div className="flex items-center justify-between pr-4">
         <SectionLabel>Stored data</SectionLabel>
-        <span className="rounded-full bg-surface-elevated px-2.5 py-0.5 text-[11px] font-semibold tabular-nums text-muted ring-1 ring-border">
-          {dataSummary.length} keys
+        <span className="text-sm tabular-nums text-muted">
+          {dataSummary.length} {dataSummary.length === 1 ? 'key' : 'keys'}
         </span>
       </div>
       {dataSummary.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border px-4 py-10 text-center">
-          <Database size={22} className="mx-auto text-muted" />
-          <p className="mt-2 text-sm font-medium">No synced data</p>
-          <p className="mt-1 text-xs text-muted">This account has not synced app data yet.</p>
-        </div>
+        <Card>
+          <div className="px-4 py-10 text-center">
+            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-foreground/[0.07] text-foreground">
+              <Database size={22} />
+            </span>
+            <p className="mt-3 text-base">No synced data</p>
+            <p className="mt-1 text-sm text-muted">This account has not synced app data yet.</p>
+          </div>
+        </Card>
       ) : (
-        <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
-          {dataSummary.map(({ key, updatedAt, sizeBytes }, index) => (
-            <div key={key} className={index > 0 ? 'border-t border-border' : ''}>
+        <Card>
+          {dataSummary.map(({ key, updatedAt, sizeBytes }) => (
+            <div key={key}>
               <button
                 type="button"
                 onClick={() => setExpandedKey(expandedKey === key ? null : key)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left active:bg-surface-elevated"
+                className="flex min-h-[4.5rem] w-full items-center gap-4 px-4 py-3 text-left transition active:bg-foreground/[0.08]"
               >
-                <div className="min-w-0">
-                  <p className="truncate font-mono text-sm">{key}</p>
-                  <p className="mt-0.5 text-xs text-muted">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground/[0.07] text-foreground">
+                  <Database size={20} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-mono text-base leading-6">{key}</span>
+                  <span className="block text-sm leading-5 text-muted">
                     {formatBytes(sizeBytes)} · {formatDate(updatedAt)}
                     {userData?.[key] !== undefined ? ` · ${summarizeJson(userData[key])}` : ''}
-                  </p>
-                </div>
+                  </span>
+                </span>
                 <ChevronRight
-                  size={16}
+                  size={20}
                   className={[
                     'shrink-0 text-muted transition',
                     expandedKey === key ? 'rotate-90' : '',
@@ -350,15 +365,15 @@ function DataSection({
                 />
               </button>
               {expandedKey === key && userData?.[key] !== undefined && (
-                <pre className="max-h-60 overflow-auto border-t border-border bg-[#0d1117] px-4 py-3 font-mono text-[11px] leading-relaxed text-[#e6edf3]">
+                <pre className="mx-3 mb-3 max-h-60 overflow-auto rounded-2xl bg-[#0d1117] px-4 py-3 font-mono text-[11px] leading-relaxed text-[#e6edf3]">
                   {JSON.stringify(userData[key], null, 2)}
                 </pre>
               )}
             </div>
           ))}
-        </div>
+        </Card>
       )}
-    </div>
+    </section>
   )
 }
 
@@ -385,147 +400,146 @@ function ActionsSection({
   if (!selectedUser) return null
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-4">
-        <SectionLabel>Data management</SectionLabel>
-        {confirmClear ? (
-          <div className="mt-3 space-y-3">
-            <p className="text-sm">Clear all synced data for {selectedUser.name}?</p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setConfirmClear(false)}
-                disabled={actionLoading}
-                className="rounded-xl border border-border py-3 text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={onClearData}
-                disabled={actionLoading}
-                className="rounded-xl bg-amber-600 py-3 text-sm font-semibold text-white"
-              >
-                Clear data
-              </button>
-            </div>
-          </div>
-        ) : (
+    <div className="space-y-3">
+      <section>
+        <SectionLabel>Data</SectionLabel>
+        <Card>
           <button
             type="button"
             onClick={() => {
               setConfirmDelete(false)
-              setConfirmClear(true)
+              setConfirmClear(!confirmClear)
             }}
-            className="mt-3 flex w-full items-center justify-between rounded-xl bg-surface px-4 py-3.5 text-left text-sm ring-1 ring-border active:bg-surface-elevated"
+            className="flex min-h-[4.5rem] w-full items-center gap-4 px-4 py-3 text-left transition active:bg-foreground/[0.08]"
           >
-            <span className="flex items-center gap-2">
-              <Database size={16} className="text-muted" />
-              Clear synced data
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground/[0.07] text-foreground">
+              <Database size={20} />
             </span>
-            <ChevronRight size={16} className="text-muted" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-base leading-6">Clear synced data</span>
+              <span className="block text-sm leading-5 text-muted">
+                Removes workouts, nutrition and settings stored for this account.
+              </span>
+            </span>
+            <ChevronRight size={20} className="shrink-0 text-muted" />
           </button>
-        )}
-      </div>
-
-      <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.03] p-4">
-        <SectionLabel>Danger zone</SectionLabel>
-        <p className="mt-1 text-xs text-muted">Permanent actions. Cannot be undone.</p>
-        {confirmDelete ? (
-          <div className="mt-3 space-y-3">
-            <p className="text-sm font-medium text-red-700 dark:text-red-300">
-              Delete {selectedUser.name}&apos;s account permanently?
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(false)}
-                disabled={actionLoading}
-                className="rounded-xl border border-border py-3 text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={onDeleteUser}
-                disabled={actionLoading}
-                className="rounded-xl bg-red-600 py-3 text-sm font-semibold text-white"
-              >
-                Delete account
-              </button>
+          {confirmClear && (
+            <div className="space-y-3 px-4 pb-4">
+              <p className="text-sm">Clear all synced data for {selectedUser.name}?</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmClear(false)}
+                  disabled={actionLoading}
+                  className={PILL_TONAL}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={onClearData}
+                  disabled={actionLoading}
+                  className={PILL_PRIMARY}
+                >
+                  {actionLoading ? 'Clearing…' : 'Clear data'}
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
+          )}
+        </Card>
+      </section>
+
+      <section>
+        <SectionLabel>Danger zone</SectionLabel>
+        <Card>
           <button
             type="button"
             onClick={() => {
               setConfirmClear(false)
-              setConfirmDelete(true)
+              setConfirmDelete(!confirmDelete)
             }}
-            className="mt-3 flex w-full items-center justify-between rounded-xl bg-surface px-4 py-3.5 text-left text-sm text-red-600 ring-1 ring-red-500/20 active:bg-red-500/[0.04] dark:text-red-400"
+            className="flex min-h-[4.5rem] w-full items-center gap-4 px-4 py-3 text-left transition active:bg-foreground/[0.08]"
           >
-            <span className="flex items-center gap-2">
-              <Trash2 size={16} />
-              Delete account
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/12 text-red-600 dark:text-red-400">
+              <Trash2 size={20} />
             </span>
-            <ChevronRight size={16} />
+            <span className="min-w-0 flex-1">
+              <span className="block text-base leading-6 text-red-600 dark:text-red-400">
+                Delete account
+              </span>
+              <span className="block text-sm leading-5 text-muted">
+                Permanently removes the account and its data.
+              </span>
+            </span>
+            <ChevronRight size={20} className="shrink-0 text-muted" />
           </button>
-        )}
-      </div>
+          {confirmDelete && (
+            <div className="space-y-3 px-4 pb-4">
+              <p className="text-sm">Delete {selectedUser.name}’s account permanently?</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={actionLoading}
+                  className={PILL_TONAL}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={onDeleteUser}
+                  disabled={actionLoading}
+                  className={PILL_DANGER}
+                >
+                  {actionLoading ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          )}
+        </Card>
+      </section>
     </div>
   )
 }
 
 export default function AdminUserDetail(props: AdminUserDetailProps) {
-  const {
-    selectedUser,
-    loadingDetail,
-    detailError,
-    onClose,
-  } = props
+  const { selectedUser, loadingDetail, detailError, onClose } = props
 
   const [activeTab, setActiveTab] = useState<DetailTab>('overview')
+  const ready = !loadingDetail && !detailError && Boolean(selectedUser)
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      <div className="sticky top-0 z-10 shrink-0 border-b border-border bg-surface/95 backdrop-blur-md">
-        <div className="flex items-center gap-3 px-4 py-3 lg:px-5 lg:py-4">
+      <div className="shrink-0 bg-background px-2 pt-[calc(var(--sat)+0.25rem)] lg:hidden">
+        <div className="flex h-14 items-center">
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-elevated text-muted ring-1 ring-border lg:hidden"
-            aria-label="Close"
+            className="flex h-12 w-12 items-center justify-center rounded-full text-foreground transition active:bg-foreground/10"
+            aria-label="Back"
           >
-            <X size={18} />
-          </button>
-          <div className="min-w-0 flex-1">
-            <SectionLabel>User details</SectionLabel>
-            <p className="truncate text-base font-semibold tracking-tight">
-              {selectedUser?.name ?? 'Loading…'}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted transition hover:bg-background lg:flex"
-            aria-label="Close"
-          >
-            <X size={16} />
+            <ArrowLeft size={24} strokeWidth={2} />
           </button>
         </div>
-
-        {!loadingDetail && !detailError && selectedUser && (
-          <div className="flex gap-1 overflow-x-auto px-4 pb-3 lg:px-5">
+        <div className="flex items-center gap-4 px-4 pb-4 pt-2">
+          {selectedUser && <Avatar user={selectedUser} />}
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-[1.75rem] font-normal leading-tight tracking-tight">
+              {selectedUser?.name ?? 'Loading…'}
+            </h1>
+            {selectedUser && <p className="truncate text-sm text-muted">{selectedUser.email}</p>}
+          </div>
+        </div>
+        {ready && (
+          <div className="flex gap-2 overflow-x-auto px-3 pb-3">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={[
-                  'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition',
-                  activeTab === tab.id
-                    ? 'bg-foreground text-background'
-                    : 'bg-surface-elevated text-muted ring-1 ring-border',
+                  'h-10 shrink-0 rounded-full px-4 text-sm font-medium transition',
+                  activeTab === tab.id ? 'bg-foreground text-background' : 'bg-surface text-foreground',
                 ].join(' ')}
               >
                 {tab.label}
@@ -535,14 +549,31 @@ export default function AdminUserDetail(props: AdminUserDetailProps) {
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-8 lg:px-5 lg:py-5">
+      <div className="hidden shrink-0 items-center gap-3 border-b border-border bg-surface/95 px-5 py-4 backdrop-blur-md lg:flex">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">User details</p>
+          <p className="truncate text-base font-semibold tracking-tight">
+            {selectedUser?.name ?? 'Loading…'}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted transition hover:bg-background"
+          aria-label="Close"
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-[max(2rem,var(--sab))] pt-1 lg:px-5 lg:py-5">
         {loadingDetail ? (
           <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted">
             <Loader2 size={18} className="animate-spin" />
             Loading account…
           </div>
         ) : detailError ? (
-          <p className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+          <p className="rounded-[1.5rem] bg-surface px-4 py-3 text-sm text-red-600 dark:text-red-400">
             {detailError}
           </p>
         ) : selectedUser ? (
@@ -569,10 +600,10 @@ export default function AdminUserDetail(props: AdminUserDetailProps) {
 export function EmptyDetailPanel() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-8 py-16 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-elevated ring-1 ring-border">
-        <UserRound size={28} className="text-muted" />
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-foreground/[0.07]">
+        <UserRound size={28} className="text-foreground" />
       </div>
-      <p className="mt-4 text-base font-semibold">Select a user</p>
+      <p className="mt-4 text-base font-medium">Select a user</p>
       <p className="mt-1 max-w-xs text-sm leading-relaxed text-muted">
         Tap any account to manage passwords, admin access, synced data, and account actions.
       </p>

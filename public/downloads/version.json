@@ -1,7 +1,7 @@
 {
-    "apkUrl":  "/downloads/OneMoreRep.apk",
-    "publishedAt":  "2026-10-02T16:59:04.816Z",
-    "versionCode":  8,
-    "versionName":  "1.6.1",
-    "notes":  "Rebuilt with the latest web assets: Android-style settings, profile and stats, RIR on exercise cards, rest timer vibration and tone."
+  "versionCode": 9,
+  "versionName": "1.7",
+  "apkUrl": "/downloads/OneMoreRep.apk",
+  "notes": "Android-style admin panel. Sign-in shows one continue option.",
+  "publishedAt": "2026-10-03T08:38:36.333Z"
 }

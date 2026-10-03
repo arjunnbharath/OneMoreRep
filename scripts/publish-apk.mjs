@@ -63,10 +63,11 @@ const gradlew = process.platform === 'win32' ? 'gradlew.bat' : './gradlew'
 run(`${gradlew} :app:clean :app:assembleDebug -q`, join(root, 'android'))
 
 // 3. Locate APK (build dir may be redirected outside the repo, see build.gradle)
+// The redirected build dir must come first: android/app/build can hold a stale APK from older builds.
 const candidates = [
-  join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk'),
   process.env.LOCALAPPDATA &&
     join(process.env.LOCALAPPDATA, 'onemorerep-android-build', 'app', 'outputs', 'apk', 'debug', 'app-debug.apk'),
+  join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk'),
 ].filter(Boolean)
 const apkSource = candidates.find((p) => existsSync(p))
 if (!apkSource) {

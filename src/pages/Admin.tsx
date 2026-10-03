@@ -1,14 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
+  Check,
   CheckCircle2,
   ChevronRight,
+  Database,
   Loader2,
-  MoreHorizontal,
+  MoreVertical,
   RefreshCw,
   Search,
   ShieldCheck,
+  Trash2,
   Users,
   X,
 } from 'lucide-react'
@@ -30,30 +33,36 @@ import {
 import AdminUserDetail, { EmptyDetailPanel } from './admin/AdminUserDetail'
 import { filterUsers, randomPassword, userInitials, type UserFilter } from './admin/adminUtils'
 
+const PILL_PRIMARY =
+  'flex h-12 items-center justify-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition active:scale-[0.98] disabled:opacity-40'
+const PILL_TONAL =
+  'flex h-12 items-center justify-center rounded-full bg-foreground/[0.07] px-5 text-sm font-medium text-foreground transition active:scale-[0.98] disabled:opacity-40'
+const PILL_DANGER =
+  'flex h-12 items-center justify-center rounded-full bg-red-600 px-5 text-sm font-medium text-white transition active:scale-[0.98] disabled:opacity-40'
+
 function StatPill({
   label,
   value,
-  accent,
+  className = '',
 }: {
   label: string
   value: number | string
-  accent?: 'green'
+  className?: string
 }) {
   return (
-    <div className="flex min-w-[8.5rem] shrink-0 snap-start flex-col rounded-2xl bg-surface px-4 py-3 ring-1 ring-border">
-      <p
-        className={[
-          'text-xl font-semibold tabular-nums tracking-tight',
-          accent === 'green' ? 'text-green-600 dark:text-green-400' : '',
-        ].join(' ')}
-      >
-        {value}
-      </p>
-      <p className="mt-0.5 text-[11px] font-medium text-muted">{label}</p>
+    <div
+      className={[
+        'flex min-w-0 flex-col rounded-[1.5rem] bg-surface px-4 py-3 lg:ring-1 lg:ring-border',
+        className,
+      ].join(' ')}
+    >
+      <p className="truncate text-2xl font-normal tabular-nums tracking-tight">{value}</p>
+      <p className="mt-0.5 text-sm text-muted">{label}</p>
     </div>
   )
 }
 
+/** Material 3 list item: tapping the avatar selects, tapping the row opens. */
 function UserRowCard({
   user,
   selected,
@@ -72,46 +81,85 @@ function UserRowCard({
   return (
     <div
       className={[
-        'flex items-center gap-3 border-b border-border px-4 py-3.5 transition md:hidden',
-        hasAdminAccess ? 'bg-green-500/[0.05]' : '',
-        selected ? 'bg-surface-elevated/80' : '',
+        'flex min-h-[4.5rem] items-center gap-4 px-4 py-3 transition-colors md:hidden',
+        checked ? 'bg-foreground/[0.06]' : selected ? 'bg-foreground/[0.04]' : '',
       ].join(' ')}
     >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onToggle}
-        className="h-5 w-5 shrink-0 rounded-md border-border accent-foreground"
-        aria-label={`Select ${user.name}`}
-      />
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-pressed={checked}
+        aria-label={checked ? `Deselect ${user.name}` : `Select ${user.name}`}
+        className={[
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-medium transition',
+          checked ? 'bg-foreground text-background' : 'bg-foreground/[0.07] text-foreground',
+        ].join(' ')}
+      >
+        {checked ? <Check size={20} strokeWidth={2.5} /> : userInitials(user.name)}
+      </button>
       <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-        <div
-          className={[
-            'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-semibold',
-            hasAdminAccess
-              ? 'bg-green-500/15 text-green-700 dark:text-green-400'
-              : 'bg-surface-elevated ring-1 ring-border',
-          ].join(' ')}
-        >
-          {userInitials(user.name)}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="truncate font-medium">{user.name}</p>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-2">
+            <span className="truncate text-base leading-6">{user.name}</span>
             {hasAdminAccess && (
-              <span className="shrink-0 rounded-full bg-green-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-green-700 dark:text-green-400">
+              <span className="shrink-0 rounded-full bg-foreground/[0.07] px-2 py-0.5 text-[11px] font-medium">
                 Admin
               </span>
             )}
-          </div>
-          <p className="truncate text-xs text-muted">{user.email}</p>
-          <p className="mt-0.5 text-[11px] text-muted">
+          </span>
+          <span className="block truncate text-sm leading-5 text-muted">{user.email}</span>
+          <span className="block text-sm leading-5 text-muted">
             {user.dataKeys ?? 0} data keys · ID {user.id}
-          </p>
-        </div>
-        <ChevronRight size={18} className="shrink-0 text-muted" />
+          </span>
+        </span>
+        <ChevronRight size={20} className="shrink-0 text-muted" />
       </button>
     </div>
+  )
+}
+
+function SheetRow({
+  icon,
+  label,
+  value,
+  destructive,
+  onClick,
+}: {
+  icon: ReactNode
+  label: string
+  value: string
+  destructive?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-h-[4.5rem] w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition active:bg-foreground/[0.08]"
+    >
+      <span
+        className={[
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
+          destructive
+            ? 'bg-red-500/12 text-red-600 dark:text-red-400'
+            : 'bg-foreground/[0.07] text-foreground',
+        ].join(' ')}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span
+          className={[
+            'block text-base leading-6',
+            destructive ? 'text-red-600 dark:text-red-400' : 'text-foreground',
+          ].join(' ')}
+        >
+          {label}
+        </span>
+        <span className="block text-sm leading-5 text-muted">{value}</span>
+      </span>
+      <ChevronRight size={20} className="shrink-0 text-muted" />
+    </button>
   )
 }
 
@@ -472,8 +520,44 @@ export default function Admin() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-30 shrink-0 border-b border-border bg-surface/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-4 py-3 lg:px-8 lg:py-4">
+      <header className="shrink-0 lg:sticky lg:top-0 lg:z-30 lg:border-b lg:border-border lg:bg-surface/95 lg:backdrop-blur-md">
+        <div className="px-2 pt-[calc(var(--sat)+0.25rem)] lg:hidden">
+          <div className="flex h-14 items-center">
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex h-12 w-12 items-center justify-center rounded-full text-foreground transition active:bg-foreground/10"
+              aria-label={isSuperAdmin ? 'Sign out' : 'Back to app'}
+            >
+              <ArrowLeft size={24} strokeWidth={2} />
+            </button>
+            <div className="ml-auto flex items-center">
+              <button
+                type="button"
+                onClick={() => void loadUsers()}
+                disabled={loadingUsers}
+                className="flex h-12 w-12 items-center justify-center rounded-full text-foreground transition active:bg-foreground/10 disabled:opacity-50"
+                aria-label="Refresh"
+              >
+                <RefreshCw size={22} className={loadingUsers ? 'animate-spin' : ''} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBulkMenu(true)}
+                className="flex h-12 w-12 items-center justify-center rounded-full text-foreground transition active:bg-foreground/10"
+                aria-label="More actions"
+              >
+                <MoreVertical size={24} />
+              </button>
+            </div>
+          </div>
+          <h1 className="px-4 pt-2 text-[2rem] font-normal leading-tight tracking-tight">Users</h1>
+          <p className="px-4 pb-4 pt-1 text-sm text-muted">
+            Admin · signed in as {displayName}
+          </p>
+        </div>
+
+        <div className="mx-auto hidden max-w-[1600px] items-center gap-3 px-8 py-4 lg:flex">
           <Link
             to="/home"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-elevated text-muted ring-1 ring-border transition active:scale-95"
@@ -488,23 +572,11 @@ export default function Admin() {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">Admin</p>
-              <h1 className="truncate text-base font-semibold tracking-tight lg:text-lg">
-                User Management
-              </h1>
+              <h1 className="truncate text-lg font-semibold tracking-tight">User Management</h1>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => void loadUsers()}
-            disabled={loadingUsers}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-elevated text-muted ring-1 ring-border transition active:scale-95 disabled:opacity-50 lg:hidden"
-            aria-label="Refresh"
-          >
-            <RefreshCw size={18} className={loadingUsers ? 'animate-spin' : ''} />
-          </button>
-
-          <div className="hidden items-center gap-2 sm:flex">
+          <div className="flex items-center gap-2">
             <span className="max-w-[180px] truncate rounded-xl bg-surface-elevated px-3 py-2 text-xs text-muted ring-1 ring-border">
               {displayName}
             </span>
@@ -528,25 +600,25 @@ export default function Admin() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 px-4 py-4 pb-28 lg:gap-5 lg:px-8 lg:py-6 lg:pb-6">
-        <div className="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-4 lg:overflow-visible">
-          <StatPill label="Total accounts" value={users.length} />
-          <StatPill label="Synced data keys" value={totalDataKeys} />
-          <StatPill label="Admin access" value={adminAccessCount} accent="green" />
-          <StatPill label="Signed in as" value={displayName} />
+      <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-3 px-3 pb-28 lg:gap-5 lg:px-8 lg:py-6 lg:pb-6">
+        <div className="grid grid-cols-3 gap-3 lg:grid-cols-4">
+          <StatPill label="Accounts" value={users.length} />
+          <StatPill label="Data keys" value={totalDataKeys} />
+          <StatPill label="Admins" value={adminAccessCount} />
+          <StatPill label="Signed in as" value={displayName} className="hidden lg:flex" />
         </div>
 
         {actionMessage && (
-          <div className="flex items-start gap-2 rounded-2xl border border-green-500/20 bg-green-500/5 px-4 py-3 text-sm">
-            <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-green-600 dark:text-green-400" />
-            <p className="text-green-800 dark:text-green-300">{actionMessage}</p>
+          <div className="flex items-center gap-3 rounded-[1.5rem] bg-surface px-4 py-3 text-sm">
+            <CheckCircle2 size={20} className="shrink-0" />
+            <p className="min-w-0 flex-1">{actionMessage}</p>
             <button
               type="button"
               onClick={() => setActionMessage('')}
-              className="ml-auto shrink-0 rounded-lg p-1 text-muted hover:text-foreground"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted transition active:bg-foreground/10"
               aria-label="Dismiss"
             >
-              <X size={14} />
+              <X size={18} />
             </button>
           </div>
         )}
@@ -557,9 +629,9 @@ export default function Admin() {
             detailOpen ? 'lg:grid-cols-[minmax(0,42%)_minmax(0,1fr)]' : 'lg:grid-cols-1',
           ].join(' ')}
         >
-          <section className="flex min-h-0 flex-col overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
-            <div className="shrink-0 space-y-3 border-b border-border p-4">
-              <div className="flex items-center justify-between gap-3">
+          <section className="flex min-h-0 flex-col overflow-hidden rounded-[1.5rem] bg-surface lg:ring-1 lg:ring-border">
+            <div className="shrink-0 space-y-3 p-3 lg:border-b lg:border-border lg:p-4">
+              <div className="hidden items-center justify-between gap-3 lg:flex">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
                     Users
@@ -568,14 +640,6 @@ export default function Admin() {
                     {filteredUsers.length} account{filteredUsers.length === 1 ? '' : 's'}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowBulkMenu(true)}
-                  className="flex h-10 items-center gap-1.5 rounded-xl bg-surface-elevated px-3 text-sm font-medium text-muted ring-1 ring-border lg:hidden"
-                >
-                  <MoreHorizontal size={16} />
-                  Actions
-                </button>
               </div>
 
               <form
@@ -586,34 +650,37 @@ export default function Admin() {
                 className="relative"
               >
                 <Search
-                  size={16}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                  size={20}
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"
                 />
                 <input
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search name, email, or ID"
-                  className="w-full rounded-xl border border-border bg-background py-3 pl-10 pr-3 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/10"
+                  className="h-14 w-full rounded-full bg-background pl-12 pr-4 text-base outline-none ring-1 ring-transparent transition focus:ring-foreground/30 lg:h-11 lg:rounded-xl lg:text-sm"
                 />
               </form>
 
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 px-1">
                 {(['all', 'admins'] as const).map((filter) => (
                   <button
                     key={filter}
                     type="button"
                     onClick={() => setUserFilter(filter)}
                     className={[
-                      'rounded-full px-3.5 py-1.5 text-xs font-semibold transition',
+                      'h-10 rounded-full px-4 text-sm font-medium transition',
                       userFilter === filter
                         ? 'bg-foreground text-background'
-                        : 'bg-surface-elevated text-muted ring-1 ring-border',
+                        : 'bg-background text-foreground lg:bg-surface-elevated lg:text-muted lg:ring-1 lg:ring-border',
                     ].join(' ')}
                   >
                     {filter === 'all' ? 'All users' : 'Admins only'}
                   </button>
                 ))}
+                <span className="ml-auto text-sm tabular-nums text-muted lg:hidden">
+                  {filteredUsers.length}
+                </span>
               </div>
 
               <div className="hidden flex-wrap items-center gap-2 border-t border-border pt-3 lg:flex">
@@ -700,21 +767,26 @@ export default function Admin() {
                 <p className="p-6 text-sm text-red-600 dark:text-red-400">{usersError}</p>
               ) : filteredUsers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-                  <Users size={28} className="text-muted" />
-                  <p className="mt-3 text-sm font-medium">No users found</p>
-                  <p className="mt-1 text-xs text-muted">Try a different search or filter.</p>
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-foreground/[0.07]">
+                    <Users size={24} />
+                  </span>
+                  <p className="mt-3 text-base">No users found</p>
+                  <p className="mt-1 text-sm text-muted">Try a different search or filter.</p>
                 </div>
               ) : (
                 <>
-                  <div className="md:hidden">
-                    <div className="flex items-center gap-2 border-b border-border px-4 py-2">
-                      <input
-                        type="checkbox"
-                        checked={allSelected}
-                        onChange={toggleAll}
-                        className="h-5 w-5 rounded-md border-border accent-foreground"
-                      />
-                      <span className="text-xs font-medium text-muted">Select all</span>
+                  <div className="pb-2 md:hidden">
+                    <div className="flex items-center justify-between px-4 py-1">
+                      <button
+                        type="button"
+                        onClick={toggleAll}
+                        className="-ml-3 h-10 rounded-full px-3 text-sm font-medium text-foreground transition active:bg-foreground/10"
+                      >
+                        {allSelected ? 'Deselect all' : 'Select all'}
+                      </button>
+                      {selectedCount > 0 && (
+                        <span className="text-sm text-muted">{selectedCount} selected</span>
+                      )}
                     </div>
                     {filteredUsers.map((user) => (
                       <UserRowCard
@@ -802,7 +874,7 @@ export default function Admin() {
             </div>
           </section>
 
-          <section className="hidden min-h-[480px] overflow-hidden rounded-2xl bg-surface ring-1 ring-border lg:flex lg:min-h-0 lg:flex-col">
+          <section className="hidden min-h-[480px] overflow-hidden rounded-[1.5rem] bg-surface ring-1 ring-border lg:flex lg:min-h-0 lg:flex-col">
             {selectedId ? (
               <AdminUserDetail {...detailPanelProps} />
             ) : (
@@ -821,22 +893,32 @@ export default function Admin() {
       </main>
 
       {selectedCount > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 p-4 backdrop-blur-md lg:hidden pb-[max(1rem,var(--sab))]">
+        <div className="fixed inset-x-0 bottom-0 z-40 rounded-t-[1.75rem] bg-surface px-4 pb-[max(1rem,var(--sab))] pt-3 shadow-[0_-8px_24px_rgba(0,0,0,0.12)] lg:hidden">
           <div className="mx-auto flex max-w-lg items-center gap-2">
-            <span className="text-sm font-medium">{selectedCount} selected</span>
+            <span className="flex-1 text-base">{selectedCount} selected</span>
             {confirmDeleteSelected ? (
               <>
-                <button type="button" onClick={() => setConfirmDeleteSelected(false)} className="ml-auto rounded-xl border border-border px-4 py-2.5 text-sm">
+                <button type="button" onClick={() => setConfirmDeleteSelected(false)} className={PILL_TONAL}>
                   Cancel
                 </button>
-                <button type="button" onClick={() => void handleDeleteSelected()} disabled={actionLoading} className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white">
-                  Delete
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteSelected()}
+                  disabled={actionLoading}
+                  className={PILL_DANGER}
+                >
+                  {actionLoading ? 'Deleting…' : 'Delete'}
                 </button>
               </>
             ) : (
-              <button type="button" onClick={() => setConfirmDeleteSelected(true)} className="ml-auto rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white">
-                Delete selected
-              </button>
+              <>
+                <button type="button" onClick={() => setCheckedIds(new Set())} className={PILL_TONAL}>
+                  Clear
+                </button>
+                <button type="button" onClick={() => setConfirmDeleteSelected(true)} className={PILL_DANGER}>
+                  Delete
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -845,40 +927,47 @@ export default function Admin() {
       {showBulkMenu && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button type="button" aria-label="Close actions" onClick={() => setShowBulkMenu(false)} className="absolute inset-0 bg-black/50" />
-          <div className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-surface p-5 pb-[max(1.25rem,var(--sab))] ring-1 ring-border">
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
-            <p className="text-base font-semibold">Bulk actions</p>
-            <p className="mt-1 text-sm text-muted">Manage all accounts at once</p>
-            <div className="mt-4 space-y-2">
+          <div className="absolute inset-x-0 bottom-0 rounded-t-[1.75rem] bg-surface px-3 pb-[max(1rem,var(--sab))] pt-3">
+            <div className="mx-auto mb-3 h-1 w-8 rounded-full bg-muted/50" />
+            <p className="px-4 pb-2 pt-1 text-xl font-normal">All accounts</p>
+            <div className="space-y-1">
               {confirmClearAll ? (
-                <div className="space-y-2">
-                  <p className="text-sm">Clear synced data for every user?</p>
+                <div className="space-y-3 px-4 py-3">
+                  <p className="text-base">Clear synced data for every user?</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <button type="button" onClick={() => setConfirmClearAll(false)} className="rounded-xl border border-border py-3 text-sm">Cancel</button>
-                    <button type="button" onClick={() => void handleClearAllData()} disabled={actionLoading} className="rounded-xl bg-amber-600 py-3 text-sm font-semibold text-white">Confirm</button>
+                    <button type="button" onClick={() => setConfirmClearAll(false)} className={PILL_TONAL}>Cancel</button>
+                    <button type="button" onClick={() => void handleClearAllData()} disabled={actionLoading} className={PILL_PRIMARY}>
+                      {actionLoading ? 'Clearing…' : 'Clear data'}
+                    </button>
                   </div>
                 </div>
               ) : (
-                <button type="button" onClick={() => { setConfirmDeleteAll(false); setConfirmClearAll(true) }} className="w-full rounded-xl bg-surface-elevated py-3.5 text-sm font-medium ring-1 ring-border">
-                  Clear all user data
-                </button>
+                <SheetRow
+                  icon={<Database size={20} />}
+                  label="Clear all user data"
+                  value="Keeps accounts, removes synced data"
+                  onClick={() => { setConfirmDeleteAll(false); setConfirmClearAll(true) }}
+                />
               )}
               {confirmDeleteAll ? (
-                <div className="space-y-2">
-                  <p className="text-sm text-red-600">Delete all {users.length} accounts?</p>
+                <div className="space-y-3 px-4 py-3">
+                  <p className="text-base text-red-600 dark:text-red-400">Delete all {users.length} accounts?</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <button type="button" onClick={() => setConfirmDeleteAll(false)} className="rounded-xl border border-border py-3 text-sm">Cancel</button>
-                    <button type="button" onClick={() => void handleDeleteAllUsers()} disabled={actionLoading} className="rounded-xl bg-red-600 py-3 text-sm font-semibold text-white">Delete all</button>
+                    <button type="button" onClick={() => setConfirmDeleteAll(false)} className={PILL_TONAL}>Cancel</button>
+                    <button type="button" onClick={() => void handleDeleteAllUsers()} disabled={actionLoading} className={PILL_DANGER}>
+                      {actionLoading ? 'Deleting…' : 'Delete all'}
+                    </button>
                   </div>
                 </div>
               ) : (
-                <button type="button" onClick={() => { setConfirmClearAll(false); setConfirmDeleteAll(true) }} className="w-full rounded-xl py-3.5 text-sm font-semibold text-red-600 ring-1 ring-red-500/20">
-                  Delete all accounts
-                </button>
+                <SheetRow
+                  icon={<Trash2 size={20} />}
+                  label="Delete all accounts"
+                  value={`Permanently removes ${users.length} account${users.length === 1 ? '' : 's'}`}
+                  destructive
+                  onClick={() => { setConfirmClearAll(false); setConfirmDeleteAll(true) }}
+                />
               )}
-              <button type="button" onClick={() => setShowBulkMenu(false)} className="w-full rounded-xl py-3.5 text-sm text-muted">
-                Close
-              </button>
             </div>
           </div>
         </div>

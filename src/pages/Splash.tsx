@@ -4,10 +4,12 @@ import AuthPageShell from '../components/AuthPageShell'
 import AuthVideoBackground from '../components/AuthVideoBackground'
 import Button from '../components/Button'
 import { useAuth } from '../context/AuthContext'
+import { isGuestProfile } from '../lib/localAccount'
 
 export default function Splash() {
   const navigate = useNavigate()
   const { user, isLoading, localProfile, resumeLocalSession, continueAsGuest } = useAuth()
+  const savedGuest = isGuestProfile(localProfile)
 
   function handleGuest() {
     continueAsGuest()
@@ -52,7 +54,7 @@ export default function Splash() {
           </h1>
 
           <div className="mt-10 space-y-3">
-            {localProfile ? (
+            {localProfile && !savedGuest ? (
               <>
                 <Button fullWidth className="py-4 text-base" onClick={handleContinueLocal}>
                   Continue as {localProfile.name}
