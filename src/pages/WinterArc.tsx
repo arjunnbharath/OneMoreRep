@@ -1,4 +1,6 @@
-import { ArrowLeft, Check, ChevronRight, Plus, Snowflake, Trash2 } from 'lucide-react'
+import { ArrowLeft, CalendarDays, Check, ChevronRight, Plus, Snowflake, Trash2 } from 'lucide-react'
+import WinterArcHistory from '../components/winter-arc/WinterArcHistory'
+import WinterSnow from '../components/winter-arc/WinterSnow'
 import FireEmoji from '../components/ui/FireEmoji'
 import { useMemo, useState, type ReactNode } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
@@ -14,18 +16,6 @@ import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
 import { useWindowScrolled } from '../hooks/useWindowScrolled'
 import type { WinterArcDailyTask } from '../types/winterArc'
-
-/** Fixed positions so the snowfall looks the same on every render. */
-const FLAKES = [
-  { left: '8%', top: '18%', size: 10, opacity: 0.35 },
-  { left: '22%', top: '62%', size: 6, opacity: 0.25 },
-  { left: '38%', top: '30%', size: 8, opacity: 0.2 },
-  { left: '55%', top: '12%', size: 12, opacity: 0.3 },
-  { left: '70%', top: '48%', size: 7, opacity: 0.25 },
-  { left: '84%', top: '22%', size: 9, opacity: 0.35 },
-  { left: '92%', top: '70%', size: 6, opacity: 0.2 },
-  { left: '14%', top: '86%', size: 8, opacity: 0.2 },
-]
 
 function StatChip({ value, label }: { value: ReactNode; label: string }) {
   return (
@@ -106,6 +96,7 @@ export default function WinterArc() {
   const { sessions } = useWorkoutTracker()
   const { plan } = useWorkoutPlan()
   const [draft, setDraft] = useState('')
+  const [showHistory, setShowHistory] = useState(false)
   const collapsed = useWindowScrolled(24)
 
   const progress = useMemo(
@@ -203,20 +194,7 @@ export default function WinterArc() {
           className="pointer-events-none absolute -right-16 top-10 h-56 w-56 rounded-full bg-sky-400/20 blur-3xl"
           aria-hidden
         />
-        {FLAKES.map((flake, index) => (
-          <Snowflake
-            key={index}
-            aria-hidden
-            className="pointer-events-none absolute text-sky-100"
-            style={{
-              left: flake.left,
-              top: flake.top,
-              width: flake.size,
-              height: flake.size,
-              opacity: flake.opacity,
-            }}
-          />
-        ))}
+        <WinterSnow />
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent"
           aria-hidden
@@ -324,7 +302,31 @@ export default function WinterArc() {
             </div>
           </section>
         )}
+
+        <button
+          type="button"
+          onClick={() => setShowHistory(true)}
+          className="mt-3 flex min-h-[4.5rem] w-full items-center gap-4 rounded-[1.5rem] bg-surface px-4 py-3 text-left ring-1 ring-sky-400/15 transition active:bg-foreground/[0.06]"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500/15 text-sky-600 dark:text-sky-300">
+            <CalendarDays size={20} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-base leading-6">History</span>
+            <span className="block text-sm leading-5 text-muted">Your 3 months, day by day</span>
+          </span>
+          <ChevronRight size={20} className="shrink-0 text-muted" />
+        </button>
       </div>
+
+      {showHistory && (
+        <WinterArcHistory
+          state={state}
+          sessions={sessions}
+          plan={plan}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
     </div>
   )
 }

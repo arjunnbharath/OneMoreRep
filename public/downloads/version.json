@@ -1,7 +1,7 @@
 {
-  "versionCode": 10,
-  "versionName": "1.8",
+  "versionCode": 11,
+  "versionName": "1.9",
   "apkUrl": "/downloads/OneMoreRep.apk",
-  "notes": "Pinned collapsing headers on Home, Calories, Profile and Settings. Redesigned Winter Arc. Android-style admin panel.",
-  "publishedAt": "2026-10-05T16:07:20.321Z"
+  "notes": "Winter Arc history calendar with month switching, day details and weekly graph; cleaner Winter Arc widget with animated snow",
+  "publishedAt": "2026-10-05T16:28:44.496Z"
 }

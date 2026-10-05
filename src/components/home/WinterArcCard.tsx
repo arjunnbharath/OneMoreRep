@@ -1,5 +1,6 @@
-import { ChevronRight, Snowflake } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import FireEmoji from '../ui/FireEmoji'
+import WinterSnow from '../winter-arc/WinterSnow'
 import { formatWinterArcEndDate } from '../../lib/winterArc'
 import type { WinterArcProgress } from '../../types/winterArc'
 
@@ -21,7 +22,6 @@ export default function WinterArcCard({
   const {
     dayNumber,
     totalDays,
-    daysRemaining,
     streak,
     arcComplete,
     progressPercent,
@@ -36,28 +36,31 @@ export default function WinterArcCard({
       type="button"
       onClick={onOpen}
       data-tour="winter-arc"
-      className="w-full overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-blue-950 text-left ring-1 ring-white/10 outline-none"
+      className="relative w-full overflow-hidden rounded-2xl bg-[radial-gradient(120%_90%_at_85%_0%,#1d4ed8_0%,#0f172a_60%,#020617_100%)] text-left ring-1 ring-white/10 outline-none"
     >
-      <div className="p-4">
+      <div
+        className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-sky-400/20 blur-3xl"
+        aria-hidden
+      />
+      <WinterSnow />
+      <div className="relative p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
-                <Snowflake size={16} className="text-sky-200" />
-              </span>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/50">
-                  Winter Arc
-                </p>
-                <p className="text-base font-semibold tracking-tight text-white">
-                  {arcComplete ? 'Arc complete' : `Day ${dayNumber} of ${totalDays}`}
-                </p>
-              </div>
-            </div>
-            <p className="mt-2 text-xs text-white/55">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/50">
+              Winter Arc
+            </p>
+            {arcComplete ? (
+              <p className="mt-0.5 text-xl font-semibold tracking-tight text-white">Arc complete</p>
+            ) : (
+              <p className="mt-0.5 text-xl font-semibold tracking-tight text-white">
+                Day {dayNumber}
+                <span className="ml-1 text-base font-normal text-white/45">/ {totalDays}</span>
+              </p>
+            )}
+            <p className="mt-1 text-xs text-white/55">
               {arcComplete
                 ? `${totalWorkouts} workouts logged during your arc`
-                : `${daysRemaining} days left · ends ${formatWinterArcEndDate(endDateKey)}`}
+                : `Ends ${formatWinterArcEndDate(endDateKey)}`}
             </p>
           </div>
 
@@ -72,17 +75,18 @@ export default function WinterArcCard({
           </div>
         </div>
 
-        <div className="mt-4">
-          <div className="mb-1.5 flex items-center justify-between text-[11px] text-white/55">
-            <span>Arc progress</span>
-            <span className="tabular-nums">{progressPercent}%</span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-300 transition-all"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
+        <div
+          className="mt-4 h-1 overflow-hidden rounded-full bg-white/10"
+          role="progressbar"
+          aria-label="Arc progress"
+          aria-valuenow={progressPercent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-sky-300 to-blue-500 transition-all"
+            style={{ width: `${progressPercent}%` }}
+          />
         </div>
 
         {!arcComplete && tasksTotal > 0 && (

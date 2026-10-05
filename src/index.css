@@ -561,8 +561,32 @@ input:-webkit-autofill:focus {
   background-color: var(--color-surface-elevated);
 }
 
+/* Winter Arc snowfall: each flake falls through its `relative` parent and sways. */
+@keyframes winter-snow-fall {
+  0% {
+    top: -10%;
+    transform: translateX(0) rotate(0deg);
+  }
+  50% {
+    transform: translateX(var(--snow-drift, 12px)) rotate(180deg);
+  }
+  100% {
+    top: 105%;
+    transform: translateX(0) rotate(360deg);
+  }
+}
+
+.winter-snow-flake {
+  animation: winter-snow-fall linear infinite;
+  will-change: top, transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .calendar-month-bg {
+    animation: none;
+  }
+
+  .winter-snow-flake {
     animation: none;
   }
 
