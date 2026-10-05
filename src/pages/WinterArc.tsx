@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarDays, Check, ChevronRight, Plus, Snowflake, Trash2 } from 'lucide-react'
+import { ArrowLeft, CalendarDays, Check, ChevronRight, Plus, Snowflake, X } from 'lucide-react'
 import WinterArcHistory from '../components/winter-arc/WinterArcHistory'
 import WinterSnow from '../components/winter-arc/WinterSnow'
 import FireEmoji from '../components/ui/FireEmoji'
@@ -38,7 +38,7 @@ function HabitRow({
   const isWorkout = task.kind === 'workout'
 
   return (
-    <div className="flex min-h-14 items-center gap-3 px-4 py-2.5">
+    <div className="flex min-h-12 items-center gap-3 py-1">
       <button
         type="button"
         onClick={onPress}
@@ -48,42 +48,30 @@ function HabitRow({
       >
         <span
           className={[
-            'flex h-7 w-7 items-center justify-center rounded-full transition',
-            task.completed
-              ? 'bg-gradient-to-br from-sky-300 to-blue-500 text-white shadow-[0_0_12px_rgba(56,189,248,0.45)]'
-              : 'ring-2 ring-inset ring-sky-300/30',
+            'flex h-5 w-5 items-center justify-center rounded-full transition',
+            task.completed ? 'bg-foreground text-background' : 'ring-[1.5px] ring-inset ring-foreground/25',
           ].join(' ')}
         >
-          {task.completed ? <Check size={15} strokeWidth={3} /> : null}
+          {task.completed ? <Check size={12} strokeWidth={3} /> : null}
         </span>
       </button>
 
       <button type="button" onClick={onPress} className="min-w-0 flex-1 text-left">
-        <p
-          className={[
-            'text-[15px]',
-            task.completed && !isWorkout ? 'text-muted line-through' : 'text-foreground',
-          ].join(' ')}
-        >
+        <span className={['text-[15px]', task.completed ? 'text-muted' : 'text-foreground'].join(' ')}>
           {task.label}
-        </p>
-        {isWorkout && (
-          <p className="text-xs text-sky-500 dark:text-sky-300/80">
-            {task.completed ? 'Trained today' : 'Tap to start today’s workout'}
-          </p>
-        )}
+        </span>
       </button>
 
       {isWorkout ? (
-        <ChevronRight size={20} className="shrink-0 text-muted" />
+        !task.completed && <ChevronRight size={18} className="shrink-0 text-muted/60" />
       ) : onRemove ? (
         <button
           type="button"
           onClick={onRemove}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:text-red-500 active:bg-foreground/10"
+          className="-mr-2 flex h-9 w-9 items-center justify-center rounded-full text-muted/50 transition hover:text-red-500 active:bg-foreground/10"
           aria-label="Remove"
         >
-          <Trash2 size={16} />
+          <X size={15} />
         </button>
       ) : null}
     </div>
@@ -138,8 +126,6 @@ export default function WinterArc() {
   }
 
   const title = progress.arcComplete ? 'Arc complete' : `Day ${progress.dayNumber}`
-  const habitPercent = total > 0 ? Math.round((completed / total) * 100) : 0
-
   return (
     <div className="min-h-full bg-background pb-24 lg:pb-10">
       {/* Mobile top bar: sits on the night sky, turns into frosted ice once the page scrolls. */}
@@ -248,35 +234,28 @@ export default function WinterArc() {
 
       <div className="mx-auto max-w-2xl px-3 py-2 lg:px-8 lg:py-5">
         {!progress.arcComplete && (
-          <section className="overflow-hidden rounded-[1.5rem] bg-surface ring-1 ring-sky-400/15">
-            <div className="px-4 pb-3 pt-4">
-              <div className="flex items-center justify-between">
-                <p className="text-base font-medium">Daily habits</p>
-                <p className="text-sm font-medium tabular-nums text-sky-600 dark:text-sky-300">
-                  {completed}/{total}
-                </p>
-              </div>
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-sky-500/10">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-sky-300 to-blue-500 transition-all duration-500"
-                  style={{ width: `${habitPercent}%` }}
-                />
-              </div>
+          <section className="rounded-[1.5rem] bg-surface px-4 pb-2 pt-4">
+            <div className="flex items-baseline justify-between">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">Today</p>
+              <p className="text-xs tabular-nums text-muted">
+                {completed}/{total}
+              </p>
             </div>
 
-            <ul>
+            <ul className="mt-1 divide-y divide-border/60">
               {habits.map((task) => (
                 <li key={task.id}>
                   <HabitRow
                     task={task}
                     onPress={() => handlePress(task)}
-                    onRemove={task.kind === 'habit' ? () => removeTask(task.id) : undefined}
+                    onRemove={task.kind === 'workout' ? undefined : () => removeTask(task.id)}
                   />
                 </li>
               ))}
             </ul>
 
-            <div className="flex items-center gap-2 p-3">
+            <div className="flex min-h-12 items-center gap-3 border-t border-border/60">
+              <Plus size={18} className="shrink-0 text-muted" />
               <input
                 type="text"
                 value={draft}
@@ -288,17 +267,18 @@ export default function WinterArc() {
                   }
                 }}
                 placeholder="Add a habit"
-                className="h-12 min-w-0 flex-1 rounded-full bg-background px-5 text-[15px] outline-none ring-1 ring-sky-400/15 transition placeholder:text-muted focus:ring-sky-400/50"
+                className="h-12 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted"
               />
-              <button
-                type="button"
-                onClick={handleAdd}
-                disabled={!draft.trim()}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-[0_6px_18px_rgba(37,99,235,0.35)] transition active:scale-95 disabled:opacity-40 disabled:shadow-none"
-                aria-label="Add habit"
-              >
-                <Plus size={20} />
-              </button>
+              {draft.trim() && (
+                <button
+                  type="button"
+                  onClick={handleAdd}
+                  className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-foreground transition active:bg-foreground/10"
+                  aria-label="Add habit"
+                >
+                  <Check size={18} strokeWidth={2.5} />
+                </button>
+              )}
             </div>
           </section>
         )}
@@ -306,16 +286,11 @@ export default function WinterArc() {
         <button
           type="button"
           onClick={() => setShowHistory(true)}
-          className="mt-3 flex min-h-[4.5rem] w-full items-center gap-4 rounded-[1.5rem] bg-surface px-4 py-3 text-left ring-1 ring-sky-400/15 transition active:bg-foreground/[0.06]"
+          className="mt-3 flex min-h-12 w-full items-center gap-3 rounded-[1.5rem] bg-surface px-4 text-left transition active:bg-foreground/[0.06]"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500/15 text-sky-600 dark:text-sky-300">
-            <CalendarDays size={20} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-base leading-6">History</span>
-            <span className="block text-sm leading-5 text-muted">Your 3 months, day by day</span>
-          </span>
-          <ChevronRight size={20} className="shrink-0 text-muted" />
+          <CalendarDays size={18} className="shrink-0 text-muted" />
+          <span className="min-w-0 flex-1 text-[15px]">History</span>
+          <ChevronRight size={18} className="shrink-0 text-muted/60" />
         </button>
       </div>
 

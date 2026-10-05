@@ -56,7 +56,7 @@ export function formatLastPerformance(exercise: TrackedExercise) {
     const bestEst = estimate1RM(best.weight ?? 0, best.reps)
     return est > bestEst ? set : best
   })
-  if (top.weight) return `${top.weight} kg × ${top.reps}`
+  if (top.weight) return `${top.weight} kg, ${top.reps} reps`
   return `${top.reps} reps`
 }
 

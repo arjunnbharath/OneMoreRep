@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useOpenExercise } from '../hooks/useOpenExercise'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 import ExerciseImage from '../components/ExerciseImage'
 import {
@@ -29,9 +30,11 @@ export default function MuscleGroupExercises() {
     navigate('/home')
   }
 
+  const openExerciseSheet = useOpenExercise()
+
   function openExercise(exerciseId: string) {
     saveScrollPosition(location.pathname, location.search, location.hash)
-    navigate(`/exercises/${exerciseId}`)
+    openExerciseSheet(exerciseId)
   }
 
   if (!groupId || !isExerciseGroup(groupId)) {

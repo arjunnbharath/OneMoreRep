@@ -4,7 +4,7 @@ import type { TrackedExercise, WorkoutSet } from '../../types/tracker'
 function previousForSet(lastExercise: TrackedExercise | null, setIndex: number) {
   const last = lastExercise?.sets[setIndex]
   if (!last) return null
-  if (last.weight) return `${last.weight} kg Ã— ${last.reps}`
+  if (last.weight) return `${last.weight} kg, ${last.reps} reps`
   return `${last.reps} reps`
 }
 

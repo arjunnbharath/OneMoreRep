@@ -289,6 +289,57 @@ input:-webkit-autofill:focus {
   animation: add-food-sheet-out 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+@keyframes sheet-panel-in {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes sheet-panel-out {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+@keyframes sheet-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sheet-panel {
+  will-change: transform;
+  contain: layout paint;
+  animation: sheet-panel-in 0.38s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.sheet-panel--closed {
+  animation: sheet-panel-out 0.28s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.sheet-backdrop {
+  animation: sheet-backdrop-in 0.3s ease-out both;
+}
+
+.sheet-backdrop--closed {
+  animation: sheet-backdrop-in 0.28s ease-in reverse both;
+}
+
+/* Fill mode "backwards" leaves no transform behind, so fixed overlays inside stay viewport-anchored. */
+.sheet-page-in {
+  transform-origin: 50% 100%;
+  animation: add-food-sheet-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
 @keyframes add-food-step-in {
   from {
     opacity: 0;
@@ -594,7 +645,12 @@ input:-webkit-autofill:focus {
     animation: none;
   }
 
-  .winter-snow-flake {
+  .winter-snow-flake,
+  .sheet-page-in,
+  .sheet-panel,
+  .sheet-panel--closed,
+  .sheet-backdrop,
+  .sheet-backdrop--closed {
     animation: none;
   }
 

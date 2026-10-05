@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useOpenExercise } from '../../hooks/useOpenExercise'
 import { ArrowLeft, ChevronDown, ChevronRight, Plus, Search, Trash2 } from 'lucide-react'
 import SwipeablePlanDayCard, { SWIPE_HINT_TOTAL_MS } from '../plan/SwipeablePlanDayCard'
 import ExerciseImage from '../ExerciseImage'
@@ -292,7 +292,7 @@ function MuscleScreen({
   onAddExercise: WeeklyPlanPanelProps['onAddExercise']
   onRemoveExercise: WeeklyPlanPanelProps['onRemoveExercise']
 }) {
-  const navigate = useNavigate()
+  const openExercise = useOpenExercise()
   const appInstalled = useAppInstalled()
   const [addedExpanded, setAddedExpanded] = useState(false)
   const [search, setSearch] = useState('')
@@ -463,9 +463,7 @@ function MuscleScreen({
                         <button
                           type="button"
                           onClick={() =>
-                            navigate(`/exercises/${exercise.id}`, {
-                              state: { fromPlan: true, planDay: day, planMuscle: group },
-                            })
+                            openExercise(exercise.id, { fromPlan: true, planDay: day, planMuscle: group })
                           }
                           className="flex h-7 items-center gap-0.5 rounded-full bg-foreground/5 px-2.5 text-[10px] font-medium text-muted ring-1 ring-border/60 backdrop-blur-sm transition hover:bg-foreground/10 hover:text-foreground dark:bg-white/5 dark:ring-white/10"
                         >

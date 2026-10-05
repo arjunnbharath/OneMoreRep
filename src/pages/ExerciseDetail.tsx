@@ -1,5 +1,6 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Dumbbell, Lightbulb, ListOrdered } from 'lucide-react'
+import type { SheetLocationState } from '../hooks/useOpenExercise'
+import { ArrowLeft, Dumbbell, Lightbulb, ListOrdered, X } from 'lucide-react'
 import Button from '../components/Button'
 import ExerciseImage from '../components/ExerciseImage'
 import { exerciseGroupLabels, getExerciseById, type ExerciseGroup } from '../data/exerciseGuides'
@@ -14,7 +15,7 @@ type PlanContext = {
   planMuscle?: ExerciseGroup
 }
 
-export default function ExerciseDetail() {
+export default function ExerciseDetail({ onClose }: { onClose?: () => void } = {}) {
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -56,6 +57,14 @@ export default function ExerciseDetail() {
     if (!alreadyInPlan) {
       addExercise(planDay, planMuscle, currentExercise.name, 3, 12)
     }
+    if (onClose) {
+      onClose()
+      return
+    }
+    if ((location.state as SheetLocationState | null)?.backgroundLocation) {
+      navigate(-1)
+      return
+    }
     navigate(TRACKER_PATHS.planMuscle(planDay, planMuscle))
   }
 
@@ -68,14 +77,25 @@ export default function ExerciseDetail() {
           className="h-full w-full object-cover"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30 lg:from-black/50 lg:via-black/10" />
-        {!appInstalled && (
+        {onClose ? (
           <button
             type="button"
-            onClick={() => navigate(-1)}
-            className="absolute left-5 top-[max(1.5rem,var(--sat))] flex h-10 w-10 items-center justify-center rounded-xl bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md transition active:scale-95"
           >
-            <ArrowLeft size={20} />
+            <X size={18} strokeWidth={2.5} />
           </button>
+        ) : (
+          !appInstalled && (
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="absolute left-5 top-[max(1.5rem,var(--sat))] flex h-10 w-10 items-center justify-center rounded-xl bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
+            >
+              <ArrowLeft size={20} />
+            </button>
+          )
         )}
       </div>
 

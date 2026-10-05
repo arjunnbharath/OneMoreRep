@@ -31,6 +31,7 @@ import MuscleExerciseList from '../components/home/MuscleExerciseList'
 import ExerciseLibraryPanel from '../components/exercise-library/ExerciseLibraryPanel'
 import WeeklyPlanPanel from '../components/tracker/WeeklyPlanPanel'
 import PlanOnboarding from '../components/tracker/PlanOnboarding'
+import ConfirmSheet from '../components/ui/ConfirmSheet'
 import { exerciseGuides, type ExerciseGroup } from '../data/exerciseGuides'
 import { heroImage } from '../data/mockData'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
@@ -48,7 +49,6 @@ import {
 import {
   detectSessionPRs,
   findLastExerciseLog,
-  formatLastPerformance,
   getExerciseHistory,
   getLoggedExerciseNames,
   getSessionDurationSeconds,
@@ -199,6 +199,7 @@ export default function Tracker() {
   } | null>(null)
   const [tick, setTick] = useState(0)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [showFinishSummary, setShowFinishSummary] = useState<WorkoutSession | null>(null)
   const [restSeconds, setRestSeconds] = useState<number | null>(null)
   const restSecondsRef = useRef(restSeconds)
@@ -300,13 +301,15 @@ export default function Tracker() {
     const hasProgress = activeSession.exercises.some((exercise) =>
       exercise.sets.some((set) => set.completed),
     )
-    if (
-      hasProgress &&
-      !window.confirm('Cancel this workout? Your progress will not be saved.')
-    ) {
+    if (hasProgress) {
+      setShowCancelConfirm(true)
       return
     }
+    discardSession()
+  }
 
+  function discardSession() {
+    setShowCancelConfirm(false)
     cancelSession()
     setDayWorkoutFlow(null)
     setReadyForNextMuscle(null)
@@ -418,8 +421,6 @@ export default function Tracker() {
 
   function renderExerciseCard(exercise: TrackedExercise) {
     const lastLog = findLastExerciseLog(sessions, exercise.name)
-    const lastPerf = lastLog ? formatLastPerformance(lastLog) : null
-
     return (
       <li key={exercise.id} className="rounded-[1.5rem] bg-surface p-4">
         <div className="flex items-start justify-between gap-3">
@@ -434,7 +435,6 @@ export default function Tracker() {
             >
               {exercise.name}
             </button>
-            {lastPerf && <p className="mt-0.5 text-sm text-muted">Last {lastPerf}</p>}
           </div>
           <button
             type="button"
@@ -852,7 +852,7 @@ export default function Tracker() {
       )}
 
       {view === 'workout' && activeSession && (
-        <div className="pt-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:px-10">
+        <div key={activeSession.id} className="sheet-page-in pt-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:px-10">
           <div>
             <section className="relative mx-5 overflow-hidden rounded-3xl lg:mx-0">
               <img src={heroImage} alt="" className="h-44 w-full object-cover lg:h-52" />
@@ -1039,6 +1039,18 @@ Add an exercise to see progress
         </div>
       )}
       </div>
+
+      <ConfirmSheet
+        open={showCancelConfirm}
+        icon={<Trash2 size={24} />}
+        title="Cancel this workout?"
+        message="Your logged sets won't be saved. This can't be undone."
+        confirmLabel="Discard workout"
+        cancelLabel="Keep going"
+        destructive
+        onConfirm={discardSession}
+        onCancel={() => setShowCancelConfirm(false)}
+      />
     </div>
   )
 }

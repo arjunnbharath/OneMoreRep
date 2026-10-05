@@ -10,6 +10,8 @@ export interface WinterArcState {
   showOnHome: boolean
   tasks: WinterArcTask[]
   completedByDate: Record<string, string[]>
+  /** Day the built-in Sugar cut habit was removed; earlier days keep it in history. */
+  sugarCutRemovedAt: string | null
 }
 
 export const DEFAULT_WINTER_ARC_STATE: WinterArcState = {
@@ -19,6 +21,7 @@ export const DEFAULT_WINTER_ARC_STATE: WinterArcState = {
   showOnHome: true,
   tasks: [],
   completedByDate: {},
+  sugarCutRemovedAt: null,
 }
 
 export interface WinterArcProgress {

@@ -1,7 +1,7 @@
 {
-  "versionCode": 12,
-  "versionName": "1.9.1",
+  "versionCode": 15,
+  "versionName": "1.9.2",
   "apkUrl": "/downloads/OneMoreRep.apk",
-  "notes": "Phone login and sign-up now work; minimal Winter Arc habits list; hidden scrollbars",
-  "publishedAt": "2026-10-05T16:50:16.401Z"
+  "notes": "Exercise guides open as a sheet; new cancel-workout dialog; month photo backgrounds on exercise cards; minimal Winter Arc habits with Sugar cut delete; borderless Winter Arc widget; removed uninstall",
+  "publishedAt": "2026-10-05T17:49:50.471Z"
 }

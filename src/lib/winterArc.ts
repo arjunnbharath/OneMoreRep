@@ -175,7 +175,8 @@ export function getDailyTasks(
     completed: completedIds.includes(task.id),
   }))
 
-  return [workoutTask, sugarTask, ...habitTasks]
+  const sugarActive = !state.sugarCutRemovedAt || dateKey < state.sugarCutRemovedAt
+  return sugarActive ? [workoutTask, sugarTask, ...habitTasks] : [workoutTask, ...habitTasks]
 }
 
 export function summarizeDailyTasks(tasks: WinterArcDailyTask[]) {

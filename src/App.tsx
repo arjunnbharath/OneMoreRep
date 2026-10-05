@@ -1,6 +1,8 @@
 import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import ScrollToTop from './components/ScrollToTop'
+import ExerciseSheet from './components/exercise-library/ExerciseSheet'
+import type { SheetLocationState } from './hooks/useOpenExercise'
 import PushNotificationSync from './components/PushNotificationSync'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -31,11 +33,14 @@ function PageLoader() {
 }
 
 export default function App() {
+  const location = useLocation()
+  const backgroundLocation = (location.state as SheetLocationState | null)?.backgroundLocation
+
   return (
     <>
       <ScrollToTop />
       <PushNotificationSync />
-      <Routes>
+      <Routes location={backgroundLocation ?? location}>
       <Route path="/" element={<Splash />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
@@ -65,6 +70,11 @@ export default function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+      {backgroundLocation && (
+        <Routes>
+          <Route path="/exercises/:id" element={<ExerciseSheet />} />
+        </Routes>
+      )}
     </>
   )
 }

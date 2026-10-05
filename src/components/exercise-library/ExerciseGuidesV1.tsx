@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useOpenExercise } from '../../hooks/useOpenExercise'
 import { ArrowLeft, BookOpen, ChevronRight, Search } from 'lucide-react'
 import { useAppInstalled } from '../../hooks/useAppInstalled'
 import ExerciseImage from '../ExerciseImage'
@@ -72,9 +73,7 @@ export default function ExerciseGuidesV1({
     navigate('/tracker/workout')
   }
 
-  function openExercise(id: string) {
-    navigate(`/exercises/${id}`)
-  }
+  const openExercise = useOpenExercise()
 
   return (
     <div className="min-h-full bg-background text-foreground">

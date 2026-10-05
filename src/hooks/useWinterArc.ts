@@ -7,6 +7,7 @@ import {
   DEFAULT_WINTER_ARC_WEEKLY_TARGET,
   normalizeCompletedByDate,
   normalizeWinterArcTasks,
+  SUGAR_CUT_TASK_ID,
   WORKOUT_TASK_ID,
 } from '../lib/winterArc'
 import {
@@ -29,6 +30,7 @@ function normalizeWinterArcState(raw: unknown): WinterArcState {
     showOnHome: record.showOnHome !== false,
     tasks: normalizeWinterArcTasks(record.tasks),
     completedByDate: normalizeCompletedByDate(record.completedByDate),
+    sugarCutRemovedAt: typeof record.sugarCutRemovedAt === 'string' ? record.sugarCutRemovedAt : null,
   }
 }
 
@@ -81,6 +83,7 @@ export function useWinterArc() {
       showOnHome: true,
       tasks: [],
       completedByDate: {},
+      sugarCutRemovedAt: null,
     })
   }
 
@@ -102,6 +105,18 @@ export function useWinterArc() {
   }
 
   function removeTask(taskId: string) {
+    if (taskId === SUGAR_CUT_TASK_ID) {
+      const todayKey = toDateKey(new Date())
+      setState((current) => ({
+        ...current,
+        sugarCutRemovedAt: todayKey,
+        completedByDate: {
+          ...current.completedByDate,
+          [todayKey]: (current.completedByDate[todayKey] ?? []).filter((id) => id !== SUGAR_CUT_TASK_ID),
+        },
+      }))
+      return
+    }
     setState((current) => {
       const completedByDate: Record<string, string[]> = {}
       for (const [dateKey, ids] of Object.entries(current.completedByDate)) {

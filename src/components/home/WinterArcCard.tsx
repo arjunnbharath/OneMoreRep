@@ -36,7 +36,7 @@ export default function WinterArcCard({
       type="button"
       onClick={onOpen}
       data-tour="winter-arc"
-      className="relative w-full overflow-hidden rounded-2xl bg-[radial-gradient(120%_90%_at_85%_0%,#1d4ed8_0%,#0f172a_60%,#020617_100%)] text-left ring-1 ring-white/10 outline-none"
+      className="relative w-full overflow-hidden rounded-2xl bg-[radial-gradient(120%_90%_at_85%_0%,#1d4ed8_0%,#0f172a_60%,#020617_100%)] text-left outline-none"
     >
       <div
         className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-sky-400/20 blur-3xl"
