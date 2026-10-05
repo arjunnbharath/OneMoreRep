@@ -35,8 +35,11 @@ export default function HomeMobile({
 
   return (
     <div className="min-h-full bg-background text-foreground lg:hidden">
-      <header className="px-5 pb-6 pt-[max(2rem,var(--sat))]">
-        <AppWordmark className="mb-4" />
+      {/* Pinned wordmark: the page content scrolls underneath it. */}
+      <div className="fixed inset-x-0 top-0 z-30 flex h-[calc(var(--sat)+2.75rem)] items-end bg-background/85 px-5 pb-3 backdrop-blur-md">
+        <AppWordmark size="lg" />
+      </div>
+      <header className="px-5 pb-6 pt-[calc(var(--sat)+3.5rem)]">
         <HomeStatsStrip
           stats={stats}
           sessionCount={sessionCount}

@@ -114,7 +114,17 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     throw new Error(await parseError(res))
   }
 
-  return res.json() as Promise<T>
+  const text = await res.text()
+  try {
+    return JSON.parse(text) as T
+  } catch {
+    // The SPA fallback answered with index.html: the request never reached the API.
+    throw new Error(
+      import.meta.env.VITE_API_URL
+        ? 'The server returned a web page instead of data. Check that VITE_API_URL points to the deployed site.'
+        : 'This app build has no server address. Set VITE_API_URL to the website URL and rebuild the app.',
+    )
+  }
 }
 
 export async function login(identifier: string, password: string): Promise<LoginResponse> {

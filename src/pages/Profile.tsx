@@ -22,6 +22,7 @@ import { useCalorieTracker } from '../hooks/useCalorieTracker'
 import { useWinterArc } from '../hooks/useWinterArc'
 import { useWorkoutTracker } from '../hooks/useWorkoutTracker'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
+import { useWindowScrolled } from '../hooks/useWindowScrolled'
 import { toLocalDateKey } from '../lib/nutritionMath'
 import { sessionVolume } from '../lib/workoutProgress'
 import { computeStreak, toDateKey } from './home/homeUtils'
@@ -48,6 +49,7 @@ export default function Profile() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, token, isLocal, logout, deleteAccount, changePassword, refreshUser } = useAuth()
+  const profileCollapsed = useWindowScrolled(24)
   const { isDark, setTheme } = useTheme()
   const { replayTour } = useTour()
   const { sessions } = useWorkoutTracker()
@@ -174,9 +176,25 @@ export default function Profile() {
 
   return (
     <div className="min-h-full bg-background text-foreground lg:desktop-page lg:mx-auto lg:max-w-6xl">
-      <header className="px-4 pt-[calc(var(--sat)+1.25rem)] lg:hidden">
-        <h1 className="text-[2rem] font-normal leading-tight tracking-tight">Profile</h1>
-        <div className="mt-5 flex items-center gap-4">
+      <div
+        className={[
+          'fixed inset-x-0 top-0 z-30 flex items-center px-4 pt-[var(--sat)] transition-all duration-200 lg:hidden',
+          profileCollapsed
+            ? 'h-[calc(var(--sat)+3.5rem)] bg-background/85 backdrop-blur-md'
+            : 'h-[calc(var(--sat)+4.5rem)] bg-background',
+        ].join(' ')}
+      >
+        <h1
+          className={[
+            'truncate font-normal leading-tight tracking-tight transition-all duration-200',
+            profileCollapsed ? 'text-[1.375rem]' : 'text-[2rem]',
+          ].join(' ')}
+        >
+          Profile
+        </h1>
+      </div>
+      <header className="px-4 pt-[calc(var(--sat)+4.5rem)] lg:hidden">
+        <div className="mt-2 flex items-center gap-4">
           <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} size="lg" />
           <div className="min-w-0">
             <p className="truncate text-xl font-medium">{user?.name}</p>

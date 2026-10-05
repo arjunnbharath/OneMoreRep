@@ -19,6 +19,7 @@ import {
   WeeklyCalorieSection,
 } from '../components/calories/CalorieWidgets'
 import { toLocalDateKey } from '../lib/nutritionMath'
+import { useWindowScrolled } from '../hooks/useWindowScrolled'
 import { CalorieTrackerProvider, useCalorieTrackerContext } from '../context/CalorieTrackerContext'
 import type {
   ActivityLevel,
@@ -166,6 +167,7 @@ function DailyLog() {
   const [addMeal, setAddMeal] = useState<MealType>('lunch')
   const [showSettings, setShowSettings] = useState(false)
   const [expandedMeal, setExpandedMeal] = useState<MealType | null>('breakfast')
+  const collapsed = useWindowScrolled(16)
 
   if (!profile) return null
 
@@ -198,23 +200,43 @@ function DailyLog() {
       </header>
 
       <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10 lg:px-10 lg:py-8">
-        <div className="px-5 pb-6 pt-[calc(var(--sat)+3.25rem)] lg:px-0 lg:py-0">
-          <header className="flex items-start justify-between lg:hidden">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
-                Nutrition
-              </p>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+        <div className="px-5 pb-6 pt-[calc(var(--sat)+5.25rem)] lg:px-0 lg:py-0">
+          {/*
+            Pinned top bar. Expanded it stacks "Nutrition" over the date; once the
+            page scrolls it shrinks to a single "Today · Nutrition" line and the
+            widgets slide underneath it.
+          */}
+          <header
+            className={[
+              'fixed inset-x-0 top-0 z-30 flex items-center justify-between bg-background/85 px-5 pt-[var(--sat)] backdrop-blur-md transition-[height] duration-200 lg:hidden',
+              collapsed ? 'h-[calc(var(--sat)+3.25rem)]' : 'h-[calc(var(--sat)+4.75rem)]',
+            ].join(' ')}
+          >
+            <div
+              className={[
+                'flex min-w-0 transition-all duration-200',
+                collapsed ? 'flex-row items-baseline gap-2' : 'flex-col-reverse items-start',
+              ].join(' ')}
+            >
+              <h1
+                className={[
+                  'truncate font-semibold tracking-tight transition-all duration-200',
+                  collapsed ? 'text-base' : 'text-2xl',
+                ].join(' ')}
+              >
                 {formatDisplayDate(selectedDate)}
               </h1>
+              <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+                {collapsed ? '· Nutrition' : 'Nutrition'}
+              </p>
             </div>
             <button
               type="button"
               onClick={() => setShowSettings(true)}
               aria-label="Settings"
-              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface ring-1 ring-border transition hover:ring-foreground/20"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground transition active:bg-foreground/10"
             >
-              <Settings size={18} />
+              <Settings size={22} />
             </button>
           </header>
 
@@ -222,7 +244,7 @@ function DailyLog() {
             {formatDisplayDate(selectedDate)}
           </p>
 
-          <div className="mt-5 lg:mt-6">
+          <div className="lg:mt-6">
             <WeekStrip
               selectedDate={selectedDate}
               onSelect={setSelectedDate}

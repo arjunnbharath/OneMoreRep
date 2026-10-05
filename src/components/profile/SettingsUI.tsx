@@ -1,9 +1,12 @@
 import type { ReactNode } from 'react'
 import { ArrowLeft, Check } from 'lucide-react'
+import { useWindowScrolled } from '../../hooks/useWindowScrolled'
 
 /**
- * Android-style (Material 3) settings header: a round back button on the
- * top app bar, then a large page title. The status-bar inset is included.
+ * Android-style (Material 3) settings header: a pinned top app bar with a
+ * round back button, then a large page title. Once the page scrolls the large
+ * title slides away and a compact title fades into the bar while the content
+ * passes underneath it. The status-bar inset is included.
  */
 export function SettingsHeader({
   title,
@@ -14,19 +17,41 @@ export function SettingsHeader({
   subtitle?: string
   onBack: () => void
 }) {
+  const collapsed = useWindowScrolled(48)
+
   return (
-    <header className="shrink-0 px-2 pt-[calc(var(--sat)+0.25rem)] lg:desktop-page-header lg:px-10 lg:py-6">
-      <div className="flex h-14 items-center lg:hidden">
+    <header className="shrink-0 lg:desktop-page-header lg:px-10 lg:py-6">
+      <div
+        className={[
+          'fixed inset-x-0 top-0 z-30 flex h-[calc(var(--sat)+3.75rem)] items-center gap-1 px-2 pt-[var(--sat)] transition-colors duration-200 lg:hidden',
+          collapsed ? 'bg-background/85 backdrop-blur-md' : 'bg-background',
+        ].join(' ')}
+      >
         <button
           type="button"
           onClick={onBack}
           aria-label="Back"
-          className="flex h-12 w-12 items-center justify-center rounded-full text-foreground transition active:bg-foreground/10"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-foreground transition active:bg-foreground/10"
         >
           <ArrowLeft size={24} strokeWidth={2} />
         </button>
+        <p
+          aria-hidden={!collapsed}
+          className={[
+            'min-w-0 truncate text-[1.375rem] font-normal tracking-tight transition-all duration-200',
+            collapsed ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
+          ].join(' ')}
+        >
+          {title}
+        </p>
       </div>
-      <h1 className="px-4 pb-4 pt-2 text-[2rem] font-normal leading-tight tracking-tight lg:hidden">
+      <div className="h-[calc(var(--sat)+3.75rem)] lg:hidden" aria-hidden />
+      <h1
+        className={[
+          'px-6 pb-4 pt-2 text-[2rem] font-normal leading-tight tracking-tight transition-opacity duration-200 lg:hidden',
+          collapsed ? 'opacity-0' : 'opacity-100',
+        ].join(' ')}
+      >
         {title}
       </h1>
 
