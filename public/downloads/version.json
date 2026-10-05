@@ -1,7 +1,7 @@
 {
-  "versionCode": 11,
-  "versionName": "1.9",
+  "versionCode": 12,
+  "versionName": "1.9.1",
   "apkUrl": "/downloads/OneMoreRep.apk",
-  "notes": "Winter Arc history calendar with month switching, day details and weekly graph; cleaner Winter Arc widget with animated snow",
-  "publishedAt": "2026-10-05T16:28:44.496Z"
+  "notes": "Phone login and sign-up now work; minimal Winter Arc habits list; hidden scrollbars",
+  "publishedAt": "2026-10-05T16:50:16.401Z"
 }

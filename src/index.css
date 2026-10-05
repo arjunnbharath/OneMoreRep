@@ -60,8 +60,16 @@ html {
   scrollbar-width: none;
 }
 
+*,
+*::before,
+*::after {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 html::-webkit-scrollbar,
-body::-webkit-scrollbar {
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
   display: none;
 }
 

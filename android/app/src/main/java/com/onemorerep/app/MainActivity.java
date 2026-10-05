@@ -32,6 +32,10 @@ public class MainActivity extends BridgeActivity {
         WebView webView = getBridge().getWebView();
         View parent = (View) webView.getParent();
 
+        // CSS scrollbar rules don't reach the WebView's native scroll indicator.
+        webView.setVerticalScrollBarEnabled(false);
+        webView.setHorizontalScrollBarEnabled(false);
+
         // Capacitor's SystemBars plugin is set to insetsHandling=disable in
         // capacitor.config.ts, so we publish the safe-area as CSS variables
         // ourselves and only pad for the keyboard.

@@ -22,12 +22,15 @@ const downloadsDir = join(root, 'public', 'downloads')
 const apkTarget = join(downloadsDir, 'OneMoreRep.apk')
 const manifestTarget = join(downloadsDir, 'version.json')
 
+// The APK serves its own files, so API calls must go to the deployed site.
+const apiUrl = process.env.VITE_API_URL || 'https://one-more-rep-gamma.vercel.app'
+
 const [, , versionNameArg, ...notesParts] = process.argv
 const notes = notesParts.join(' ').trim()
 
-function run(cmd, cwd = root) {
+function run(cmd, cwd = root, env = process.env) {
   console.log(`\n> ${cmd}`)
-  execSync(cmd, { cwd, stdio: 'inherit', shell: true })
+  execSync(cmd, { cwd, stdio: 'inherit', shell: true, env })
 }
 
 // 1. Bump version in build.gradle
@@ -47,7 +50,8 @@ writeFileSync(gradleFile, gradle)
 console.log(`Version → ${versionName} (code ${versionCode})`)
 
 // 2. Build web + sync + gradle
-run('npm run build')
+console.log(`API → ${apiUrl}`)
+run('npm run build', root, { ...process.env, VITE_API_URL: apiUrl })
 run('npx cap sync android')
 if (process.platform === 'win32') {
   // OneDrive turns freshly copied files into placeholders, which Gradle can't read.
